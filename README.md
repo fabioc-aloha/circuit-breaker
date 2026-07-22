@@ -3,7 +3,7 @@
 > **HIGH VOLTAGE BLOCK STACKER** · **BOSS RUSH PROTOCOL** · **TRIP THE MAINFRAME**
 
 <p align="center">
-  <img src="docs/gameplay.png" alt="Circuit Breaker gameplay screenshot with Kong perched on the girder above the well" width="480">
+  <img src="docs/assets/gameplay.png" alt="Circuit Breaker gameplay screenshot with Kong perched on the girder above the well" width="480">
 </p>
 
 [![Play now](https://img.shields.io/badge/PLAY%20NOW-cb.correax.com-ff00e5?style=for-the-badge&labelColor=05010f)](https://cb.correax.com)
@@ -184,6 +184,7 @@ src/
 ├── game.ts           # phase machine, scoring, boss orchestration
 ├── board.ts          # grid + line-clear
 ├── piece.ts          # tetromino shapes, SRS wall-kicks, 7-bag
+├── kong.ts           # Kong actor: state machine + sprite rendering
 ├── bosses.ts         # boss definitions and attack patterns
 ├── effects.ts        # particles, lightning, announcements, Pacman runs
 ├── renderer.ts       # canvas draw pipeline
@@ -198,6 +199,16 @@ src/
 api/
 ├── src/quotes.js      # cached, bounded-concurrency indicative quote adapter
 └── src/functions/     # Azure Functions v4 quote endpoint
+
+public/
+├── kong-sprite.png            # Kong sprite sheet (see CREDITS.md)
+└── circuit-breaker-social.png # OpenGraph / social preview
+
+docs/
+└── assets/
+    ├── banner.png
+    ├── gameplay.png           # README hero screenshot
+    └── sources/               # reference art kept for provenance
 ```
 
 ## 🚀 Deploy

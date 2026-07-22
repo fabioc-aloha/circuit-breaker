@@ -2,7 +2,11 @@
 
 ## Kong sprite
 
-- **File**: `public/kong-sprite.png`
+- **Deployed file**: [public/kong-sprite.png](public/kong-sprite.png) — the
+  transparent PNG the game loads at runtime.
+- **Reference sources** (kept for provenance, not shipped to the browser):
+  - [docs/assets/sources/kong-sprite-original.png](docs/assets/sources/kong-sprite-original.png) — the raw asset the deployed sprite was derived from.
+  - [docs/assets/sources/kong-vector-reference.jpg](docs/assets/sources/kong-vector-reference.jpg) — vector-style reference used during earlier iteration passes.
 - **Content**: cartoon gorilla character sprite sheet used for the Kong intro
   animation and thrower on the game board.
 - **Source**: _TODO — user to add attribution._ The asset was supplied as an

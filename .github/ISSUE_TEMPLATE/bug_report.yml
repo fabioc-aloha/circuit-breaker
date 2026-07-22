@@ -1,0 +1,72 @@
+name: Bug report
+description: Something in Circuit Breaker misbehaves — report it here.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file this. The more specific you can
+        be about what you did, what you saw, and what you expected, the
+        faster this can be triaged.
+
+  - type: input
+    id: url
+    attributes:
+      label: Where did you hit this?
+      description: Live URL (e.g. cb.correax.com) or `localhost:5173` for local dev.
+      placeholder: https://cb.correax.com
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the actual behavior. One paragraph is fine.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      description: Describe the intended behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Numbered steps a stranger could follow. Include which piece was
+        active, which boss was on-screen, or any other salient detail.
+      placeholder: |
+        1. Start a run
+        2. Reach voltage tier 3
+        3. Hard-drop an I-piece into column 4
+        4. Observe the S-piece appearing at column 0
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser / OS
+      description: e.g. "Chrome 140 on Windows 11", "Firefox 130 on macOS 14".
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot or short clip
+      description: Optional but very helpful. Drag a PNG/GIF straight into this box.
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors
+      description: Paste anything the browser DevTools console shows in red.
+      render: shell

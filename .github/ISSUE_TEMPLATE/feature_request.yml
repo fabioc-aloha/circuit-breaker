@@ -1,0 +1,55 @@
+name: Feature request
+description: Suggest a new arcade twist, boss, effect, or quality-of-life improvement.
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Circuit Breaker leans into weird cross-genre ideas. Please pitch
+        yours with the same energy — what does it *feel* like to play?
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What is the idea?
+      description: One paragraph. Assume the reader has played the game.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why does it improve the game?
+      description: What experience does it unlock or fix?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of feature is this?
+      options:
+        - Core gameplay (tetrominoes, gravity, scoring)
+        - Kong behaviour (intro, throw, celebration)
+        - Boss Rush addition or tweak
+        - Visual effect / cabinet chrome
+        - Audio (SFX or BGM)
+        - Ticker / marquee content
+        - Accessibility (keys, colour, motion)
+        - Quality of life (settings, persistence)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Simpler versions, cheaper versions, or existing features that already partly cover this.
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Screenshots, other games that do this well, or design mockups.
