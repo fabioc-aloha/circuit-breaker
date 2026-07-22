@@ -1,0 +1,23 @@
+{
+  "spec_version": "1.0",
+  "edition": "Alex",
+  "edition_version": "4.1.0",
+  "heir_id": "tetris",
+  "heir_name": "tetris",
+  "repo_url": "https://github.com/fabioc-aloha/circuit-breaker.git",
+  "deployed_at": "2026-07-22T03:45:07.137Z",
+  "last_sync_at": "2026-07-22T03:45:07.137Z",
+  "contact": {
+    "owner": "fabioc-aloha"
+  },
+  "opt_in": {
+    "fleet_inventory": true,
+    "auto_upgrade": false
+  },
+  "source": "github-fetch",
+  "commit_sha": "4ccd9072491517e9a343562d92a62e4515853e4b",
+  "fetched_at": "2026-07-22T03:45:07.284Z",
+  "auth_mode": "anonymous",
+  "extension_version": "9.5.8",
+  "marker_schema_version": 2
+}

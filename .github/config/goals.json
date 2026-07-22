@@ -1,0 +1,17 @@
+{
+  "activeGoal": {
+    "title": "Keep Circuit Breaker playable, discoverable, private, and releasable",
+    "priority": "high",
+    "outcomes": [
+      "Preserve correct and responsive core block-stacker gameplay.",
+      "Maintain accurate canonical, social, structured-data, sitemap, and crawl assets.",
+      "Keep telemetry constrained to the approved production page-view contract.",
+      "Maintain a green typecheck, test, build, and artifact-validation gate."
+    ],
+    "reviewOn": "2026-10-21"
+  },
+  "nextGoals": [
+    "Improve boss-rush clarity and game feel without weakening the core rules.",
+    "Maintain a lightweight static deployment with zero runtime dependencies."
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    // Minimum requirements for ACT Edition in VS Code.
+    // Copilot Chat itself is declared by the Marketplace Extension dependency;
+    // these workspace recommendations cover repo workflows around ACT.
+    "GitHub.vscode-pull-request-github",
+    "fabioc-aloha.alex-cognitive-architecture",
+
+    // Quality-of-life recommendations for authoring and reviewing brain files.
+    "DavidAnson.vscode-markdownlint",
+    "streetsidesoftware.code-spell-checker",
+    "redhat.vscode-yaml"
+  ]
+}

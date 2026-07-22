@@ -1,0 +1,78 @@
+{
+  "window.zoomLevel": 0,
+  "editor.mouseWheelZoom": true,
+  "editor.stickyScroll.enabled": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.linkedEditing": true,
+  "editor.suggest.preview": true,
+  "editor.minimap.enabled": false,
+  "editor.renderWhitespace": "boundary",
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "files.eol": "\n",
+  "files.autoSave": "onFocusChange",
+  "workbench.editor.enablePreview": false,
+  "workbench.editor.closeOnFileDelete": true,
+  "workbench.tree.indent": 16,
+  "explorer.confirmDragAndDrop": true,
+  "explorer.confirmDelete": true,
+  "search.useGlobalIgnoreFiles": true,
+  "search.smartCase": true,
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.github-backup-*": true,
+    "**/*.vsix": true
+  },
+  "terminal.integrated.scrollback": 10000,
+  "terminal.integrated.copyOnSelection": true,
+  "terminal.integrated.enablePersistentSessions": true,
+  "git.confirmSync": false,
+  "git.pruneOnFetch": true,
+  "git.enableSmartCommit": true,
+  "git.autofetch": true,
+  "markdown.preview.fontSize": 12,
+  "markdown.preview.lineHeight": 1.4,
+  "markdown.preview.frontMatter": "codeBlock",
+  "markdown.styles": [
+    ".vscode/markdown-light.css"
+  ],
+  "markdown-mermaid.lightModeTheme": "neutral",
+  "markdown-mermaid.darkModeTheme": "dark",
+  "markdown-mermaid.languages": [
+    "mermaid"
+  ],
+  "markdown-mermaid.maxTextSize": 50000,
+  "[markdown]": {
+    "files.trimTrailingWhitespace": false,
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "other": "on",
+      "comments": "on",
+      "strings": "on"
+    }
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.tabSize": 2
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.tabSize": 2
+  },
+  "chat.agentSkillsLocations": {
+    ".github/skills": true,
+    ".github/skills/local": true
+  },
+  "chat.promptFilesLocations": {
+    ".github/prompts": true,
+    ".github/prompts/local": true
+  },
+  "chat.agentFilesLocations": {
+    ".github/agents": true,
+    ".github/agents/local": true
+  },
+  "chat.experimental.incrementalRendering.animationStyle": "none",
+  "chat.permissions.default": "default"
+}
