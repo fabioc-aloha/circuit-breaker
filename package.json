@@ -17,7 +17,7 @@
     "check": "npm run typecheck && npm test && npm run build && npm run validate"
   },
   "devDependencies": {
-    "typescript": "^5.6.3",
+    "typescript": "^7.0.2",
     "vite": "^8.1.4"
   }
 }
