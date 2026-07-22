@@ -51,7 +51,7 @@ Click or press any key to boot up the cabinet -- the browser needs a user gestur
 
 - 7 tetrominoes with full **SRS rotation + wall-kick tables** (JLSTZ + I)
 - **7-bag randomizer**, hold piece (one-swap-per-drop), ghost preview, next-3 queue
-- Combo tracker (⚡ **AMPERAGE ×N**), level-based gravity, local high score
+- Combo tracker (⚡ **AMPERAGE ×N**), boss-driven voltage tiers and gravity, local high score
 
 ### Boss Rush
 
@@ -63,24 +63,27 @@ Five rogue AIs stand between you and the mainframe:
 4. **FEEDBACK LOOP** -- scrambles columns
 5. **THE MAINFRAME** -- every attack, twice as fast
 
-Each fight tracks **BOSS INTEGRITY**; the BGM drops to a frantic *boss-low* mix under 25% HP.
+Each fight tracks **BOSS INTEGRITY**. Defeating a boss advances the **VOLTAGE TIER**
+and gravity curve; the BGM drops to a frantic *boss-low* mix under 25% HP.
 
 ### Audio (100% procedural, no assets)
 
 - Web Audio graph with reverb send/return bus + master DynamicsCompressor
 - Synthwave sequencer: chord progressions, detuned-saw lead, ambient pad, real drum kit
 - Punchy layered SFX: hard-drop sub boom, chromatic line-clear zaps, tetris BOOM with fanfare stab
+- Persisted master, SFX, and BGM mixer controls plus `M` mute shortcut
 
 ### The look
 
 - Circuit-trace animated background, CRT scanlines, screen shake, chromatic flash
-- **Neon Pacman line-clear** -- one chomping cyberpunk Pacman per cleared row, alternating direction, RGB-split, glowing pellet trail
-- Arcade cabinet chrome with animated marquee, chase lights, and scrolling ticker
+- **Neon Pacman line-clear** -- one chomping cyberpunk Pacman per cleared row, alternating direction, RGB-split, glowing pellet trail; a Tetris summons a giant breaker Pacman
+- `MAIN BREAKER TRIPPED` four-line-clear banner, circuit lightning, particles, screen shake, and chromatic flash
+- Responsive arcade cabinet chrome with animated marquee, chase lights, scrolling ticker, bezel reflection, and corner screws
 
 ## 🛠️ Tech
 
 - **TypeScript** (strict) + **HTML5 Canvas 2D** + **Web Audio API**
-- **Vite** for dev / build (~40 KB gzipped bundle, ~13 KB with gzip)
+- **Vite** for dev / build (about 49 KB JavaScript, about 15 KB gzipped)
 - **Zero runtime dependencies**
 - Deployed on **Azure Static Web Apps** (Standard tier, custom domain w/ managed TLS)
 
@@ -93,11 +96,11 @@ src/
 ├── board.ts          # grid + line-clear
 ├── piece.ts          # tetromino shapes, SRS wall-kicks, 7-bag
 ├── bosses.ts         # boss definitions and attack patterns
-├── effects.ts        # particles, screen shake, Pacman runs
+├── effects.ts        # particles, lightning, announcements, Pacman runs
 ├── renderer.ts       # canvas draw pipeline
 ├── input.ts          # keyboard + DAS/ARR
 ├── audio/
-│   ├── audio.ts      # graph: master, reverb bus, compressor
+│   ├── audio.ts      # graph, mixer persistence, reverb bus, compressor
 │   ├── music.ts      # synthwave sequencer
 │   └── sfx.ts        # procedural SFX bank
 └── ...
@@ -111,6 +114,12 @@ production build, artifact validation, and deployment through
 
 Pull requests deploy tracker-disabled preview environments. Production pushes set
 `CB_TRACKER_ENABLED=true` so only the default environment emits page views.
+
+Run the complete local gate before a release:
+
+```bash
+npm run check
+```
 
 For emergency recovery when GitHub Actions is unavailable:
 

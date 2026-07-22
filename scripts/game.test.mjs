@@ -1,0 +1,247 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import test from 'node:test';
+import ts from 'typescript';
+
+const root = path.resolve(import.meta.dirname, '..');
+const moduleCache = new Map();
+
+function loadTypeScriptModule(filePath) {
+  const resolvedPath = path.resolve(filePath);
+  const cached = moduleCache.get(resolvedPath);
+  if (cached) return cached.exports;
+
+  const module = { exports: {} };
+  moduleCache.set(resolvedPath, module);
+  const source = fs.readFileSync(resolvedPath, 'utf8');
+  const output = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      target: ts.ScriptTarget.ES2022,
+    },
+  }).outputText;
+  const require = (specifier) => {
+    if (!specifier.startsWith('.')) throw new Error(`Unsupported import: ${specifier}`);
+    return loadTypeScriptModule(path.resolve(path.dirname(resolvedPath), `${specifier}.ts`));
+  };
+  new Function('exports', 'require', 'module', output)(module.exports, require, module);
+  return module.exports;
+}
+
+const { Game } = loadTypeScriptModule(path.join(root, 'src', 'game.ts'));
+const { EffectsManager } = loadTypeScriptModule(path.join(root, 'src', 'effects.ts'));
+const { BOSSES, bossSilhouetteFor } = loadTypeScriptModule(path.join(root, 'src', 'bosses.ts'));
+const { volumeFromPercent } = loadTypeScriptModule(path.join(root, 'src', 'audio', 'audio.ts'));
+
+function createGame() {
+  return createGameWithEffects().game;
+}
+
+function createGameWithEffects() {
+  const effects = {
+    breakerRuns: 0,
+    flash() {},
+    shake() {},
+    spawnLineBurst() {},
+    showAnnouncement() {},
+    spawnBreakerPacman() {
+      this.breakerRuns += 1;
+    },
+    spawnPacman() {},
+    spawnSpark() {},
+  };
+  const sfx = {
+    alarm() {},
+    fanfare() {},
+    gameOver() {},
+    hardDrop() {},
+    hold() {},
+    lineClear() {},
+    lock() {},
+    move() {},
+    rotate() {},
+    softDropTick() {},
+    tetrisBoom() {},
+    uiBlip() {},
+  };
+  const music = { setMode() {} };
+  return { game: new Game(effects, sfx, music, () => {}), effects };
+}
+
+test('creates and expires a transient lightning bolt', () => {
+  const effects = new EffectsManager();
+
+  effects.spawnLightning(0, 0, 100, 80);
+
+  assert.equal(effects.lightning.length, 1);
+  assert.deepEqual(effects.lightning[0].points[0], { x: 0, y: 0 });
+  assert.deepEqual(effects.lightning[0].points.at(-1), { x: 100, y: 80 });
+
+  effects.update(1_000);
+
+  assert.equal(effects.lightning.length, 0);
+});
+
+test('keeps a newly scheduled ambient lightning bolt for at least one frame', () => {
+  const effects = new EffectsManager();
+
+  effects.update(2_800, 800, 720);
+
+  assert.equal(effects.lightning.length, 1);
+});
+
+test('shows and expires the four-line-clear announcement', () => {
+  const effects = new EffectsManager();
+
+  effects.showAnnouncement('MAIN BREAKER TRIPPED', 'FOUR-LINE OVERLOAD', 900);
+
+  assert.deepEqual(effects.currentAnnouncement(), {
+    title: 'MAIN BREAKER TRIPPED',
+    subtitle: 'FOUR-LINE OVERLOAD',
+    remainingMs: 900,
+    durationMs: 900,
+  });
+
+  effects.update(900);
+
+  assert.equal(effects.currentAnnouncement(), null);
+});
+
+test('creates an oversized breaker Pacman for a Tetris', () => {
+  const effects = new EffectsManager();
+
+  effects.spawnBreakerPacman(0, 300, 400, '#ffe600', 48);
+
+  assert.equal(effects.pacmen.length, 1);
+  assert.equal(effects.pacmen[0].variant, 'breaker');
+  assert.equal(effects.pacmen[0].size, 48);
+});
+
+test('assigns each boss a distinct HUD silhouette', () => {
+  const silhouettes = BOSSES.map((boss) => bossSilhouetteFor(boss.id));
+
+  assert.equal(new Set(silhouettes).size, BOSSES.length);
+});
+
+test('normalizes mixer slider values into persisted audio volumes', () => {
+  assert.equal(volumeFromPercent('0'), 0);
+  assert.equal(volumeFromPercent('45'), 0.45);
+  assert.equal(volumeFromPercent('100'), 1);
+  assert.equal(volumeFromPercent('240'), 1);
+  assert.equal(volumeFromPercent('invalid'), 0);
+});
+
+test('does not advance gameplay before the boot overlay is dismissed', () => {
+  const game = createGame();
+
+  game.update(10_000);
+
+  assert.equal(game.phase, 'ready');
+  assert.equal(game.active, null);
+});
+
+test('raises the active piece with a garbage attack', () => {
+  const game = createGame();
+  game.beginRun();
+  game.active.y = 10;
+  const originalRandom = Math.random;
+  Math.random = () => 0;
+
+  try {
+    game.executeAttack('garbage');
+  } finally {
+    Math.random = originalRandom;
+  }
+
+  assert.equal(game.active.y, 9);
+});
+
+test('allows garbage attacks to raise four rows', () => {
+  const game = createGame();
+  game.beginRun();
+  game.active.y = 10;
+  const originalRandom = Math.random;
+  Math.random = () => 0.99;
+
+  try {
+    game.executeAttack('garbage');
+  } finally {
+    Math.random = originalRandom;
+  }
+
+  assert.equal(game.active.y, 6);
+});
+
+test('replaces row Pacmen with one breaker Pacman for a four-line clear', () => {
+  const { game, effects } = createGameWithEffects();
+  game.beginRun();
+  game.active = { kind: 'I', rotation: 1, x: 3, y: 18 };
+  for (let row = 18; row <= 21; row++) {
+    game.board.grid[row].fill('J');
+    game.board.grid[row][5] = 0;
+  }
+
+  game.lockAndAdvance();
+
+  assert.equal(effects.breakerRuns, 1);
+});
+
+test('does not increase voltage tier from cleared-line thresholds', () => {
+  const game = createGame();
+  game.beginRun();
+  game.lines = 9;
+  game.active = { kind: 'I', rotation: 0, x: 3, y: 20 };
+  game.board.grid[21] = ['J', 'J', 'J', 0, 0, 0, 0, 'J', 'J', 'J'];
+
+  game.lockAndAdvance();
+
+  assert.equal(game.level, 1);
+});
+
+test('increases voltage tier after defeating a boss', () => {
+  const game = createGame();
+  game.beginRun();
+  game.boss.hp = 1;
+  game.active = { kind: 'I', rotation: 1, x: 3, y: 18 };
+  for (let row = 18; row <= 21; row++) {
+    game.board.grid[row].fill('J');
+    game.board.grid[row][5] = 0;
+  }
+
+  game.lockAndAdvance();
+
+  assert.equal(game.level, 2);
+});
+
+test('ends the run when garbage displaces blocks above the board', () => {
+  const game = createGame();
+  game.beginRun();
+  game.board.grid[0][0] = 'T';
+  const originalRandom = Math.random;
+  Math.random = () => 0;
+
+  try {
+    game.executeAttack('garbage');
+  } finally {
+    Math.random = originalRandom;
+  }
+
+
+  assert.equal(game.phase, 'gameover');
+});
+
+test('keeps final-boss victory when the locking board is topped out', () => {
+  const game = createGame();
+  game.beginRun();
+  game.bossIndex = 4;
+  game.boss.hp = 1;
+  game.active = { kind: 'I', rotation: 0, x: 3, y: 20 };
+  game.board.grid[0][0] = 'T';
+  game.board.grid[21] = ['J', 'J', 'J', 0, 0, 0, 0, 'J', 'J', 'J'];
+
+  game.lockAndAdvance();
+
+  assert.equal(game.phase, 'victory');
+});

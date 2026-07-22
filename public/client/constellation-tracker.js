@@ -74,7 +74,6 @@
     utm_campaign: 'utmCampaign',
   };
   const UTM_MAX_LENGTH = 200;
-  const REFERRER_MAX_LENGTH = 256;
   const SCREEN_WIDTH_MAX = 10000;
 
   function requiresExplicitConsent(timeZone) {
@@ -114,8 +113,10 @@
     if (typeof getReferrer !== 'function') return '';
     try {
       const value = getReferrer();
-      return typeof value === 'string'
-        ? value.trim().slice(0, REFERRER_MAX_LENGTH)
+      if (typeof value !== 'string' || !value.trim()) return '';
+      const url = new URL(value);
+      return url.protocol === 'http:' || url.protocol === 'https:'
+        ? url.hostname.toLowerCase()
         : '';
     } catch {
       return '';

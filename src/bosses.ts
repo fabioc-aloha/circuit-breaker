@@ -1,6 +1,8 @@
 // CIRCUIT BREAKER — boss roster
 import type { ActiveBoss, BossDef } from './types';
 
+export type BossSilhouette = 'bolt' | 'eclipse' | 'fuse' | 'loop' | 'core';
+
 export const BOSSES: BossDef[] = [
   {
     id: 'surge',
@@ -56,4 +58,21 @@ export const BOSSES: BossDef[] = [
 
 export function makeActiveBoss(def: BossDef): ActiveBoss {
   return { def, hp: def.hp, maxHp: def.hp, attackTimer: def.attackIntervalMs };
+}
+
+export function bossSilhouetteFor(id: string): BossSilhouette {
+  switch (id) {
+    case 'surge':
+      return 'bolt';
+    case 'blackout':
+      return 'eclipse';
+    case 'shortfuse':
+      return 'fuse';
+    case 'feedback':
+      return 'loop';
+    case 'mainframe':
+      return 'core';
+    default:
+      throw new Error(`Unknown boss silhouette: ${id}`);
+  }
 }

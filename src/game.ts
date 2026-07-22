@@ -1,32 +1,32 @@
 // CIRCUIT BREAKER — game state orchestration
-import {
-  BLACKOUT_DURATION_MS,
-  BOARD_PX_W,
-  BOSS_DAMAGE,
-  CELL,
-  COLS,
-  HARD_DROP_POINTS,
-  HIDDEN_ROWS,
-  HUD_PADDING,
-  LINE_SCORE,
-  LINES_PER_LEVEL,
-  LOCK_DELAY_MS,
-  PIECE_COLORS,
-  SIDE_PANEL_W,
-  SOFT_DROP_POINTS,
-  SPIKE_DURATION_MS,
-  SPIKE_MULTIPLIER,
-  gravityFor,
-} from './constants';
-import type { ActiveBoss, ActivePiece, BossAttackKind, CutsceneState, GamePhase, PieceKind } from './types';
-import { Board } from './board';
-import { Bag, cellsOf, spawnPiece } from './piece';
-import { BOSSES, makeActiveBoss } from './bosses';
-import type { EffectsManager } from './effects';
-import type { SFX } from './audio/sfx';
 import type { Music } from './audio/music';
+import type { SFX } from './audio/sfx';
+import { Board } from './board';
+import { BOSSES, makeActiveBoss } from './bosses';
+import {
+    BLACKOUT_DURATION_MS,
+    BOARD_PX_H,
+    BOARD_PX_W,
+    BOSS_DAMAGE,
+    CELL,
+    COLS,
+    gravityFor,
+    HARD_DROP_POINTS,
+    HIDDEN_ROWS,
+    HUD_PADDING,
+    LINE_SCORE,
+    LOCK_DELAY_MS,
+    PIECE_COLORS,
+    SIDE_PANEL_W,
+    SOFT_DROP_POINTS,
+    SPIKE_DURATION_MS,
+    SPIKE_MULTIPLIER,
+} from './constants';
+import type { EffectsManager } from './effects';
 import type { InputActions } from './input';
+import { Bag, cellsOf, spawnPiece } from './piece';
 import { loadHiScore, saveHiScore } from './storage';
+import type { ActiveBoss, ActivePiece, BossAttackKind, CutsceneState, GamePhase, PieceKind } from './types';
 
 const BOARD_PIXEL_ORIGIN_X = HUD_PADDING + SIDE_PANEL_W + HUD_PADDING;
 const BOARD_PIXEL_ORIGIN_Y = HUD_PADDING;
@@ -60,9 +60,7 @@ export class Game implements InputActions {
     private sfx: SFX,
     private music: Music,
     private onMuteToggle: () => void,
-  ) {
-    this.beginRun();
-  }
+  ) {}
 
   beginRun(): void {
     this.board.reset();
@@ -165,23 +163,31 @@ export class Game implements InputActions {
         const rowIdx = cleared[i];
         const y = BOARD_PIXEL_ORIGIN_Y + (rowIdx - HIDDEN_ROWS) * CELL + CELL / 2;
         this.effects.spawnLineBurst(centerX, y, BOARD_PX_W, '#00f0ff', rows === 4 ? 60 : 30);
-        // Cyberpunk pacman zips across the cleared row — direction alternates per row
-        const reverse = i % 2 === 1;
-        const startX = reverse ? BOARD_PIXEL_ORIGIN_X + BOARD_PX_W + 20 : BOARD_PIXEL_ORIGIN_X - 20;
-        const endX = reverse ? BOARD_PIXEL_ORIGIN_X - 20 : BOARD_PIXEL_ORIGIN_X + BOARD_PX_W + 20;
-        const color = NEON_COLORS[i % NEON_COLORS.length];
-        this.effects.spawnPacman(startX, y, endX, color, Math.floor(CELL * 0.55));
+        if (rows < 4) {
+          // Cyberpunk Pacmen zip across ordinary clears — direction alternates per row.
+          const reverse = i % 2 === 1;
+          const startX = reverse ? BOARD_PIXEL_ORIGIN_X + BOARD_PX_W + 20 : BOARD_PIXEL_ORIGIN_X - 20;
+          const endX = reverse ? BOARD_PIXEL_ORIGIN_X - 20 : BOARD_PIXEL_ORIGIN_X + BOARD_PX_W + 20;
+          const color = NEON_COLORS[i % NEON_COLORS.length];
+          this.effects.spawnPacman(startX, y, endX, color, Math.floor(CELL * 0.55));
+        }
       }
-      if (rows === 4) this.sfx.tetrisBoom();
-      else this.sfx.lineClear(rows);
+      if (rows === 4) {
+        this.sfx.tetrisBoom();
+        this.effects.showAnnouncement('MAIN BREAKER TRIPPED', 'FOUR-LINE OVERLOAD', 900);
+        this.effects.spawnBreakerPacman(
+          BOARD_PIXEL_ORIGIN_X - 60,
+          BOARD_PIXEL_ORIGIN_Y + BOARD_PX_H * 0.48,
+          BOARD_PIXEL_ORIGIN_X + BOARD_PX_W + 60,
+          '#ffe600',
+          Math.floor(CELL * 1.55),
+        );
+      } else {
+        this.sfx.lineClear(rows);
+      }
       // Boss damage
       if (this.boss) this.damageBoss(BOSS_DAMAGE[rows] * (this.combo > 1 ? this.combo : 1));
-      // Level up (based on lines)
-      const newLevel = Math.floor(this.lines / LINES_PER_LEVEL) + 1;
-      if (newLevel > this.level) {
-        this.level = newLevel;
-        this.sfx.fanfare();
-      }
+      if (this.phase === 'victory') return;
     } else {
       this.combo = 0;
     }
@@ -220,6 +226,7 @@ export class Game implements InputActions {
       }
       const next = BOSSES[this.bossIndex];
       this.boss = makeActiveBoss(next);
+      this.level = this.bossIndex + 1;
       this.cutscene = {
         text: [
           `${defeated.name}: ${defeated.defeatQuote}`,
@@ -243,8 +250,10 @@ export class Game implements InputActions {
     this.effects.shake(4, 300);
     switch (kind) {
       case 'garbage': {
-        const rows = 1 + Math.floor(Math.random() * 2);
-        this.board.addGarbage(rows);
+        const rows = 1 + Math.floor(Math.random() * 4);
+        const displacedBlocks = this.board.addGarbage(rows);
+        if (this.active) this.active.y -= rows;
+        if (displacedBlocks || (this.active && this.board.collides(this.active))) this.gameOver();
         break;
       }
       case 'spike':

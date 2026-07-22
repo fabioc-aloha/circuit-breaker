@@ -8,8 +8,9 @@
 
 ## Published facts
 
-- The game uses seven tetrominoes, SRS rotation, a seven-bag randomizer, hold, ghost preview, and a local high score.
-- Boss Rush contains five rogue-AI encounters with distinct attack patterns.
-- Music and sound effects are synthesized in the browser with the Web Audio API.
+- The game uses seven tetrominoes, SRS rotation, a seven-bag randomizer, hold, ghost preview, a local high score, and boss-driven voltage tiers.
+- Boss Rush contains five rogue-AI encounters with distinct attack patterns; defeating a boss advances the voltage tier.
+- A four-line clear triggers a `MAIN BREAKER TRIPPED` banner and a giant cyberpunk breaker Pacman.
+- Music and sound effects are synthesized in the browser with the Web Audio API. Master, SFX, and BGM levels persist locally, as does mute state.
 - Scores, volume preferences, and mute state remain in the visitor's browser and are not sent to the CorreaX tracker.
 - Source code is available from the [Circuit Breaker repository](https://github.com/fabioc-aloha/circuit-breaker).

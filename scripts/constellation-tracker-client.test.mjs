@@ -10,6 +10,7 @@ function loadTrackerApi() {
   const source = fs.readFileSync(path.join(root, 'public', 'client', 'constellation-tracker.js'), 'utf8');
   const context = {};
   context.globalThis = context;
+  context.URL = URL;
   vm.runInNewContext(source, context);
   return context.CorreaXConstellationTracker;
 }
@@ -100,7 +101,7 @@ test('emits only the approved Circuit Breaker page-view contract', async () => {
     utmSource: 'arcade',
     utmMedium: 'referral',
     utmCampaign: 'launch',
-    referrer: 'https://www.google.com/search?q=blocks',
+    referrer: 'www.google.com',
     screenWidth: 1440,
   });
   assert.equal(value.requests[0].options.credentials, 'omit');

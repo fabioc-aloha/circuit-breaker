@@ -1,6 +1,12 @@
 // CIRCUIT BREAKER — Web Audio manager
 import { loadMuted, loadVolumes, saveMuted, saveVolumes, type Volumes } from '../storage';
 
+export function volumeFromPercent(value: string): number {
+  const percent = Number(value);
+  if (!Number.isFinite(percent)) return 0;
+  return Math.max(0, Math.min(100, percent)) / 100;
+}
+
 export class AudioManager {
   ctx: AudioContext | null = null;
   master: GainNode | null = null;

@@ -1,22 +1,23 @@
 // CIRCUIT BREAKER — canvas rendering pipeline
-import {
-  BOARD_PX_H,
-  BOARD_PX_W,
-  CANVAS_H,
-  CANVAS_W,
-  CELL,
-  COLORS,
-  COLS,
-  HIDDEN_ROWS,
-  HUD_PADDING,
-  PIECE_COLORS,
-  ROWS,
-  SIDE_PANEL_W,
-} from './constants';
-import type { ActiveBoss, ActivePiece, CellValue, PieceKind } from './types';
 import type { Board } from './board';
+import { bossSilhouetteFor } from './bosses';
+import {
+    BOARD_PX_H,
+    BOARD_PX_W,
+    CANVAS_H,
+    CANVAS_W,
+    CELL,
+    COLORS,
+    COLS,
+    HIDDEN_ROWS,
+    HUD_PADDING,
+    PIECE_COLORS,
+    ROWS,
+    SIDE_PANEL_W,
+} from './constants';
 import type { EffectsManager } from './effects';
 import { cellsOf, SHAPES } from './piece';
+import type { ActiveBoss, ActivePiece, CellValue, PieceKind } from './types';
 
 export interface RenderState {
   board: Board;
@@ -68,6 +69,7 @@ export class Renderer {
     ctx.translate(shake.x, shake.y);
 
     this.drawBackground(s);
+    this.drawLightning();
     this.drawLeftPanel(s);
     this.drawBoard(s);
     this.drawRightPanel(s);
@@ -84,6 +86,8 @@ export class Renderer {
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
     }
 
+    const announcement = this.effects.currentAnnouncement();
+    if (announcement) this.drawAnnouncement(announcement);
     if (s.paused) this.drawCenterBanner('⏸ PAUSED', 'PRESS P TO RESUME');
     if (s.gameOver) this.drawCenterBanner('⚡ CIRCUIT BROKEN ⚡', 'PRESS R TO REBOOT');
     if (s.victory) this.drawCenterBanner('▲ GRID CLEARED ▲', 'PRESS R FOR NEW RUN');
@@ -113,6 +117,30 @@ export class Renderer {
       ctx.moveTo(0, y + off);
       ctx.lineTo(CANVAS_W, y + off);
       ctx.stroke();
+    }
+  }
+
+  private drawLightning(): void {
+    const ctx = this.ctx;
+    for (const bolt of this.effects.lightning) {
+      if (bolt.points.length < 2) continue;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, bolt.life);
+      ctx.strokeStyle = bolt.color;
+      ctx.shadowColor = bolt.color;
+      ctx.shadowBlur = 18;
+      ctx.lineWidth = bolt.width;
+      ctx.beginPath();
+      ctx.moveTo(bolt.points[0].x, bolt.points[0].y);
+      for (let index = 1; index < bolt.points.length; index++) {
+        ctx.lineTo(bolt.points[index].x, bolt.points[index].y);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 4;
+      ctx.lineWidth = Math.max(0.5, bolt.width * 0.45);
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+      ctx.restore();
     }
   }
 
@@ -216,17 +244,26 @@ export class Renderer {
     this.drawLabel(x + 12, by + 22, 'BOSS');
     if (s.boss) {
       const b = s.boss;
+      this.drawBossSilhouette(x + SIDE_PANEL_W - 37, by + 51, b.def.color, bossSilhouetteFor(b.def.id));
       ctx.fillStyle = b.def.color;
       ctx.shadowColor = b.def.color;
       ctx.shadowBlur = 8;
-      ctx.font = 'bold 16px Consolas, monospace';
+      ctx.font = 'bold 15px Consolas, monospace';
       ctx.fillText(b.def.name, x + 12, by + 50);
       ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(0,240,255,0.18)';
+      ctx.beginPath();
+      ctx.moveTo(x + 12, by + 59.5);
+      ctx.lineTo(x + SIDE_PANEL_W - 12, by + 59.5);
+      ctx.stroke();
       // Integrity bar
       const bx = x + 12;
       const bw = SIDE_PANEL_W - 24;
       const bh = 14;
       const by2 = by + 66;
+      ctx.fillStyle = COLORS.hudDim;
+      ctx.font = '9px Consolas, monospace';
+      ctx.fillText('CORE INTEGRITY', bx, by2 - 5);
       ctx.strokeStyle = COLORS.panelBorder;
       ctx.strokeRect(bx + 0.5, by2 + 0.5, bw, bh);
       const frac = Math.max(0, b.hp / b.maxHp);
@@ -246,9 +283,13 @@ export class Renderer {
       this.wrapText(b.def.taunt, bx, by2 + bh + 36, bw, 14);
       // Attack timer
       const secs = Math.max(0, b.attackTimer / 1000);
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.08)';
+      ctx.fillRect(bx, by + 181, bw, 24);
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.22)';
+      ctx.strokeRect(bx + 0.5, by + 181.5, bw - 1, 23);
       ctx.fillStyle = secs < 3 ? COLORS.warn : COLORS.hudDim;
-      ctx.font = '11px Consolas, monospace';
-      ctx.fillText(`NEXT ATTACK ${secs.toFixed(1)}s`, bx, by + 200);
+      ctx.font = 'bold 10px Consolas, monospace';
+      ctx.fillText(`NEXT ATTACK  ${secs.toFixed(1)}s`, bx + 8, by + 197);
     } else {
       ctx.fillStyle = COLORS.hudDim;
       ctx.font = '12px Consolas, monospace';
@@ -329,6 +370,79 @@ export class Renderer {
     ctx.font = 'bold 18px Consolas, monospace';
     ctx.fillText(value, x, y + 20);
     ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.12)';
+    ctx.beginPath();
+    ctx.moveTo(x, y + 28.5);
+    ctx.lineTo(x + SIDE_PANEL_W - 24, y + 28.5);
+    ctx.stroke();
+  }
+
+  private drawBossSilhouette(
+    centerX: number,
+    centerY: number,
+    color: string,
+    silhouette: ReturnType<typeof bossSilhouetteFor>,
+  ): void {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 2;
+
+    switch (silhouette) {
+      case 'bolt':
+        ctx.beginPath();
+        ctx.moveTo(-4, -20);
+        ctx.lineTo(10, -20);
+        ctx.lineTo(2, -5);
+        ctx.lineTo(13, -5);
+        ctx.lineTo(-10, 21);
+        ctx.lineTo(-3, 3);
+        ctx.lineTo(-13, 3);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      case 'eclipse':
+        ctx.beginPath();
+        ctx.arc(0, 0, 17, Math.PI * 0.26, Math.PI * 1.74);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(-2, 0, 10, Math.PI * 0.31, Math.PI * 1.69);
+        ctx.stroke();
+        break;
+      case 'fuse':
+        ctx.beginPath();
+        ctx.arc(0, 4, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-4, -10);
+        ctx.lineTo(-12, -23);
+        ctx.lineTo(-3, -29);
+        ctx.lineTo(3, -20);
+        ctx.lineTo(10, -27);
+        ctx.stroke();
+        break;
+      case 'loop':
+        for (let radius = 8; radius <= 18; radius += 5) {
+          ctx.beginPath();
+          ctx.arc(0, 0, radius, Math.PI * 0.15, Math.PI * 1.85);
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.moveTo(-18, 0);
+        ctx.lineTo(18, 0);
+        ctx.stroke();
+        break;
+      case 'core':
+        ctx.rotate(Math.PI / 4);
+        ctx.strokeRect(-13, -13, 26, 26);
+        ctx.fillRect(-4, -4, 8, 8);
+        break;
+    }
+    ctx.restore();
   }
 
   private drawMiniPiece(cx: number, cy: number, kind: PieceKind | null, dim: boolean): void {
@@ -379,9 +493,24 @@ export class Renderer {
       }
       if (pm.life <= 0) continue;
 
+      if (pm.variant === 'breaker') {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, pm.life) * 0.42;
+        ctx.strokeStyle = pm.color;
+        ctx.shadowColor = pm.color;
+        ctx.shadowBlur = 20;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(pm.x - pm.size * 1.18, pm.y - pm.size * 0.7, pm.size * 2.36, pm.size * 1.4);
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.arc(pm.x, pm.y, pm.size * 1.18, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
       // Chomp animation: mouth opens/closes at ~10Hz
       const chomp = 0.5 + 0.5 * Math.sin(timeMs * 0.02);
-      const maxMouth = Math.PI / 3.2;
+      const maxMouth = pm.variant === 'breaker' ? Math.PI / 2.7 : Math.PI / 3.2;
       const mouthAngle = chomp * maxMouth;
       const facing = pm.reverse ? Math.PI : 0; // face left when reversed
 
@@ -389,7 +518,7 @@ export class Renderer {
         ctx.save();
         ctx.globalAlpha = alpha;
         ctx.shadowColor = tint;
-        ctx.shadowBlur = 18;
+        ctx.shadowBlur = pm.variant === 'breaker' ? 28 : 18;
         ctx.fillStyle = tint;
         ctx.beginPath();
         ctx.moveTo(pm.x + offsetX, pm.y + offsetY);
@@ -468,21 +597,61 @@ export class Renderer {
     const ctx = this.ctx;
     const cx = this.boardX + BOARD_PX_W / 2;
     const cy = this.boardY + BOARD_PX_H / 2;
-    ctx.fillStyle = 'rgba(5,1,15,0.75)';
-    ctx.fillRect(this.boardX, cy - 60, BOARD_PX_W, 120);
+    ctx.fillStyle = 'rgba(5,1,15,0.88)';
+    ctx.fillRect(this.boardX, cy - 66, BOARD_PX_W, 132);
     ctx.strokeStyle = COLORS.cyan;
-    ctx.strokeRect(this.boardX + 0.5, cy - 60 + 0.5, BOARD_PX_W - 1, 120 - 1);
+    ctx.strokeRect(this.boardX + 0.5, cy - 66 + 0.5, BOARD_PX_W - 1, 132 - 1);
+    ctx.fillStyle = COLORS.hudDim;
+    ctx.textAlign = 'center';
+    ctx.font = '9px Consolas, monospace';
+    ctx.fillText('SYSTEM STATUS', cx, cy - 42);
+    ctx.strokeStyle = 'rgba(0,240,255,0.28)';
+    ctx.beginPath();
+    ctx.moveTo(this.boardX + 34, cy - 32.5);
+    ctx.lineTo(this.boardX + BOARD_PX_W - 34, cy - 32.5);
+    ctx.stroke();
     ctx.fillStyle = COLORS.cyan;
     ctx.shadowColor = COLORS.cyan;
     ctx.shadowBlur = 12;
     ctx.textAlign = 'center';
     ctx.font = 'bold 22px Consolas, monospace';
-    ctx.fillText(title, cx, cy - 8);
+    ctx.fillText(title, cx, cy - 2);
+    ctx.fillStyle = 'rgba(0,240,255,0.12)';
+    ctx.fillRect(cx - 105, cy + 11, 210, 26);
+    ctx.strokeStyle = 'rgba(0,240,255,0.35)';
+    ctx.strokeRect(cx - 104.5, cy + 11.5, 209, 25);
+    ctx.fillStyle = COLORS.hudText;
     ctx.font = '13px Consolas, monospace';
     ctx.shadowBlur = 4;
-    ctx.fillText(sub, cx, cy + 22);
+    ctx.fillText(sub, cx, cy + 29);
     ctx.textAlign = 'start';
     ctx.shadowBlur = 0;
+  }
+
+  private drawAnnouncement(announcement: NonNullable<ReturnType<EffectsManager['currentAnnouncement']>>): void {
+    const ctx = this.ctx;
+    const progress = Math.max(0, Math.min(1, announcement.remainingMs / announcement.durationMs));
+    const alpha = Math.min(1, (1 - progress) * 8, progress * 5);
+    const centerX = this.boardX + BOARD_PX_W / 2;
+    const topY = this.boardY + 76;
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = 'rgba(5, 1, 15, 0.88)';
+    ctx.fillRect(this.boardX + 14, topY - 30, BOARD_PX_W - 28, 60);
+    ctx.strokeStyle = COLORS.warn;
+    ctx.shadowColor = COLORS.warn;
+    ctx.shadowBlur = 14;
+    ctx.strokeRect(this.boardX + 14.5, topY - 29.5, BOARD_PX_W - 29, 59);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = COLORS.warn;
+    ctx.font = 'bold 17px Consolas, monospace';
+    ctx.fillText(announcement.title, centerX, topY - 3);
+    ctx.fillStyle = COLORS.hudText;
+    ctx.font = '10px Consolas, monospace';
+    ctx.fillText(announcement.subtitle, centerX, topY + 16);
+    ctx.textAlign = 'start';
+    ctx.restore();
   }
 
   private drawCutscene(lines: string[]): void {

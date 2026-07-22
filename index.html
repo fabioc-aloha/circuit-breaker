@@ -41,12 +41,35 @@
           </div>
         </div>
         <div id="screen-wrap">
+          <span class="screen-screw screen-screw-top-left" aria-hidden="true"></span>
+          <span class="screen-screw screen-screw-top-right" aria-hidden="true"></span>
+          <span class="screen-screw screen-screw-bottom-left" aria-hidden="true"></span>
+          <span class="screen-screw screen-screw-bottom-right" aria-hidden="true"></span>
           <canvas id="game" width="800" height="720"></canvas>
           <div id="boot" class="boot-overlay">
             <pre id="boot-text"></pre>
           </div>
           <div id="hint">CLICK / PRESS ANY KEY TO INITIALIZE</div>
         </div>
+        <section id="audio-console" aria-label="Audio mixer">
+          <div class="audio-console-title">AUDIO MIX</div>
+          <label class="audio-control" for="volume-master">
+            <span>MASTER</span>
+            <input id="volume-master" type="range" min="0" max="100" step="1" />
+            <output id="volume-master-value" for="volume-master"></output>
+          </label>
+          <label class="audio-control" for="volume-sfx">
+            <span>SFX</span>
+            <input id="volume-sfx" type="range" min="0" max="100" step="1" />
+            <output id="volume-sfx-value" for="volume-sfx"></output>
+          </label>
+          <label class="audio-control" for="volume-bgm">
+            <span>BGM</span>
+            <input id="volume-bgm" type="range" min="0" max="100" step="1" />
+            <output id="volume-bgm-value" for="volume-bgm"></output>
+          </label>
+          <button id="audio-mute" type="button" title="Mute audio (M)"></button>
+        </section>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

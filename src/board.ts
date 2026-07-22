@@ -115,15 +115,17 @@ export class Board {
   }
 
   /** Rise N garbage rows from the bottom with a random hole column. */
-  addGarbage(rows: number, holeCol?: number): void {
-    if (rows <= 0) return;
+  addGarbage(rows: number, holeCol?: number): boolean {
+    let displacedBlocks = false;
     for (let i = 0; i < rows; i++) {
+      if (this.grid[0].some((value) => value !== 0)) displacedBlocks = true;
       const hole = holeCol ?? Math.floor(Math.random() * COLS);
       const row: CellValue[] = Array<CellValue>(COLS).fill('G');
       row[hole] = 0;
       this.grid.push(row);
       this.grid.shift();
     }
+    return displacedBlocks;
   }
 
   /** Swap two columns (FEEDBACK LOOP attack). */

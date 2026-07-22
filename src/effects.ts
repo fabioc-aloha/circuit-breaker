@@ -1,6 +1,20 @@
 // CIRCUIT BREAKER — visual effects (particles, screen shake, chromatic flash)
 import type { Particle } from './types';
 
+export interface LightningBolt {
+  points: { x: number; y: number }[];
+  life: number;
+  color: string;
+  width: number;
+}
+
+export interface Announcement {
+  title: string;
+  subtitle: string;
+  remainingMs: number;
+  durationMs: number;
+}
+
 export interface PacmanRun {
   y: number;           // pixel y (center of row)
   x: number;           // current pixel x (center)
@@ -12,21 +26,71 @@ export interface PacmanRun {
   pellets: { x: number; y: number; life: number; size: number }[];
   lastPelletX: number; // to space pellets
   reverse: boolean;    // right-to-left variant
+  variant: 'standard' | 'breaker';
 }
 
 export class EffectsManager {
   particles: Particle[] = [];
   pacmen: PacmanRun[] = [];
+  lightning: LightningBolt[] = [];
+  announcement: Announcement | null = null;
   shakeAmp = 0;
   shakeUntil = 0;
   flashAmp = 0;
   flashUntil = 0;
+  private ambientLightningTimer = 2800;
+
+  spawnLightning(
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+    color = '#e6f8ff',
+    width = 1.5,
+  ): void {
+    const distance = Math.hypot(endX - startX, endY - startY);
+    const segments = Math.max(3, Math.ceil(distance / 28));
+    const perpendicularX = -(endY - startY) / distance;
+    const perpendicularY = (endX - startX) / distance;
+    const jitter = Math.min(28, distance * 0.12);
+    const points = [{ x: startX, y: startY }];
+
+    for (let index = 1; index < segments; index++) {
+      const progress = index / segments;
+      const offset = (Math.random() - 0.5) * jitter;
+      points.push({
+        x: startX + (endX - startX) * progress + perpendicularX * offset,
+        y: startY + (endY - startY) * progress + perpendicularY * offset,
+      });
+    }
+    points.push({ x: endX, y: endY });
+    this.lightning.push({ points, life: 1, color, width });
+  }
+
+  showAnnouncement(title: string, subtitle: string, durationMs: number): void {
+    this.announcement = { title, subtitle, remainingMs: durationMs, durationMs };
+  }
 
   spawnPacman(startX: number, y: number, endX: number, color: string, size = 14): void {
+    this.createPacman(startX, y, endX, color, size, 'standard', 30);
+  }
+
+  spawnBreakerPacman(startX: number, y: number, endX: number, color: string, size = 48): void {
+    this.createPacman(startX, y, endX, color, size, 'breaker', 42);
+  }
+
+  private createPacman(
+    startX: number,
+    y: number,
+    endX: number,
+    color: string,
+    size: number,
+    variant: PacmanRun['variant'],
+    durationFrames: number,
+  ): void {
     const reverse = endX < startX;
     const distance = Math.abs(endX - startX);
-    // Complete the run in ~500ms at 60fps → ~30 frames → vx = distance/30
-    const vx = (reverse ? -1 : 1) * (distance / 30);
+    const vx = (reverse ? -1 : 1) * (distance / durationFrames);
     this.pacmen.push({
       x: startX,
       y,
@@ -38,6 +102,7 @@ export class EffectsManager {
       pellets: [],
       lastPelletX: startX,
       reverse,
+      variant,
     });
   }
 
@@ -86,8 +151,26 @@ export class EffectsManager {
     if (until > this.flashUntil) this.flashUntil = until;
   }
 
-  update(dtMs: number): void {
+  update(dtMs: number, canvasWidth = 800, canvasHeight = 720): void {
     const dt = dtMs / 16.6667; // normalized to 60fps ticks
+    if (this.announcement) {
+      this.announcement.remainingMs -= dtMs;
+      if (this.announcement.remainingMs <= 0) this.announcement = null;
+    }
+
+    for (const bolt of this.lightning) bolt.life -= 0.045 * dt;
+    this.lightning = this.lightning.filter((bolt) => bolt.life > 0);
+
+    this.ambientLightningTimer -= dtMs;
+    if (this.ambientLightningTimer <= 0) {
+      const startX = Math.random() < 0.5 ? -20 : canvasWidth + 20;
+      const startY = Math.random() * canvasHeight * 0.6;
+      const endX = canvasWidth * (0.25 + Math.random() * 0.5);
+      const endY = canvasHeight * (0.2 + Math.random() * 0.65);
+      this.spawnLightning(startX, startY, endX, endY, '#8de8ff', 1.25);
+      this.ambientLightningTimer = 3500 + Math.random() * 4500;
+    }
+
     for (const p of this.particles) {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
@@ -101,7 +184,8 @@ export class EffectsManager {
       pm.x += pm.vx * dt;
       // Drop pellets every ~14px of travel
       if (Math.abs(pm.x - pm.lastPelletX) > 14) {
-        pm.pellets.push({ x: pm.x, y: pm.y, life: 1, size: 2 + Math.random() * 1.5 });
+        const pelletSize = pm.variant === 'breaker' ? 4 + Math.random() * 2 : 2 + Math.random() * 1.5;
+        pm.pellets.push({ x: pm.x, y: pm.y, life: 1, size: pelletSize });
         pm.lastPelletX = pm.x;
       }
       for (const pel of pm.pellets) pel.life -= 0.04 * dt;
@@ -109,6 +193,10 @@ export class EffectsManager {
       pm.life -= 0.02 * dt;
     }
     this.pacmen = this.pacmen.filter((pm) => pm.life > 0 || pm.pellets.length > 0);
+  }
+
+  currentAnnouncement(): Announcement | null {
+    return this.announcement;
   }
 
   currentShake(): { x: number; y: number } {
