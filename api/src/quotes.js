@@ -128,7 +128,7 @@ export function createDelayedQuoteService(options = {}) {
       }),
     );
     const quotes = results.flatMap((result) => result.status === 'fulfilled' ? [result.value] : []);
-    if (quotes.length === 0) throw new Error('No delayed quotes available');
+    if (quotes.length === 0) throw new Error('No indicative quotes available');
 
     const providerTimes = quotes
       .map((quote) => quote.marketTime ? Date.parse(quote.marketTime) : NaN)

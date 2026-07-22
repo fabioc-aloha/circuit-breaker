@@ -34,6 +34,7 @@ const { Game } = loadTypeScriptModule(path.join(root, 'src', 'game.ts'));
 const { EffectsManager, gameOverWraithPosition } = loadTypeScriptModule(path.join(root, 'src', 'effects.ts'));
 const { BOSSES, bossSilhouetteFor } = loadTypeScriptModule(path.join(root, 'src', 'bosses.ts'));
 const { volumeFromPercent } = loadTypeScriptModule(path.join(root, 'src', 'audio', 'audio.ts'));
+const { frameDelta } = loadTypeScriptModule(path.join(root, 'src', 'frame-timing.ts'));
 
 function createGame() {
   return createGameWithEffects().game;
@@ -196,6 +197,24 @@ test('does not advance gameplay before the boot overlay is dismissed', () => {
 
   assert.equal(game.phase, 'ready');
   assert.equal(game.active, null);
+});
+
+test('advances gravity when a frame delivers more than one row of elapsed time', () => {
+  const game = createGame();
+  game.beginRun();
+  const startingY = game.active.y;
+
+  // Level 1 gravity is 1000 ms; a 1050 ms tick must produce exactly one drop.
+  game.update(1_050);
+
+  assert.equal(game.active.y, startingY + 1);
+});
+
+test('frameDelta preserves elapsed time and clamps clock skew and pathological stalls', () => {
+  assert.equal(frameDelta(1_050, 1_000), 50);
+  assert.equal(frameDelta(500, 500), 0);
+  assert.equal(frameDelta(0, 500), 0);
+  assert.equal(frameDelta(10_000, 0), 750);
 });
 
 test('raises the active piece with a garbage attack', () => {

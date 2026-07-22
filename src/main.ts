@@ -3,6 +3,7 @@ import { AudioManager, volumeFromPercent } from './audio/audio';
 import { Music } from './audio/music';
 import { SFX } from './audio/sfx';
 import { EffectsManager } from './effects';
+import { frameDelta } from './frame-timing';
 import { Game } from './game';
 import { InputController } from './input';
 import { initializeMarketTicker } from './market-ticker';
@@ -128,8 +129,16 @@ const input = new InputController({
 });
 
 let last = performance.now();
+// Resetting on tab reactivation prevents rAF from delivering a giant catch-up
+// dt after a long hidden-tab pause. The listener lives for the page lifetime;
+// there is no unit test because it depends on the real Document visibility API.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  last = performance.now();
+});
+
 function loop(now: number): void {
-  const dt = Math.min(100, now - last);
+  const dt = frameDelta(now, last);
   last = now;
   input.update();
   game.update(dt);
