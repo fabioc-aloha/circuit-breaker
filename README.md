@@ -112,6 +112,8 @@ the spawn point:
   drift matters, and you learn to read his facing direction
 - He goes silent and still when you pause (**P**) so you can screenshot the
   throw mid-flight
+- When the run ends (top-out or victory) he breaks into a five-pose
+  celebration dance on the girder — because of course he does
 
 ### Boss Rush
 
@@ -202,6 +204,7 @@ api/
 
 public/
 ├── kong-sprite.png            # Kong sprite sheet (see CREDITS.md)
+├── kong-dance.png             # Kong celebration dance strip (see CREDITS.md)
 └── circuit-breaker-social.png # OpenGraph / social preview
 
 docs/

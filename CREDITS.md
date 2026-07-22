@@ -18,3 +18,19 @@
 
 If the license requires visible attribution (CC-BY family), also surface a
 short credit line in the game UI or in the site footer.
+
+## Kong celebration dance strip
+
+- **Deployed file**: [public/kong-dance.png](public/kong-dance.png) — the
+  1286×196 transparent PNG loaded when the run ends (top-out or victory).
+- **Content**: five-pose horizontal strip of the same cartoon gorilla
+  character mid-dance, used only in the celebration state.
+- **Source**: _TODO — user to add attribution._ The asset was supplied as an
+  open-source / stock file during development on 2026-07-22. Please replace
+  this line with the artist name, source URL, and specific license
+  (e.g. CC0, CC-BY 4.0, OGA-BY 3.0) before shipping to a wider public
+  audience so downstream users know the reuse terms.
+- **License**: _TODO — pending confirmation of the specific open-source license._
+
+Same attribution rule as the sprite sheet above: if the license requires
+visible attribution, surface it in the UI or footer.
