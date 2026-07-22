@@ -14,6 +14,7 @@ import {
     HARD_DROP_POINTS,
     HIDDEN_ROWS,
     HUD_PADDING,
+    KONG_LEDGE_H,
     LINE_SCORE,
     LOCK_DELAY_MS,
     PIECE_COLORS,
@@ -24,12 +25,13 @@ import {
 } from './constants';
 import type { EffectsManager } from './effects';
 import type { InputActions } from './input';
+import { Kong, makeKongConfig } from './kong';
 import { Bag, cellsOf, spawnPiece } from './piece';
 import { loadHiScore, saveHiScore } from './storage';
 import type { ActiveBoss, ActivePiece, BossAttackKind, CutsceneState, GamePhase, PieceKind } from './types';
 
 const BOARD_PIXEL_ORIGIN_X = HUD_PADDING + SIDE_PANEL_W + HUD_PADDING;
-const BOARD_PIXEL_ORIGIN_Y = HUD_PADDING;
+const BOARD_PIXEL_ORIGIN_Y = HUD_PADDING + KONG_LEDGE_H;
 
 export class Game implements InputActions {
   phase: GamePhase = 'ready';
@@ -55,6 +57,10 @@ export class Game implements InputActions {
   spikeUntil = 0;
   blackoutUntil = 0;
 
+  // Kong paces the girder above the board and throws each new piece down
+  // from his current column. Constructed here so tests can inspect state.
+  kong = new Kong(makeKongConfig(BOARD_PIXEL_ORIGIN_X, BOARD_PIXEL_ORIGIN_Y));
+
   constructor(
     private effects: EffectsManager,
     private sfx: SFX,
@@ -78,7 +84,11 @@ export class Game implements InputActions {
     this.lockTimer = 0;
     this.spikeUntil = 0;
     this.blackoutUntil = 0;
-    this.spawnNext();
+    this.active = null;
+    // Fresh Kong for this run — he climbs the ladder and beats his chest
+    // before the first piece drops. Piece queued now, released after intro.
+    this.kong = new Kong(makeKongConfig(BOARD_PIXEL_ORIGIN_X, BOARD_PIXEL_ORIGIN_Y));
+    this.requestSpawn();
     this.phase = 'playing';
     this.music.setMode('boss');
   }
@@ -92,8 +102,30 @@ export class Game implements InputActions {
           if (this.phase === 'cutscene') this.phase = 'playing';
         }
       }
+      // Cutscenes still let Kong pace so he doesn't freeze mid-stride, but
+      // an explicit pause freezes EVERYTHING (including Kong) so screenshots
+      // can capture him mid-throw without motion smearing the frame.
+      if (this.phase !== 'paused') {
+        this.kong.update(dtMs);
+      }
       return;
     }
+
+    // Kong animates + processes any pending throw request.
+    this.kong.update(dtMs);
+    const throwOut = this.kong.takeSpawnRequest();
+    if (throwOut && !this.active) {
+      this.active = spawnPiece(throwOut.kind, throwOut.column);
+      if (this.board.collides(this.active)) {
+        this.gameOver();
+        return;
+      }
+      this.lockTimer = 0;
+      this.gravityTimer = 0;
+    }
+
+    // Skip gravity while waiting for Kong to release the next piece.
+    if (!this.active) return;
 
     // Gravity
     const gravityBase = gravityFor(this.level);
@@ -203,18 +235,16 @@ export class Game implements InputActions {
       return;
     }
     this.holdLocked = false;
-    this.spawnNext();
-    if (this.active && this.board.collides(this.active)) {
-      this.gameOver();
-      return;
-    }
+    // Ask Kong to throw the next piece. It becomes active when he releases it.
+    this.active = null;
+    this.requestSpawn();
     this.lockTimer = 0;
     this.gravityTimer = 0;
   }
 
-  private spawnNext(): void {
+  private requestSpawn(): void {
     const kind = this.bag.next();
-    this.active = spawnPiece(kind);
+    this.kong.requestThrow(kind);
   }
 
   private damageBoss(dmg: number): void {
@@ -298,12 +328,17 @@ export class Game implements InputActions {
       saveHiScore(this.hiScore);
     }
     this.music.setMode('silent');
+    // Kong doesn't lose — he beats his chest either way.
+    this.kong.startCelebration();
   }
 
   private victory(): void {
     this.phase = 'victory';
     this.boss = null;
     this.sfx.fanfare();
+    // Even on a win, Kong celebrates — he's the one who threw every piece
+    // that built the winning stack.
+    this.kong.startCelebration();
     if (this.score > this.hiScore) {
       this.hiScore = this.score;
       saveHiScore(this.hiScore);
@@ -372,13 +407,17 @@ export class Game implements InputActions {
   holdPiece(): void {
     if (this.phase !== 'playing' || !this.active || this.holdLocked) return;
     const currentKind = this.active.kind;
+    // Hold is instant (no Kong throw animation) so the mechanic stays snappy.
+    // The swapped piece still appears under Kong's current column for theme.
+    const spawnCol = this.kong.spawnColumnFor(this.hold ?? this.bag.peek(1)[0]);
     if (this.hold === null) {
       this.hold = currentKind;
-      this.spawnNext();
+      const kind = this.bag.next();
+      this.active = spawnPiece(kind, this.kong.spawnColumnFor(kind));
     } else {
       const prev = this.hold;
       this.hold = currentKind;
-      this.active = spawnPiece(prev);
+      this.active = spawnPiece(prev, spawnCol);
     }
     this.holdLocked = true;
     this.sfx.hold();

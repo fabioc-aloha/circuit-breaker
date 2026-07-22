@@ -202,6 +202,9 @@ test('does not advance gameplay before the boot overlay is dismissed', () => {
 test('advances gravity when a frame delivers more than one row of elapsed time', () => {
   const game = createGame();
   game.beginRun();
+  // Kong defers the first piece until his throw animation releases. Seed a piece
+  // directly so the gravity test can measure a single-tick drop.
+  game.active = { kind: 'T', rotation: 0, x: 3, y: 0 };
   const startingY = game.active.y;
 
   // Level 1 gravity is 1000 ms; a 1050 ms tick must produce exactly one drop.
@@ -220,7 +223,7 @@ test('frameDelta preserves elapsed time and clamps clock skew and pathological s
 test('raises the active piece with a garbage attack', () => {
   const game = createGame();
   game.beginRun();
-  game.active.y = 10;
+  game.active = { kind: 'T', rotation: 0, x: 3, y: 10 };
   const originalRandom = Math.random;
   Math.random = () => 0;
 
@@ -236,7 +239,7 @@ test('raises the active piece with a garbage attack', () => {
 test('allows garbage attacks to raise four rows', () => {
   const game = createGame();
   game.beginRun();
-  game.active.y = 10;
+  game.active = { kind: 'T', rotation: 0, x: 3, y: 10 };
   const originalRandom = Math.random;
   Math.random = () => 0.99;
 
@@ -261,7 +264,8 @@ test('replaces row Pacmen with one breaker Pacman for a four-line clear', () => 
   game.lockAndAdvance();
 
   assert.equal(effects.breakerRuns, 1);
-  assert.equal(effects.breakerY, 560);
+  // Board origin shifted down by KONG_LEDGE_H (112) to make room for Kong's girder.
+  assert.equal(effects.breakerY, 672);
   assert.equal(effects.breakerSize, 60);
 });
 

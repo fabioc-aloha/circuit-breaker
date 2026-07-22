@@ -11,11 +11,13 @@ import {
     COLS,
     HIDDEN_ROWS,
     HUD_PADDING,
+    KONG_LEDGE_H,
     PIECE_COLORS,
     ROWS,
     SIDE_PANEL_W,
 } from './constants';
 import { gameOverWraithPosition, type EffectsManager } from './effects';
+import type { Kong } from './kong';
 import { cellsOf, SHAPES } from './piece';
 import type { ActiveBoss, ActivePiece, CellValue, PieceKind } from './types';
 
@@ -40,6 +42,7 @@ export interface RenderState {
   bootText: string | null;
   cutsceneText: string[] | null;
   muted: boolean;
+  kong: Kong;
   time: number; // performance.now()
 }
 
@@ -58,7 +61,8 @@ export class Renderer {
     this.ctx = ctx;
     this.leftPanelX = HUD_PADDING;
     this.boardX = HUD_PADDING + SIDE_PANEL_W + HUD_PADDING;
-    this.boardY = HUD_PADDING;
+    // Board sits below the Kong ledge so he has space to pace above it.
+    this.boardY = HUD_PADDING + KONG_LEDGE_H;
     this.rightPanelX = this.boardX + BOARD_PX_W + HUD_PADDING;
   }
 
@@ -73,10 +77,16 @@ export class Renderer {
     this.drawLeftPanel(s);
     this.drawBoard(s);
     this.drawRightPanel(s);
+    this.drawKongLedge(s.kong);
+    s.kong.draw(ctx);
     this.drawPacmen(s.time);
     this.drawParticles();
     this.drawLightning(true);
     this.drawScanlines();
+    // Thrown tetromino renders LAST inside the shake transform so the
+    // projectile always sits at top z-order — never hidden by particles,
+    // scanlines, or lightning during flight.
+    s.kong.drawThrownPiece(ctx);
 
     ctx.restore();
 
@@ -89,7 +99,9 @@ export class Renderer {
 
     const announcement = this.effects.currentAnnouncement();
     if (announcement) this.drawAnnouncement(announcement);
-    if (s.paused) this.drawCenterBanner('⏸ PAUSED', 'PRESS P TO RESUME');
+    // Pause is intentionally silent — no banner overlay — so screenshots
+    // can capture the game mid-frame (e.g. Kong throwing a piece) without
+    // any UI chrome covering the action. Press P again to resume.
     if (s.gameOver) this.drawCenterBanner('⚡ CIRCUIT BROKEN ⚡', 'PRESS R TO REBOOT', 0.58);
     if (s.victory) this.drawCenterBanner('▲ GRID CLEARED ▲', 'PRESS R FOR NEW RUN');
     if (s.cutsceneText) this.drawCutscene(s.cutsceneText);
@@ -235,7 +247,7 @@ export class Renderer {
   private drawLeftPanel(s: RenderState): void {
     const ctx = this.ctx;
     const x = this.leftPanelX;
-    const y = HUD_PADDING;
+    const y = HUD_PADDING + KONG_LEDGE_H;
     this.drawPanel(x, y, SIDE_PANEL_W, 160);
     this.drawLabel(x + 12, y + 22, 'HOLD');
     this.drawMiniPiece(x + SIDE_PANEL_W / 2, y + 90, s.hold, s.holdLocked);
@@ -302,7 +314,7 @@ export class Renderer {
   private drawRightPanel(s: RenderState): void {
     const ctx = this.ctx;
     const x = this.rightPanelX;
-    const y = HUD_PADDING;
+    const y = HUD_PADDING + KONG_LEDGE_H;
     // NEXT panel
     this.drawPanel(x, y, SIDE_PANEL_W, 260);
     this.drawLabel(x + 12, y + 22, 'NEXT');
@@ -340,6 +352,72 @@ export class Renderer {
       ctx.font = 'bold 12px Consolas, monospace';
       ctx.fillText('⚡ VOLTAGE SPIKE', x + 12, sy + 190);
     }
+  }
+
+  /**
+   * The girder Kong paces along, plus the ladder he climbs on intro. Drawn
+   * after board/panels so it visually sits above the board without a border seam.
+   * Ladder length is driven by Kong's state so the intro can extend it in and
+   * retract it back to a stub after he reaches the top.
+   */
+  private drawKongLedge(kong: Kong): void {
+    const ctx = this.ctx;
+    const ledgeY = this.boardY - 2; // matches makeKongConfig
+    const girderH = 6;
+    const girderTop = ledgeY - girderH;
+    // Girder — dim rust I-beam spanning the board width.
+    ctx.fillStyle = '#3a2410';
+    ctx.fillRect(this.boardX, girderTop, BOARD_PX_W, girderH);
+    ctx.strokeStyle = '#5a3a1e';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(this.boardX + 0.5, girderTop + 0.5, BOARD_PX_W - 1, girderH - 1);
+    // Rivets along the top edge for pixel-art flavor.
+    ctx.fillStyle = '#7a5030';
+    for (let x = this.boardX + 6; x < this.boardX + BOARD_PX_W - 4; x += 20) {
+      ctx.fillRect(x, girderTop + 1, 2, 2);
+    }
+    // Ladder on the right edge — length is animated by Kong's intro state.
+    // Rails sized to sit under Kong's hip width so he looks like he could
+    // actually grip and climb it.
+    const ladderX = this.boardX + BOARD_PX_W - CELL;
+    const ladderTop = ledgeY;
+    const ladderLen = Math.max(2, kong.ladderLengthPx());
+    const ladderBottom = ladderTop + ladderLen;
+    const railHalf = 13;   // half-width between rails (26px overall)
+    const rungGap = 14;    // vertical spacing between rungs
+    ctx.strokeStyle = '#5a3a1e';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(ladderX - railHalf, ladderTop);
+    ctx.lineTo(ladderX - railHalf, ladderBottom);
+    ctx.moveTo(ladderX + railHalf, ladderTop);
+    ctx.lineTo(ladderX + railHalf, ladderBottom);
+    ctx.stroke();
+    // Highlight the outer edge of each rail with a lighter stroke for depth.
+    ctx.strokeStyle = '#7a5030';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(ladderX - railHalf - 1, ladderTop);
+    ctx.lineTo(ladderX - railHalf - 1, ladderBottom);
+    ctx.moveTo(ladderX + railHalf + 1, ladderTop);
+    ctx.lineTo(ladderX + railHalf + 1, ladderBottom);
+    ctx.stroke();
+    // Rungs — thicker crossbars, evenly spaced.
+    ctx.strokeStyle = '#5a3a1e';
+    ctx.lineWidth = 2;
+    for (let y = ladderTop + 10; y < ladderBottom - 2; y += rungGap) {
+      ctx.beginPath();
+      ctx.moveTo(ladderX - railHalf, y);
+      ctx.lineTo(ladderX + railHalf, y);
+      ctx.stroke();
+    }
+    // Cap the ladder's bottom rail so it doesn't look like a broken pipe when
+    // it's retracting.
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(ladderX - railHalf, ladderBottom);
+    ctx.lineTo(ladderX + railHalf, ladderBottom);
+    ctx.stroke();
   }
 
   private drawPanel(x: number, y: number, w: number, h: number): void {

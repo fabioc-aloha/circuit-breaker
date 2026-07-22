@@ -165,6 +165,7 @@ function loop(now: number): void {
     bootText: null,
     cutsceneText: game.cutscene?.text ?? null,
     muted: audio.muted,
+    kong: game.kong,
     time: now,
   });
   requestAnimationFrame(loop);

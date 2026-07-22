@@ -1,6 +1,6 @@
 // CIRCUIT BREAKER — tetrominoes + SRS rotation system
-import type { ActivePiece, PieceKind, Point, Rotation } from './types';
 import { COLS, HIDDEN_ROWS } from './constants';
+import type { ActivePiece, PieceKind, Point, Rotation } from './types';
 
 // Piece shapes at rotation 0 as offsets from piece origin (top-left of bounding box)
 // SRS reference: https://tetris.wiki/Super_Rotation_System
@@ -101,11 +101,36 @@ export function kicksFor(kind: PieceKind, from: Rotation, to: Rotation): Point[]
   return kicks.map((k) => P(k.x, -k.y));
 }
 
-export function spawnPiece(kind: PieceKind): ActivePiece {
+export function spawnPiece(kind: PieceKind, xOverride?: number): ActivePiece {
   // Spawn horizontally centered in the hidden rows so I fits properly.
   const spawnY = HIDDEN_ROWS - 2; // pieces begin partially in hidden area
-  const spawnX = Math.floor((COLS - 4) / 2); // 3 for 10-wide board
+  const defaultX = Math.floor((COLS - 4) / 2); // 3 for 10-wide board
+  const spawnX = xOverride !== undefined ? clampSpawnX(kind, xOverride) : defaultX;
   return { kind, rotation: 0, x: spawnX, y: spawnY };
+}
+
+/**
+ * Returns [minX, maxX] — the inclusive range of piece.x values that keep every
+ * cell of the piece (at rotation 0) inside the board horizontally.
+ */
+export function spawnRangeX(kind: PieceKind): [number, number] {
+  const shape = SHAPES[kind][0];
+  let minCell = Infinity;
+  let maxCell = -Infinity;
+  for (const c of shape) {
+    if (c.x < minCell) minCell = c.x;
+    if (c.x > maxCell) maxCell = c.x;
+  }
+  // `+ 0` normalizes negative zero to positive zero so callers/tests using
+  // Object.is-style equality don't trip on `-0 !== 0`.
+  return [-minCell + 0, COLS - 1 - maxCell];
+}
+
+function clampSpawnX(kind: PieceKind, x: number): number {
+  const [minX, maxX] = spawnRangeX(kind);
+  if (x < minX) return minX;
+  if (x > maxX) return maxX;
+  return x;
 }
 
 /** 7-bag randomizer. */

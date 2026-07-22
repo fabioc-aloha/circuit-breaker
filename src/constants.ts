@@ -12,9 +12,13 @@ export const BOARD_PX_W = COLS * CELL;   // 300
 export const BOARD_PX_H = ROWS * CELL;   // 600
 export const SIDE_PANEL_W = 200;
 export const HUD_PADDING = 20;
+// Vertical strip above the board where Kong paces and throws pieces down.
+// Sized to fit the sprite-rendered Kong (KONG_HEIGHT = 100 canvas px) plus a
+// small margin above his crown.
+export const KONG_LEDGE_H = 112;
 
 export const CANVAS_W = SIDE_PANEL_W + HUD_PADDING * 2 + BOARD_PX_W + HUD_PADDING * 2 + SIDE_PANEL_W;
-export const CANVAS_H = BOARD_PX_H + HUD_PADDING * 2 + 60; // extra bottom room for boot/game-over
+export const CANVAS_H = BOARD_PX_H + HUD_PADDING * 2 + 60 + KONG_LEDGE_H; // extra top room for Kong
 
 // Timings (ms)
 export const LOCK_DELAY_MS = 500;
