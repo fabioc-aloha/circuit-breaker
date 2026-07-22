@@ -3,11 +3,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import {
-  createDelayedQuoteService,
-  fetchDelayedQuote,
-  normalizeYahooQuote,
-  QUOTE_RESPONSE_CACHE_CONTROL,
-  QUOTE_SYMBOLS,
+    createDelayedQuoteService,
+    fetchDelayedQuote,
+    normalizeYahooQuote,
+    QUOTE_RESPONSE_CACHE_CONTROL,
+    QUOTE_SYMBOLS,
 } from '../api/src/quotes.js';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -33,6 +33,7 @@ test('normalizes delayed provider data into a direction-safe quote', () => {
         meta: {
           chartPreviousClose: 400,
           regularMarketPrice: 410,
+          regularMarketTime: 1_700_000_000,
         },
       }],
     },
@@ -43,7 +44,34 @@ test('normalizes delayed provider data into a direction-safe quote', () => {
     price: 410,
     changePercent: 2.5,
     direction: 'up',
+    marketTime: '2023-11-14T22:13:20.000Z',
   });
+});
+
+test('uses the latest provider market time as the quote response timestamp', async () => {
+  const quotes = createDelayedQuoteService({
+    fetchImpl: async (_url) => ({
+      ok: true,
+      async json() {
+        return {
+          chart: {
+            result: [{
+              meta: {
+                chartPreviousClose: 100,
+                regularMarketPrice: 101,
+                regularMarketTime: 1_700_000_000,
+              },
+            }],
+          },
+        };
+      },
+    }),
+    now: () => 1_800_000_000_000,
+  });
+
+  const result = await quotes.getDelayedQuotes();
+
+  assert.equal(result.asOf, '2023-11-14T22:13:20.000Z');
 });
 
 test('caches delayed quote provider responses for five minutes', async () => {
@@ -93,6 +121,24 @@ test('retries transient provider failures with exponential backoff', async () =>
   assert.equal(quote.symbol, 'MSFT');
   assert.equal(attempts, 3);
   assert.deepEqual(delays, [165, 330]);
+});
+
+test('does not retry malformed provider quote data', async () => {
+  let attempts = 0;
+
+  await assert.rejects(
+    fetchDelayedQuote('MSFT', async () => {
+      attempts += 1;
+      return {
+        ok: true,
+        async json() {
+          return { chart: { result: [{ meta: { chartPreviousClose: 100 } }] } };
+        },
+      };
+    }, { sleep: async () => {} }),
+  );
+
+  assert.equal(attempts, 1);
 });
 
 test('limits concurrent provider requests during a refresh', async () => {

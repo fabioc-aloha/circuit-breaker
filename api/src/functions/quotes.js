@@ -15,7 +15,7 @@ app.http('quotes', {
     } catch {
       return {
         status: 503,
-        jsonBody: { quotes: [], delayed: true },
+        jsonBody: { quotes: [], indicative: true },
         headers: { 'Cache-Control': 'no-store' },
       };
     }

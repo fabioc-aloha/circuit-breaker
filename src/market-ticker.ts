@@ -3,12 +3,14 @@ export interface MarketQuote {
   price: number;
   changePercent: number;
   direction: 'up' | 'down' | 'flat';
+  marketTime?: string;
 }
 
 export interface TickerSegment {
   type: 'phrase' | 'quote';
   text: string;
   direction?: MarketQuote['direction'];
+  marketTime?: string;
 }
 
 export const QUOTE_FETCH_OPTIONS = { cache: 'default' } as const;
@@ -40,7 +42,12 @@ export function buildTickerSegments(quotes: MarketQuote[]): TickerSegment[] {
     const text = ARCADE_PHRASES[quoteIndex % ARCADE_PHRASES.length];
     segments.push({ type: 'phrase', text });
     const quote = quotes[quoteIndex];
-    segments.push({ type: 'quote', text: formatQuote(quote), direction: quote.direction });
+    segments.push({
+      type: 'quote',
+      text: formatQuote(quote),
+      direction: quote.direction,
+      ...(quote.marketTime ? { marketTime: quote.marketTime } : {}),
+    });
   }
   return segments;
 }
@@ -57,7 +64,8 @@ function isMarketQuote(value: unknown): value is MarketQuote {
     && Number.isFinite(quote.price)
     && typeof quote.changePercent === 'number'
     && Number.isFinite(quote.changePercent)
-    && (quote.direction === 'up' || quote.direction === 'down' || quote.direction === 'flat');
+    && (quote.direction === 'up' || quote.direction === 'down' || quote.direction === 'flat')
+    && (quote.marketTime === undefined || typeof quote.marketTime === 'string');
 }
 
 function renderTicker(track: HTMLElement, segments: TickerSegment[]): void {
@@ -71,7 +79,11 @@ function renderTicker(track: HTMLElement, segments: TickerSegment[]): void {
       const item = document.createElement('span');
       item.className = `ticker-segment ticker-${segment.type}${segment.direction ? ` ticker-${segment.direction}` : ''}`;
       item.textContent = `◆ ${segment.text} `;
-      if (segment.type === 'quote') item.title = 'Delayed market quote';
+      if (segment.type === 'quote') {
+        item.title = segment.marketTime
+          ? `Indicative quote as of ${new Date(segment.marketTime).toLocaleString()}`
+          : 'Indicative market quote';
+      }
       loop.append(item);
     }
     track.append(loop);

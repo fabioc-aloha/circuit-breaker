@@ -1,6 +1,6 @@
 # ⚡ CIRCUIT BREAKER — Plan
 
-## Implementation tracker
+## Delivery record
 
 **Last assessed:** 2026-07-22
 
@@ -16,7 +16,7 @@
 | Complete | Garbage tuning | Garbage attacks now use the planned 1-4 row range, with maximum-displacement regression coverage. |
 | Decided | Tooling | ESLint and Prettier are excluded: strict TypeScript, focused Node tests, and the built-site validator provide the current quality gate without extra dependencies. |
 
-**Next sequence:** the implementation plan is complete. Revisit the accepted
+**Current state:** the implementation plan is complete. Revisit the accepted
 soundtrack decision only if a non-boss gameplay phase is added.
 
 Run `npm run check` after every implementation update. For tracker, SEO, CSP,
@@ -132,7 +132,7 @@ tetris/
 
 ### Theme-specific
 
-- Boss Rush progression (5+ bosses)
+- Boss Rush progression (five bosses)
 - Boss HP bar + damage-per-clear
 - Boss attack patterns (garbage, speed surge, fog, scramble)
 - Neon glow, scanlines, particle FX on clears
@@ -141,10 +141,11 @@ tetris/
 ### Audio (procedural — Web Audio API, zero assets)
 
 - **SFX (synthesized):** move blip, rotate click, soft-drop tick, hard-drop thud+zap, lock clink, line-clear zap, Tetris BOOM ("MAIN BREAKER TRIPPED"), hold swoosh, level-up/boss-defeat fanfare, boss-attack alarm, game-over power-down whine, UI blip
-- **BGM (synthesized):** driving synthwave arpeggio (~110–120 BPM, minor key)
-  - **Main theme** during normal play
-  - **Boss theme** — aggressive bassline during boss fights
-  - **Low-HP variant** — tempo bumps when BOSS INTEGRITY < 25%
+- **BGM (synthesized):** a 100 BPM main mix, a 132 BPM boss mix, and a 150 BPM
+  low-integrity boss variant; the run begins in the boss mix because every level is a boss encounter
+  - **Main theme** after victory
+  - **Boss theme** during every encounter
+  - **Low-integrity variant** when BOSS INTEGRITY < 25%
   - Short game-over fade stinger
 - **Controls:** `M` mute toggle; separate SFX/BGM sliders; volumes persisted in localStorage
 - **Autoplay:** audio starts on first user input (browser policy compliance)

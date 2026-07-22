@@ -6,8 +6,8 @@
 ![TypeScript, Canvas, and WebAudio](https://img.shields.io/badge/stack-TypeScript%20%2B%20Canvas%20%2B%20WebAudio-00f0ff?style=for-the-badge&labelColor=05010f)
 ![Zero runtime dependencies](https://img.shields.io/badge/deps-zero-ffe066?style=for-the-badge&labelColor=05010f)
 
-*A high-voltage cyberpunk block-stacker with **Boss Rush** mode. Stack the
-current. Trip the mainframe.*
+*A high-voltage cyberpunk block-stacker with **Boss Rush** mode. Build the
+stack. Break the circuit. Take down the mainframe.*
 
 ---
 
@@ -19,13 +19,13 @@ Or run it locally:
 
 ```bash
 npm install
-npm run dev          # http://localhost:5173
+npm run dev # http://localhost:5173
 ```
 
 Ship a static bundle:
 
 ```bash
-npm run build        # → dist/
+npm run build # dist/
 npm run preview
 ```
 
@@ -43,15 +43,16 @@ npm run preview
 | M             | Mute audio      |
 | R             | Restart run     |
 
-Click or press any key to boot up the cabinet -- the browser needs a user gesture before the audio graph starts.
+Click or press any key to boot the cabinet. The browser requires a user gesture
+before it can start the audio graph.
 
 ## 🕹️ Features
 
 ### Modern block-stacker fundamentals
 
-- 7 tetrominoes with full **SRS rotation + wall-kick tables** (JLSTZ + I)
-- **7-bag randomizer**, hold piece (one-swap-per-drop), ghost preview, next-3 queue
-- Combo tracker (⚡ **AMPERAGE ×N**), boss-driven voltage tiers and gravity, local high score
+- Seven tetrominoes with full **SRS rotation + wall-kick tables** for JLSTZ and I
+- **7-bag randomizer**, one-swap-per-drop hold, ghost preview, and next-three queue
+- **AMPERAGE xN** combo tracker, boss-driven voltage tiers and gravity, and a local high score
 
 ### Boss Rush
 
@@ -76,13 +77,19 @@ and gravity curve; the BGM drops to a frantic *boss-low* mix under 25% HP.
 ### The look
 
 - Circuit-trace animated background, CRT scanlines, screen shake, chromatic flash
-- **Neon Pacman line-clear** -- one chomping cyberpunk Pacman per cleared row, alternating direction, RGB-split, glowing pellet trail; a Tetris summons a giant breaker Pacman with three foreground lightning arcs
+- **Neon Pacman line clear** -- one chomping cyberpunk Pacman per cleared row, alternating direction, RGB split, and glowing pellet trail; a Tetris summons a giant breaker Pacman with foreground lightning arcs
 - `MAIN BREAKER TRIPPED` four-line-clear banner, circuit lightning, particles, screen shake, and chromatic flash
 - A large top-layer Grid Wraith roams the board briefly when a run ends, then dissolves into the cabinet glow
-- Delayed quotes for an AI-focused basket (`MSFT`, `NVDA`, `GOOGL`, `AMZN`, `META`, `AMD`, `AVGO`, `ORCL`, `PLTR`, `TSM`) alternate with arcade phrases in the ticker crawl
-- Quote data comes from the first-party `/api/quotes` endpoint with a five-minute server cache, short browser/edge cache, bounded retries, and an arcade-only fallback when unavailable
-- The cabinet's `INSERT COIN` slot links to *Loop Engineering* on Amazon; no purchase interaction is tracked
+- Indicative quotes for an AI-focused basket alternate with arcade phrases in the ticker crawl
+- The cabinet's `INSERT COIN` slot links to *Loop Engineering* on Amazon
 - Responsive arcade cabinet chrome with animated marquee, occasional blinking lights, scrolling ticker, bezel reflection, and corner screws
+
+### Ticker and privacy
+
+- The browser calls only the first-party `/api/quotes` endpoint; it never contacts the quote provider directly.
+- The server returns indicative quotes for `MSFT`, `NVDA`, `GOOGL`, `AMZN`, `META`, `AMD`, `AVGO`, `ORCL`, `PLTR`, and `TSM`, with a five-minute server cache, a short browser/edge cache, and bounded retries.
+- If quote retrieval fails, the ticker continues with arcade phrases and gameplay remains unaffected.
+- Ticker values and interaction are not tracked. The Amazon purchase link is not tracked either.
 
 ## 🛠️ Tech
 
@@ -103,7 +110,7 @@ src/
 ├── effects.ts        # particles, lightning, announcements, Pacman runs
 ├── renderer.ts       # canvas draw pipeline
 ├── input.ts          # keyboard + DAS/ARR
-├── market-ticker.ts  # arcade phrase and delayed quote ticker
+├── market-ticker.ts  # arcade phrase and indicative quote ticker
 ├── audio/
 │   ├── audio.ts      # graph, mixer persistence, reverb bus, compressor
 │   ├── music.ts      # synthwave sequencer
@@ -111,8 +118,8 @@ src/
 └── ...
 
 api/
-├── src/quotes.js      # cached, bounded-concurrency delayed quote adapter
-└── src/functions/     # Azure Static Web Apps quote endpoint
+├── src/quotes.js      # cached, bounded-concurrency indicative quote adapter
+└── src/functions/     # Azure Functions v4 quote endpoint
 ```
 
 ## 🚀 Deploy

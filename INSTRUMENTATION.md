@@ -20,20 +20,22 @@ Last updated: 2026-07-22.
 
 Circuit Breaker is a one-page browser game. It has no accounts, forms, cloud saves,
 or client-side router. Tracking exists to measure discovery of the public homepage,
-not gameplay. Its only backend endpoint is a cached delayed-market-data feed used for
+not gameplay. Its only backend endpoint is a cached indicative-market-data feed used for
 the decorative arcade ticker.
 
-## Delayed Market Data
+## Indicative Market Data
 
 - The browser requests only the first-party `/api/quotes` endpoint.
-- The endpoint fetches delayed quotes server-side, applies a three-second request
+- The endpoint fetches indicative quotes server-side, applies a three-second request
   deadline, a two-request concurrency limit, and bounded jittered exponential retries.
   It caches normalized results for five minutes; the public response has a short
   60-second browser/edge cache. It returns only symbol, price, percentage change,
-  direction, and timestamp.
+  direction, and provider market timestamp when available.
 - The configured AI-focused universe is `MSFT`, `NVDA`, `GOOGL`, `AMZN`, `META`,
   `AMD`, `AVGO`, `ORCL`, `PLTR`, and `TSM`.
 - The browser never contacts the quote provider directly and no provider key is exposed.
+- Quotes are presented as indicative. The response `asOf` value uses the latest provider
+  market timestamp when available, otherwise the cache refresh time.
 - Quote fetch failures retain the normal arcade crawl; they do not block or change play.
 - The ticker has no event telemetry. Quote symbols, values, or ticker interaction must
   never be attached to the tracker payload.
@@ -126,7 +128,7 @@ unapproved field, or if the tracker causes a game regression.
 - Game-only changes ship normally when tracker tests remain green.
 - Changes to paths, storage, CSP, tracker scripts, or activation require the full local
   validation gate.
-- Changes to the delayed quote provider, cache policy, or API response contract require
+- Changes to the indicative quote provider, cache policy, or API response contract require
   the full local validation gate and must preserve the first-party browser boundary.
 - New events, fields, retention, joins, or identity require a portfolio contract change
   in `seo-correax` and `analytics-correax` before site implementation.

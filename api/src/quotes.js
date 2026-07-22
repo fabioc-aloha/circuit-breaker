@@ -7,13 +7,24 @@ const BASE_BACKOFF_MS = 150;
 const MAX_CONCURRENT_REQUESTS = 2;
 export const QUOTE_RESPONSE_CACHE_CONTROL = 'public, max-age=60, s-maxage=60';
 
+function quoteValidationError(symbol) {
+  const error = new Error(`Invalid indicative quote for ${symbol}`);
+  error.retryable = false;
+  return error;
+}
+
 export function normalizeYahooQuote(symbol, payload) {
   const meta = payload?.chart?.result?.[0]?.meta;
   const price = Number(meta?.regularMarketPrice);
   const previousClose = Number(meta?.chartPreviousClose);
   if (!Number.isFinite(price) || price <= 0 || !Number.isFinite(previousClose) || previousClose <= 0) {
-    throw new Error(`Invalid delayed quote for ${symbol}`);
+    throw quoteValidationError(symbol);
   }
+
+  const providerMarketTime = Number(meta?.regularMarketTime);
+  const marketTime = Number.isFinite(providerMarketTime) && providerMarketTime > 0
+    ? new Date(providerMarketTime * 1_000).toISOString()
+    : undefined;
 
   const changePercent = Number((((price - previousClose) / previousClose) * 100).toFixed(2));
   return {
@@ -21,6 +32,7 @@ export function normalizeYahooQuote(symbol, payload) {
     price: Number(price.toFixed(2)),
     changePercent,
     direction: changePercent > 0 ? 'up' : changePercent < 0 ? 'down' : 'flat',
+    ...(marketTime ? { marketTime } : {}),
   };
 }
 
@@ -118,10 +130,16 @@ export function createDelayedQuoteService(options = {}) {
     const quotes = results.flatMap((result) => result.status === 'fulfilled' ? [result.value] : []);
     if (quotes.length === 0) throw new Error('No delayed quotes available');
 
+    const providerTimes = quotes
+      .map((quote) => quote.marketTime ? Date.parse(quote.marketTime) : NaN)
+      .filter(Number.isFinite);
+    const asOf = providerTimes.length > 0
+      ? new Date(Math.max(...providerTimes)).toISOString()
+      : new Date(now()).toISOString();
     const value = {
       quotes,
-      delayed: true,
-      asOf: new Date(now()).toISOString(),
+      indicative: true,
+      asOf,
     };
     cachedQuotes = { cachedAt: now(), value };
     return value;
