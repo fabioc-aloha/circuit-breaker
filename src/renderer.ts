@@ -69,12 +69,14 @@ export class Renderer {
     ctx.translate(shake.x, shake.y);
 
     this.drawBackground(s);
-    this.drawLightning();
+    this.drawLightning(false);
     this.drawLeftPanel(s);
     this.drawBoard(s);
     this.drawRightPanel(s);
     this.drawPacmen(s.time);
     this.drawParticles();
+    this.drawLightning(true);
+    this.drawGameOverWraith(s.time);
     this.drawScanlines();
 
     ctx.restore();
@@ -89,7 +91,7 @@ export class Renderer {
     const announcement = this.effects.currentAnnouncement();
     if (announcement) this.drawAnnouncement(announcement);
     if (s.paused) this.drawCenterBanner('⏸ PAUSED', 'PRESS P TO RESUME');
-    if (s.gameOver) this.drawCenterBanner('⚡ CIRCUIT BROKEN ⚡', 'PRESS R TO REBOOT');
+    if (s.gameOver) this.drawCenterBanner('⚡ CIRCUIT BROKEN ⚡', 'PRESS R TO REBOOT', 0.58);
     if (s.victory) this.drawCenterBanner('▲ GRID CLEARED ▲', 'PRESS R FOR NEW RUN');
     if (s.cutsceneText) this.drawCutscene(s.cutsceneText);
     if (s.muted) this.drawMuteBadge();
@@ -120,10 +122,10 @@ export class Renderer {
     }
   }
 
-  private drawLightning(): void {
+  private drawLightning(foreground: boolean): void {
     const ctx = this.ctx;
     for (const bolt of this.effects.lightning) {
-      if (bolt.points.length < 2) continue;
+      if (bolt.foreground !== foreground || bolt.points.length < 2) continue;
       ctx.save();
       ctx.globalAlpha = Math.max(0, bolt.life);
       ctx.strokeStyle = bolt.color;
@@ -593,11 +595,11 @@ export class Renderer {
     ctx.restore();
   }
 
-  private drawCenterBanner(title: string, sub: string): void {
+  private drawCenterBanner(title: string, sub: string, panelOpacity = 0.88): void {
     const ctx = this.ctx;
     const cx = this.boardX + BOARD_PX_W / 2;
     const cy = this.boardY + BOARD_PX_H / 2;
-    ctx.fillStyle = 'rgba(5,1,15,0.88)';
+    ctx.fillStyle = `rgba(5,1,15,${panelOpacity})`;
     ctx.fillRect(this.boardX, cy - 66, BOARD_PX_W, 132);
     ctx.strokeStyle = COLORS.cyan;
     ctx.strokeRect(this.boardX + 0.5, cy - 66 + 0.5, BOARD_PX_W - 1, 132 - 1);
@@ -626,6 +628,64 @@ export class Renderer {
     ctx.fillText(sub, cx, cy + 29);
     ctx.textAlign = 'start';
     ctx.shadowBlur = 0;
+  }
+
+  private drawGameOverWraith(timeMs: number): void {
+    const wraith = this.effects.currentGameOverWraith();
+    if (!wraith) return;
+
+    const ctx = this.ctx;
+    const progress = Math.max(0, Math.min(1, wraith.remainingMs / wraith.durationMs));
+    const alpha = Math.min(0.72, (1 - progress) * 3, progress * 2.5);
+    const driftX = Math.sin(timeMs * 0.004) * 38;
+    const driftY = Math.cos(timeMs * 0.005) * 24;
+    const half = wraith.size / 2;
+    const x = wraith.centerX + driftX;
+    const y = wraith.centerY + driftY;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(Math.sin(timeMs * 0.003) * 0.08);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#a970ff';
+    ctx.shadowColor = '#a970ff';
+    ctx.shadowBlur = 26;
+    ctx.beginPath();
+    ctx.moveTo(-half * 0.64, half * 0.54);
+    ctx.lineTo(-half * 0.62, -half * 0.06);
+    ctx.quadraticCurveTo(-half * 0.48, -half * 0.72, 0, -half * 0.78);
+    ctx.quadraticCurveTo(half * 0.48, -half * 0.72, half * 0.62, -half * 0.06);
+    ctx.lineTo(half * 0.62, half * 0.52);
+    ctx.lineTo(half * 0.28, half * 0.24);
+    ctx.lineTo(half * 0.04, half * 0.6);
+    ctx.lineTo(-half * 0.22, half * 0.2);
+    ctx.lineTo(-half * 0.48, half * 0.58);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.globalAlpha = alpha * 0.8;
+    ctx.strokeStyle = '#00f0ff';
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-half * 0.5, half * 0.44);
+    ctx.lineTo(-half * 0.4, -half * 0.15);
+    ctx.lineTo(0, -half * 0.54);
+    ctx.lineTo(half * 0.4, -half * 0.15);
+    ctx.lineTo(half * 0.5, half * 0.44);
+    ctx.stroke();
+
+    ctx.fillStyle = '#05010f';
+    ctx.shadowBlur = 0;
+    ctx.fillRect(-half * 0.35, -half * 0.08, half * 0.22, half * 0.18);
+    ctx.fillRect(half * 0.13, -half * 0.08, half * 0.22, half * 0.18);
+    ctx.fillStyle = '#e6f8ff';
+    ctx.shadowColor = '#e6f8ff';
+    ctx.shadowBlur = 8;
+    ctx.fillRect(-half * 0.3, -half * 0.04, half * 0.12, half * 0.07);
+    ctx.fillRect(half * 0.18, -half * 0.04, half * 0.12, half * 0.07);
+    ctx.restore();
   }
 
   private drawAnnouncement(announcement: NonNullable<ReturnType<EffectsManager['currentAnnouncement']>>): void {

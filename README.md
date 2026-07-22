@@ -76,8 +76,9 @@ and gravity curve; the BGM drops to a frantic *boss-low* mix under 25% HP.
 ### The look
 
 - Circuit-trace animated background, CRT scanlines, screen shake, chromatic flash
-- **Neon Pacman line-clear** -- one chomping cyberpunk Pacman per cleared row, alternating direction, RGB-split, glowing pellet trail; a Tetris summons a giant breaker Pacman
+- **Neon Pacman line-clear** -- one chomping cyberpunk Pacman per cleared row, alternating direction, RGB-split, glowing pellet trail; a Tetris summons a giant breaker Pacman with three foreground lightning arcs
 - `MAIN BREAKER TRIPPED` four-line-clear banner, circuit lightning, particles, screen shake, and chromatic flash
+- A large drifting Grid Wraith appears briefly when a run ends, then dissolves into the cabinet glow
 - Responsive arcade cabinet chrome with animated marquee, chase lights, scrolling ticker, bezel reflection, and corner screws
 
 ## 🛠️ Tech

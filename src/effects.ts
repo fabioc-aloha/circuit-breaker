@@ -6,11 +6,20 @@ export interface LightningBolt {
   life: number;
   color: string;
   width: number;
+  foreground: boolean;
 }
 
 export interface Announcement {
   title: string;
   subtitle: string;
+  remainingMs: number;
+  durationMs: number;
+}
+
+export interface GameOverWraith {
+  centerX: number;
+  centerY: number;
+  size: number;
   remainingMs: number;
   durationMs: number;
 }
@@ -34,6 +43,7 @@ export class EffectsManager {
   pacmen: PacmanRun[] = [];
   lightning: LightningBolt[] = [];
   announcement: Announcement | null = null;
+  gameOverWraith: GameOverWraith | null = null;
   shakeAmp = 0;
   shakeUntil = 0;
   flashAmp = 0;
@@ -47,6 +57,7 @@ export class EffectsManager {
     endY: number,
     color = '#e6f8ff',
     width = 1.5,
+    foreground = false,
   ): void {
     const distance = Math.hypot(endX - startX, endY - startY);
     const segments = Math.max(3, Math.ceil(distance / 28));
@@ -64,11 +75,15 @@ export class EffectsManager {
       });
     }
     points.push({ x: endX, y: endY });
-    this.lightning.push({ points, life: 1, color, width });
+    this.lightning.push({ points, life: 1, color, width, foreground });
   }
 
   showAnnouncement(title: string, subtitle: string, durationMs: number): void {
     this.announcement = { title, subtitle, remainingMs: durationMs, durationMs };
+  }
+
+  spawnGameOverWraith(centerX: number, centerY: number, size = 76, durationMs = 1_800): void {
+    this.gameOverWraith = { centerX, centerY, size, remainingMs: durationMs, durationMs };
   }
 
   spawnPacman(startX: number, y: number, endX: number, color: string, size = 14): void {
@@ -77,6 +92,11 @@ export class EffectsManager {
 
   spawnBreakerPacman(startX: number, y: number, endX: number, color: string, size = 48): void {
     this.createPacman(startX, y, endX, color, size, 'breaker', 42);
+    const boltOffsets = [-size / 2, 0, size / 2];
+    const boltColors = [color, '#00f0ff', '#ff2bd6'];
+    for (let index = 0; index < boltOffsets.length; index++) {
+      this.spawnLightning(startX, y + boltOffsets[index], endX, y + boltOffsets[index], boltColors[index], 2.2, true);
+    }
   }
 
   private createPacman(
@@ -157,6 +177,10 @@ export class EffectsManager {
       this.announcement.remainingMs -= dtMs;
       if (this.announcement.remainingMs <= 0) this.announcement = null;
     }
+    if (this.gameOverWraith) {
+      this.gameOverWraith.remainingMs -= dtMs;
+      if (this.gameOverWraith.remainingMs <= 0) this.gameOverWraith = null;
+    }
 
     for (const bolt of this.lightning) bolt.life -= 0.045 * dt;
     this.lightning = this.lightning.filter((bolt) => bolt.life > 0);
@@ -197,6 +221,10 @@ export class EffectsManager {
 
   currentAnnouncement(): Announcement | null {
     return this.announcement;
+  }
+
+  currentGameOverWraith(): GameOverWraith | null {
+    return this.gameOverWraith;
   }
 
   currentShake(): { x: number; y: number } {

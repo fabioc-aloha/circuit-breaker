@@ -9,7 +9,7 @@
 | Complete | Core block-stacker | Seven-bag, SRS, collision, hold, ghost, scoring, gravity, pause, restart, and local high score are implemented. |
 | Complete | Boss Rush | Five bosses, boss-driven voltage tiers, distinct HUD silhouettes, integrity, damage, attacks, cutscenes, victory, and terminal-state regression coverage are implemented. |
 | Complete | Audio baseline | Procedural SFX/BGM, mute persistence, boss-low mode, and autoplay-safe boot are implemented. |
-| Complete | Visual baseline | Responsive cabinet framing, HUD hierarchy, bezel reflection and screws, circuit-grid background, ambient and boot lightning, neon blocks, scanlines, particles, flash, shake, row Pacmen, the giant Tetris breaker Pacman, boot text, and favicon are implemented. |
+| Complete | Visual baseline | Responsive cabinet framing, HUD hierarchy, bezel reflection and screws, circuit-grid background, ambient and boot lightning, neon blocks, scanlines, particles, flash, shake, row Pacmen, the giant Tetris breaker Pacman with foreground lightning arcs, the game-over Grid Wraith, boot text, and favicon are implemented. |
 | Complete | Delivery | Vite build, static deployment configuration, SEO assets, privacy-safe visit instrumentation, and the local validation gate are implemented. |
 | Complete | Audio controls | Master, SFX, and BGM sliders persist through `AudioManager.setVolumes()`; the mute control stays synchronized with the `M` shortcut. |
 | Complete | Tetris feedback | Four-line clears trigger the visible `MAIN BREAKER TRIPPED` / `FOUR-LINE OVERLOAD` announcement, giant breaker Pacman, flash, shake, and boom. |

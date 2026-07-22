@@ -42,12 +42,20 @@ function createGame() {
 function createGameWithEffects() {
   const effects = {
     breakerRuns: 0,
+    breakerY: null,
+    breakerSize: null,
+    wraithRuns: 0,
     flash() {},
     shake() {},
     spawnLineBurst() {},
     showAnnouncement() {},
-    spawnBreakerPacman() {
+    spawnGameOverWraith() {
+      this.wraithRuns += 1;
+    },
+    spawnBreakerPacman(_startX, y, _endX, _color, size) {
       this.breakerRuns += 1;
+      this.breakerY = y;
+      this.breakerSize = size;
     },
     spawnPacman() {},
     spawnSpark() {},
@@ -109,6 +117,24 @@ test('shows and expires the four-line-clear announcement', () => {
   assert.equal(effects.currentAnnouncement(), null);
 });
 
+test('spawns and expires the game-over Grid Wraith', () => {
+  const effects = new EffectsManager();
+
+  effects.spawnGameOverWraith(400, 320, 76, 1_800);
+
+  assert.deepEqual(effects.currentGameOverWraith(), {
+    centerX: 400,
+    centerY: 320,
+    size: 76,
+    remainingMs: 1_800,
+    durationMs: 1_800,
+  });
+
+  effects.update(1_800);
+
+  assert.equal(effects.currentGameOverWraith(), null);
+});
+
 test('creates an oversized breaker Pacman for a Tetris', () => {
   const effects = new EffectsManager();
 
@@ -117,6 +143,9 @@ test('creates an oversized breaker Pacman for a Tetris', () => {
   assert.equal(effects.pacmen.length, 1);
   assert.equal(effects.pacmen[0].variant, 'breaker');
   assert.equal(effects.pacmen[0].size, 48);
+  assert.equal(effects.lightning.length, 3);
+  assert.deepEqual(effects.lightning.map((bolt) => bolt.foreground), [true, true, true]);
+  assert.deepEqual(effects.lightning.map((bolt) => bolt.color), ['#ffe600', '#00f0ff', '#ff2bd6']);
 });
 
 test('assigns each boss a distinct HUD silhouette', () => {
@@ -186,6 +215,8 @@ test('replaces row Pacmen with one breaker Pacman for a four-line clear', () => 
   game.lockAndAdvance();
 
   assert.equal(effects.breakerRuns, 1);
+  assert.equal(effects.breakerY, 560);
+  assert.equal(effects.breakerSize, 60);
 });
 
 test('does not increase voltage tier from cleared-line thresholds', () => {
@@ -216,7 +247,7 @@ test('increases voltage tier after defeating a boss', () => {
 });
 
 test('ends the run when garbage displaces blocks above the board', () => {
-  const game = createGame();
+  const { game, effects } = createGameWithEffects();
   game.beginRun();
   game.board.grid[0][0] = 'T';
   const originalRandom = Math.random;
@@ -230,6 +261,7 @@ test('ends the run when garbage displaces blocks above the board', () => {
 
 
   assert.equal(game.phase, 'gameover');
+  assert.equal(effects.wraithRuns, 1);
 });
 
 test('keeps final-boss victory when the locking board is topped out', () => {

@@ -159,6 +159,12 @@ export class Game implements InputActions {
       this.effects.shake(rows === 4 ? 8 : 3, rows === 4 ? 400 : 200);
       const centerX = BOARD_PIXEL_ORIGIN_X + BOARD_PX_W / 2;
       const NEON_COLORS = ['#00f0ff', '#ff00e5', '#ffe066', '#00ff9f'];
+      const tetrisY = rows === 4
+        ? cleared.reduce(
+          (sum, rowIdx) => sum + BOARD_PIXEL_ORIGIN_Y + (rowIdx - HIDDEN_ROWS) * CELL + CELL / 2,
+          0,
+        ) / rows
+        : 0;
       for (let i = 0; i < cleared.length; i++) {
         const rowIdx = cleared[i];
         const y = BOARD_PIXEL_ORIGIN_Y + (rowIdx - HIDDEN_ROWS) * CELL + CELL / 2;
@@ -177,10 +183,10 @@ export class Game implements InputActions {
         this.effects.showAnnouncement('MAIN BREAKER TRIPPED', 'FOUR-LINE OVERLOAD', 900);
         this.effects.spawnBreakerPacman(
           BOARD_PIXEL_ORIGIN_X - 60,
-          BOARD_PIXEL_ORIGIN_Y + BOARD_PX_H * 0.48,
+          tetrisY,
           BOARD_PIXEL_ORIGIN_X + BOARD_PX_W + 60,
           '#ffe600',
-          Math.floor(CELL * 1.55),
+          CELL * 2,
         );
       } else {
         this.sfx.lineClear(rows);
@@ -280,7 +286,12 @@ export class Game implements InputActions {
   }
 
   private gameOver(): void {
+    if (this.phase === 'gameover') return;
     this.phase = 'gameover';
+    this.effects.spawnGameOverWraith(
+      BOARD_PIXEL_ORIGIN_X + BOARD_PX_W / 2,
+      BOARD_PIXEL_ORIGIN_Y + BOARD_PX_H / 2,
+    );
     this.sfx.gameOver();
     if (this.score > this.hiScore) {
       this.hiScore = this.score;
