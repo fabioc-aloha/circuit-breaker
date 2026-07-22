@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>⚡ CIRCUIT BREAKER</title>
+    <meta name="description" content="High-voltage cyberpunk block-stacker with Boss Rush mode." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='28'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="cabinet">
+        <div id="marquee">
+          <div class="marquee-frame">
+            <div class="chase-lights top" aria-hidden="true"></div>
+            <div class="marquee-inner">
+              <span class="bolt left" aria-hidden="true">⚡</span>
+              <h1 class="marquee-title" data-text="CIRCUIT BREAKER">CIRCUIT BREAKER</h1>
+              <span class="bolt right" aria-hidden="true">⚡</span>
+            </div>
+            <div class="chase-lights bottom" aria-hidden="true"></div>
+          </div>
+          <div class="ticker">
+            <div class="ticker-track">
+              <span>◆ HIGH VOLTAGE BLOCK STACKER ◆ BOSS RUSH PROTOCOL ◆ STACK THE CURRENT ◆ TRIP THE MAINFRAME ◆ INSERT COIN TO CONTINUE ◆ HIGH VOLTAGE BLOCK STACKER ◆ BOSS RUSH PROTOCOL ◆ STACK THE CURRENT ◆ TRIP THE MAINFRAME ◆ INSERT COIN TO CONTINUE ◆&nbsp;</span>
+              <span>◆ HIGH VOLTAGE BLOCK STACKER ◆ BOSS RUSH PROTOCOL ◆ STACK THE CURRENT ◆ TRIP THE MAINFRAME ◆ INSERT COIN TO CONTINUE ◆ HIGH VOLTAGE BLOCK STACKER ◆ BOSS RUSH PROTOCOL ◆ STACK THE CURRENT ◆ TRIP THE MAINFRAME ◆ INSERT COIN TO CONTINUE ◆&nbsp;</span>
+            </div>
+          </div>
+        </div>
+        <div id="screen-wrap">
+          <canvas id="game" width="800" height="720"></canvas>
+          <div id="boot" class="boot-overlay">
+            <pre id="boot-text"></pre>
+          </div>
+          <div id="hint">CLICK / PRESS ANY KEY TO INITIALIZE</div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
