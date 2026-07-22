@@ -6,13 +6,18 @@ import {
   createDelayedQuoteService,
   fetchDelayedQuote,
   normalizeYahooQuote,
+  QUOTE_RESPONSE_CACHE_CONTROL,
   QUOTE_SYMBOLS,
 } from '../api/src/quotes.js';
 
 const root = path.resolve(import.meta.dirname, '..');
 
 test('uses ten configured market symbols', () => {
-  assert.equal(QUOTE_SYMBOLS.length, 10);
+  assert.deepEqual(QUOTE_SYMBOLS, ['MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'AMD', 'AVGO', 'ORCL', 'PLTR', 'TSM']);
+});
+
+test('allows a short public cache for delayed quote responses', () => {
+  assert.equal(QUOTE_RESPONSE_CACHE_CONTROL, 'public, max-age=60, s-maxage=60');
 });
 
 test('declares the Azure Functions v4 entry point', () => {
@@ -82,11 +87,38 @@ test('retries transient provider failures with exponential backoff', async () =>
   }, {
     sleep: async (delay) => delays.push(delay),
     timeoutMs: 250,
+    random: () => 0.5,
   });
 
   assert.equal(quote.symbol, 'MSFT');
   assert.equal(attempts, 3);
-  assert.deepEqual(delays, [150, 300]);
+  assert.deepEqual(delays, [165, 330]);
+});
+
+test('limits concurrent provider requests during a refresh', async () => {
+  let activeRequests = 0;
+  let peakRequests = 0;
+  const quotes = createDelayedQuoteService({
+    maxConcurrentRequests: 2,
+    fetchImpl: async () => {
+      activeRequests += 1;
+      peakRequests = Math.max(peakRequests, activeRequests);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      activeRequests -= 1;
+      return {
+        ok: true,
+        async json() {
+          return { chart: { result: [{ meta: { chartPreviousClose: 100, regularMarketPrice: 101 } }] } };
+        },
+      };
+    },
+    now: () => 1_000,
+  });
+
+  const result = await quotes.getDelayedQuotes();
+
+  assert.equal(result.quotes.length, QUOTE_SYMBOLS.length);
+  assert.equal(peakRequests, 2);
 });
 
 test('coalesces concurrent cold-cache quote refreshes', async () => {

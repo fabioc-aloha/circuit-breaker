@@ -11,6 +11,8 @@ export interface TickerSegment {
   direction?: MarketQuote['direction'];
 }
 
+export const QUOTE_FETCH_OPTIONS = { cache: 'default' } as const;
+
 const ARCADE_PHRASES = [
   'INSERT COIN TO CONTINUE',
   'VIBE CODE DEPLOYED',
@@ -82,7 +84,7 @@ export async function initializeMarketTicker(): Promise<void> {
 
   renderTicker(track, buildTickerSegments([]));
   try {
-    const response = await fetch('/api/quotes', { cache: 'no-store' });
+    const response = await fetch('/api/quotes', QUOTE_FETCH_OPTIONS);
     if (!response.ok) return;
     const payload = await response.json() as { quotes?: unknown };
     if (!Array.isArray(payload.quotes)) return;

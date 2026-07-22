@@ -1,6 +1,10 @@
 // CIRCUIT BREAKER — visual effects (particles, screen shake, chromatic flash)
 import type { Particle } from './types';
 
+const MAX_PARTICLES = 600;
+const MAX_LIGHTNING = 12;
+const MAX_PACMEN = 8;
+
 export interface LightningBolt {
   points: { x: number; y: number }[];
   life: number;
@@ -82,6 +86,7 @@ export class EffectsManager {
       });
     }
     points.push({ x: endX, y: endY });
+    if (this.lightning.length >= MAX_LIGHTNING) this.lightning.shift();
     this.lightning.push({ points, life: 1, color, width, foreground });
   }
 
@@ -118,6 +123,7 @@ export class EffectsManager {
     const reverse = endX < startX;
     const distance = Math.abs(endX - startX);
     const vx = (reverse ? -1 : 1) * (distance / durationFrames);
+    if (this.pacmen.length >= MAX_PACMEN) this.pacmen.shift();
     this.pacmen.push({
       x: startX,
       y,
@@ -134,7 +140,8 @@ export class EffectsManager {
   }
 
   spawnSpark(x: number, y: number, color: string, count = 12, speed = 4): void {
-    for (let i = 0; i < count; i++) {
+    const particleCount = Math.min(count, MAX_PARTICLES - this.particles.length);
+    for (let i = 0; i < particleCount; i++) {
       const angle = Math.random() * Math.PI * 2;
       const v = speed * (0.4 + Math.random() * 0.9);
       this.particles.push({
@@ -150,7 +157,8 @@ export class EffectsManager {
   }
 
   spawnLineBurst(centerX: number, y: number, width: number, color: string, count = 40): void {
-    for (let i = 0; i < count; i++) {
+    const particleCount = Math.min(count, MAX_PARTICLES - this.particles.length);
+    for (let i = 0; i < particleCount; i++) {
       const x = centerX - width / 2 + Math.random() * width;
       const angle = Math.random() * Math.PI * 2;
       const v = 2 + Math.random() * 5;

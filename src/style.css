@@ -130,20 +130,19 @@ body {
 }
 .bolt.right { animation-delay: 0.65s; }
 
-/* -------- CHASE LIGHTS -------- */
+/* -------- MARQUEE LIGHTS -------- */
 .chase-lights {
   height: 8px;
   background-image: radial-gradient(circle, var(--cyan) 40%, transparent 45%);
   background-size: 20px 8px;
   background-repeat: repeat-x;
   filter: drop-shadow(0 0 6px var(--cyan));
-  opacity: 0.85;
-  animation: chase 1.2s linear infinite;
+  opacity: 0.42;
+  animation: marquee-blink 5s steps(1, end) infinite;
 }
 .chase-lights.bottom {
   background-image: radial-gradient(circle, var(--magenta) 40%, transparent 45%);
   filter: drop-shadow(0 0 6px var(--magenta));
-  animation-direction: reverse;
 }
 
 /* -------- TICKER -------- */
@@ -160,13 +159,12 @@ body {
   display: flex;
   width: max-content;
   white-space: nowrap;
-  animation: scroll-x 28s linear infinite;
+  animation: scroll-x 32s linear infinite;
   color: var(--yellow);
   font-size: 12px;
   letter-spacing: 3px;
   line-height: 22px;
   text-shadow: 0 0 6px var(--yellow);
-  will-change: transform;
 }
 
 .ticker-loop {
@@ -670,9 +668,10 @@ body {
   50%      { transform: scale(1.18); opacity: 0.7; }
 }
 
-@keyframes chase {
-  from { background-position: 0 0; }
-  to   { background-position: 20px 0; }
+@keyframes marquee-blink {
+  0%, 78%, 100% { opacity: 0.42; }
+  82%, 88% { opacity: 1; }
+  85%, 91% { opacity: 0.65; }
 }
 
 @keyframes scroll-x {

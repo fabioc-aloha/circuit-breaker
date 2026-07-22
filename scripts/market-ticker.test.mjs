@@ -19,12 +19,16 @@ function loadTypeScriptModule(filePath) {
   return module.exports;
 }
 
-const { buildTickerLoops, buildTickerSegments } = loadTypeScriptModule(path.join(root, 'src', 'market-ticker.ts'));
+const { buildTickerLoops, buildTickerSegments, QUOTE_FETCH_OPTIONS } = loadTypeScriptModule(path.join(root, 'src', 'market-ticker.ts'));
 
-test('uses the readable twenty-eight-second ticker crawl', () => {
+test('allows browser caching for delayed quote responses', () => {
+  assert.deepEqual(QUOTE_FETCH_OPTIONS, { cache: 'default' });
+});
+
+test('uses the comfortable thirty-two-second ticker crawl', () => {
   const css = fs.readFileSync(path.join(root, 'src', 'style.css'), 'utf8');
 
-  assert.match(css, /animation:\s*scroll-x\s+28s\s+linear\s+infinite/);
+  assert.match(css, /animation:\s*scroll-x\s+32s\s+linear\s+infinite/);
 });
 
 test('uses loop gap instead of terminal segment padding for a seamless reset', () => {

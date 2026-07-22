@@ -79,9 +79,10 @@ and gravity curve; the BGM drops to a frantic *boss-low* mix under 25% HP.
 - **Neon Pacman line-clear** -- one chomping cyberpunk Pacman per cleared row, alternating direction, RGB-split, glowing pellet trail; a Tetris summons a giant breaker Pacman with three foreground lightning arcs
 - `MAIN BREAKER TRIPPED` four-line-clear banner, circuit lightning, particles, screen shake, and chromatic flash
 - A large top-layer Grid Wraith roams the board briefly when a run ends, then dissolves into the cabinet glow
-- Delayed market quotes alternate with arcade phrases in the faster ticker crawl; quote failures fall back to the normal crawl
+- Delayed quotes for an AI-focused basket (`MSFT`, `NVDA`, `GOOGL`, `AMZN`, `META`, `AMD`, `AVGO`, `ORCL`, `PLTR`, `TSM`) alternate with arcade phrases in the ticker crawl
+- Quote data comes from the first-party `/api/quotes` endpoint with a five-minute server cache, short browser/edge cache, bounded retries, and an arcade-only fallback when unavailable
 - The cabinet's `INSERT COIN` slot links to *Loop Engineering* on Amazon; no purchase interaction is tracked
-- Responsive arcade cabinet chrome with animated marquee, chase lights, scrolling ticker, bezel reflection, and corner screws
+- Responsive arcade cabinet chrome with animated marquee, occasional blinking lights, scrolling ticker, bezel reflection, and corner screws
 
 ## 🛠️ Tech
 
@@ -102,6 +103,7 @@ src/
 ├── effects.ts        # particles, lightning, announcements, Pacman runs
 ├── renderer.ts       # canvas draw pipeline
 ├── input.ts          # keyboard + DAS/ARR
+├── market-ticker.ts  # arcade phrase and delayed quote ticker
 ├── audio/
 │   ├── audio.ts      # graph, mixer persistence, reverb bus, compressor
 │   ├── music.ts      # synthwave sequencer
@@ -109,8 +111,8 @@ src/
 └── ...
 
 api/
-├── src/quotes.js      # cached delayed quote adapter
-└── src/functions/     # Azure Static Web Apps API endpoint
+├── src/quotes.js      # cached, bounded-concurrency delayed quote adapter
+└── src/functions/     # Azure Static Web Apps quote endpoint
 ```
 
 ## 🚀 Deploy

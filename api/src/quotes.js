@@ -1,9 +1,11 @@
-export const QUOTE_SYMBOLS = ['MSFT', 'SPCX', 'AAPL', 'NVDA', 'AMZN', 'META', 'TSLA', 'INTC', 'SBUX', 'TSM'];
+export const QUOTE_SYMBOLS = ['MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'AMD', 'AVGO', 'ORCL', 'PLTR', 'TSM'];
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 3_000;
 const MAX_ATTEMPTS = 3;
 const BASE_BACKOFF_MS = 150;
+const MAX_CONCURRENT_REQUESTS = 2;
+export const QUOTE_RESPONSE_CACHE_CONTROL = 'public, max-age=60, s-maxage=60';
 
 export function normalizeYahooQuote(symbol, payload) {
   const meta = payload?.chart?.result?.[0]?.meta;
@@ -36,12 +38,34 @@ function providerError(status) {
   return error;
 }
 
+async function mapWithConcurrency(values, maxConcurrentRequests, mapper) {
+  const results = new Array(values.length);
+  let nextIndex = 0;
+  const workerCount = Math.min(maxConcurrentRequests, values.length);
+
+  async function worker() {
+    while (nextIndex < values.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      try {
+        results[index] = { status: 'fulfilled', value: await mapper(values[index]) };
+      } catch (reason) {
+        results[index] = { status: 'rejected', reason };
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: workerCount }, worker));
+  return results;
+}
+
 export async function fetchDelayedQuote(symbol, fetchImpl = fetch, options = {}) {
   const {
     sleep = wait,
     timeoutMs = REQUEST_TIMEOUT_MS,
     maxAttempts = MAX_ATTEMPTS,
     baseDelayMs = BASE_BACKOFF_MS,
+    random = Math.random,
   } = options;
   let lastError;
 
@@ -57,7 +81,8 @@ export async function fetchDelayedQuote(symbol, fetchImpl = fetch, options = {})
       lastError = error;
       const retryable = !(error && error.retryable === false);
       if (!retryable || attempt === maxAttempts - 1) throw error;
-      await sleep(baseDelayMs * 2 ** attempt);
+      const exponentialDelay = baseDelayMs * 2 ** attempt;
+      await sleep(Math.round(exponentialDelay * (1 + random() * 0.2)));
     }
   }
 
@@ -72,18 +97,23 @@ export function createDelayedQuoteService(options = {}) {
     timeoutMs = REQUEST_TIMEOUT_MS,
     maxAttempts = MAX_ATTEMPTS,
     baseDelayMs = BASE_BACKOFF_MS,
+    maxConcurrentRequests = MAX_CONCURRENT_REQUESTS,
+    random = Math.random,
   } = options;
   let cachedQuotes = null;
   let inFlightRefresh = null;
 
   async function refresh() {
-    const results = await Promise.allSettled(
-      QUOTE_SYMBOLS.map((symbol) => fetchDelayedQuote(symbol, fetchImpl, {
+    const results = await mapWithConcurrency(
+      QUOTE_SYMBOLS,
+      maxConcurrentRequests,
+      (symbol) => fetchDelayedQuote(symbol, fetchImpl, {
         sleep,
         timeoutMs,
         maxAttempts,
         baseDelayMs,
-      })),
+        random,
+      }),
     );
     const quotes = results.flatMap((result) => result.status === 'fulfilled' ? [result.value] : []);
     if (quotes.length === 0) throw new Error('No delayed quotes available');

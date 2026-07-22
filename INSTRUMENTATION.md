@@ -27,8 +27,12 @@ the decorative arcade ticker.
 
 - The browser requests only the first-party `/api/quotes` endpoint.
 - The endpoint fetches delayed quotes server-side, applies a three-second request
-  deadline and bounded exponential retries, caches normalized results for five
-  minutes, and returns only symbol, price, percentage change, direction, and timestamp.
+  deadline, a two-request concurrency limit, and bounded jittered exponential retries.
+  It caches normalized results for five minutes; the public response has a short
+  60-second browser/edge cache. It returns only symbol, price, percentage change,
+  direction, and timestamp.
+- The configured AI-focused universe is `MSFT`, `NVDA`, `GOOGL`, `AMZN`, `META`,
+  `AMD`, `AVGO`, `ORCL`, `PLTR`, and `TSM`.
 - The browser never contacts the quote provider directly and no provider key is exposed.
 - Quote fetch failures retain the normal arcade crawl; they do not block or change play.
 - The ticker has no event telemetry. Quote symbols, values, or ticker interaction must

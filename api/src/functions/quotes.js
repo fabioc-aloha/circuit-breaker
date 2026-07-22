@@ -1,5 +1,5 @@
 import { app } from '@azure/functions';
-import { getDelayedQuotes } from '../quotes.js';
+import { getDelayedQuotes, QUOTE_RESPONSE_CACHE_CONTROL } from '../quotes.js';
 
 app.http('quotes', {
   methods: ['GET'],
@@ -10,7 +10,7 @@ app.http('quotes', {
       return {
         status: 200,
         jsonBody: await getDelayedQuotes(),
-        headers: { 'Cache-Control': 'private, max-age=60' },
+        headers: { 'Cache-Control': QUOTE_RESPONSE_CACHE_CONTROL },
       };
     } catch {
       return {

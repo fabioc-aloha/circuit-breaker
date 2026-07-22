@@ -92,6 +92,14 @@ test('creates and expires a transient lightning bolt', () => {
   assert.equal(effects.lightning.length, 0);
 });
 
+test('caps particle bursts to protect the render loop', () => {
+  const effects = new EffectsManager();
+
+  effects.spawnLineBurst(400, 320, 300, '#00f0ff', 1_000);
+
+  assert.equal(effects.particles.length, 600);
+});
+
 test('keeps a newly scheduled ambient lightning bolt for at least one frame', () => {
   const effects = new EffectsManager();
 
