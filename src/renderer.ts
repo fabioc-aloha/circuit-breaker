@@ -15,7 +15,7 @@ import {
     ROWS,
     SIDE_PANEL_W,
 } from './constants';
-import type { EffectsManager } from './effects';
+import { gameOverWraithPosition, type EffectsManager } from './effects';
 import { cellsOf, SHAPES } from './piece';
 import type { ActiveBoss, ActivePiece, CellValue, PieceKind } from './types';
 
@@ -76,7 +76,6 @@ export class Renderer {
     this.drawPacmen(s.time);
     this.drawParticles();
     this.drawLightning(true);
-    this.drawGameOverWraith(s.time);
     this.drawScanlines();
 
     ctx.restore();
@@ -95,6 +94,7 @@ export class Renderer {
     if (s.victory) this.drawCenterBanner('▲ GRID CLEARED ▲', 'PRESS R FOR NEW RUN');
     if (s.cutsceneText) this.drawCutscene(s.cutsceneText);
     if (s.muted) this.drawMuteBadge();
+    if (s.gameOver) this.drawGameOverWraith(s.time);
   }
 
   // ----- background -----
@@ -637,11 +637,8 @@ export class Renderer {
     const ctx = this.ctx;
     const progress = Math.max(0, Math.min(1, wraith.remainingMs / wraith.durationMs));
     const alpha = Math.min(0.72, (1 - progress) * 3, progress * 2.5);
-    const driftX = Math.sin(timeMs * 0.004) * 38;
-    const driftY = Math.cos(timeMs * 0.005) * 24;
     const half = wraith.size / 2;
-    const x = wraith.centerX + driftX;
-    const y = wraith.centerY + driftY;
+    const { x, y } = gameOverWraithPosition(wraith, timeMs);
 
     ctx.save();
     ctx.translate(x, y);

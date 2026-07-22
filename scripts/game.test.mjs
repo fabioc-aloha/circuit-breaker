@@ -31,7 +31,7 @@ function loadTypeScriptModule(filePath) {
 }
 
 const { Game } = loadTypeScriptModule(path.join(root, 'src', 'game.ts'));
-const { EffectsManager } = loadTypeScriptModule(path.join(root, 'src', 'effects.ts'));
+const { EffectsManager, gameOverWraithPosition } = loadTypeScriptModule(path.join(root, 'src', 'effects.ts'));
 const { BOSSES, bossSilhouetteFor } = loadTypeScriptModule(path.join(root, 'src', 'bosses.ts'));
 const { volumeFromPercent } = loadTypeScriptModule(path.join(root, 'src', 'audio', 'audio.ts'));
 
@@ -133,6 +133,25 @@ test('spawns and expires the game-over Grid Wraith', () => {
   effects.update(1_800);
 
   assert.equal(effects.currentGameOverWraith(), null);
+});
+
+test('moves the game-over Grid Wraith around the board center', () => {
+  const wraith = {
+    centerX: 400,
+    centerY: 320,
+    size: 76,
+    remainingMs: 1_800,
+    durationMs: 1_800,
+  };
+
+  const firstPosition = gameOverWraithPosition(wraith, 0);
+  const laterPosition = gameOverWraithPosition(wraith, 900);
+
+  assert.notDeepEqual(firstPosition, laterPosition);
+  assert.ok(Math.abs(firstPosition.x - wraith.centerX) <= 105);
+  assert.ok(Math.abs(firstPosition.y - wraith.centerY) <= 210);
+  assert.ok(Math.abs(laterPosition.x - wraith.centerX) <= 105);
+  assert.ok(Math.abs(laterPosition.y - wraith.centerY) <= 210);
 });
 
 test('creates an oversized breaker Pacman for a Tetris', () => {

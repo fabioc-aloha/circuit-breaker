@@ -24,6 +24,13 @@ export interface GameOverWraith {
   durationMs: number;
 }
 
+export function gameOverWraithPosition(wraith: GameOverWraith, timeMs: number): { x: number; y: number } {
+  return {
+    x: wraith.centerX + Math.sin(timeMs * 0.0025) * 105,
+    y: wraith.centerY + Math.sin(timeMs * 0.0037 + Math.PI / 3) * 210,
+  };
+}
+
 export interface PacmanRun {
   y: number;           // pixel y (center of row)
   x: number;           // current pixel x (center)
