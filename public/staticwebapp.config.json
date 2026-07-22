@@ -1,6 +1,15 @@
 {
   "routes": [
     {
+      "route": "/api/quotes",
+      "methods": [
+        "GET"
+      ],
+      "headers": {
+        "Cache-Control": "private, max-age=60"
+      }
+    },
+    {
       "route": "/client/*",
       "headers": {
         "Cache-Control": "no-store"

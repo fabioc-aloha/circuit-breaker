@@ -5,6 +5,7 @@ import { SFX } from './audio/sfx';
 import { EffectsManager } from './effects';
 import { Game } from './game';
 import { InputController } from './input';
+import { initializeMarketTicker } from './market-ticker';
 import { Renderer } from './renderer';
 import type { Volumes } from './storage';
 import './style.css';
@@ -14,6 +15,8 @@ const bootOverlay = document.getElementById('boot')!;
 const bootText = document.getElementById('boot-text')!;
 const hint = document.getElementById('hint')!;
 const muteButton = document.getElementById('audio-mute') as HTMLButtonElement;
+
+void initializeMarketTicker();
 
 const BIOS_LINES = [
   '> CIRCUIT BREAKER v0.1  BIOS/POST',

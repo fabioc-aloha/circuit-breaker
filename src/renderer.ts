@@ -648,15 +648,17 @@ export class Renderer {
     ctx.shadowColor = '#a970ff';
     ctx.shadowBlur = 26;
     ctx.beginPath();
-    ctx.moveTo(-half * 0.64, half * 0.54);
-    ctx.lineTo(-half * 0.62, -half * 0.06);
-    ctx.quadraticCurveTo(-half * 0.48, -half * 0.72, 0, -half * 0.78);
-    ctx.quadraticCurveTo(half * 0.48, -half * 0.72, half * 0.62, -half * 0.06);
-    ctx.lineTo(half * 0.62, half * 0.52);
-    ctx.lineTo(half * 0.28, half * 0.24);
-    ctx.lineTo(half * 0.04, half * 0.6);
-    ctx.lineTo(-half * 0.22, half * 0.2);
-    ctx.lineTo(-half * 0.48, half * 0.58);
+    ctx.moveTo(-half * 0.68, half * 0.5);
+    ctx.lineTo(-half * 0.68, -half * 0.08);
+    ctx.quadraticCurveTo(-half * 0.48, -half * 0.76, 0, -half * 0.82);
+    ctx.quadraticCurveTo(half * 0.5, -half * 0.76, half * 0.68, -half * 0.08);
+    ctx.lineTo(half * 0.68, half * 0.44);
+    ctx.lineTo(half * 0.42, half * 0.2);
+    ctx.lineTo(half * 0.24, half * 0.62);
+    ctx.lineTo(-half * 0.02, half * 0.3);
+    ctx.lineTo(-half * 0.2, half * 0.7);
+    ctx.lineTo(-half * 0.46, half * 0.26);
+    ctx.lineTo(-half * 0.62, half * 0.58);
     ctx.closePath();
     ctx.fill();
 
@@ -666,22 +668,33 @@ export class Renderer {
     ctx.shadowBlur = 12;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(-half * 0.5, half * 0.44);
-    ctx.lineTo(-half * 0.4, -half * 0.15);
+    ctx.moveTo(-half * 0.55, half * 0.46);
+    ctx.lineTo(-half * 0.46, -half * 0.18);
     ctx.lineTo(0, -half * 0.54);
-    ctx.lineTo(half * 0.4, -half * 0.15);
-    ctx.lineTo(half * 0.5, half * 0.44);
+    ctx.lineTo(half * 0.46, -half * 0.18);
+    ctx.lineTo(half * 0.55, half * 0.4);
     ctx.stroke();
 
     ctx.fillStyle = '#05010f';
     ctx.shadowBlur = 0;
-    ctx.fillRect(-half * 0.35, -half * 0.08, half * 0.22, half * 0.18);
-    ctx.fillRect(half * 0.13, -half * 0.08, half * 0.22, half * 0.18);
+    ctx.fillRect(-half * 0.43, -half * 0.11, half * 0.86, half * 0.23);
     ctx.fillStyle = '#e6f8ff';
     ctx.shadowColor = '#e6f8ff';
     ctx.shadowBlur = 8;
-    ctx.fillRect(-half * 0.3, -half * 0.04, half * 0.12, half * 0.07);
-    ctx.fillRect(half * 0.18, -half * 0.04, half * 0.12, half * 0.07);
+    ctx.fillRect(-half * 0.34, -half * 0.05, half * 0.68, half * 0.09);
+    ctx.fillStyle = '#05010f';
+    for (let index = 1; index < 4; index++) {
+      ctx.fillRect(-half * 0.34 + half * 0.17 * index, -half * 0.055, half * 0.035, half * 0.1);
+    }
+
+    ctx.strokeStyle = '#ff2bd6';
+    ctx.shadowColor = '#ff2bd6';
+    ctx.shadowBlur = 8;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-half * 0.47, half * 0.15);
+    ctx.lineTo(half * 0.47, half * 0.15);
+    ctx.stroke();
     ctx.restore();
   }
 

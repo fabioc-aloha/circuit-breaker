@@ -79,6 +79,8 @@ and gravity curve; the BGM drops to a frantic *boss-low* mix under 25% HP.
 - **Neon Pacman line-clear** -- one chomping cyberpunk Pacman per cleared row, alternating direction, RGB-split, glowing pellet trail; a Tetris summons a giant breaker Pacman with three foreground lightning arcs
 - `MAIN BREAKER TRIPPED` four-line-clear banner, circuit lightning, particles, screen shake, and chromatic flash
 - A large top-layer Grid Wraith roams the board briefly when a run ends, then dissolves into the cabinet glow
+- Delayed market quotes alternate with arcade phrases in the faster ticker crawl; quote failures fall back to the normal crawl
+- The cabinet's `INSERT COIN` slot links to *Loop Engineering* on Amazon; no purchase interaction is tracked
 - Responsive arcade cabinet chrome with animated marquee, chase lights, scrolling ticker, bezel reflection, and corner screws
 
 ## 🛠️ Tech
@@ -105,6 +107,10 @@ src/
 │   ├── music.ts      # synthwave sequencer
 │   └── sfx.ts        # procedural SFX bank
 └── ...
+
+api/
+├── src/quotes.js      # cached delayed quote adapter
+└── src/functions/     # Azure Static Web Apps API endpoint
 ```
 
 ## 🚀 Deploy

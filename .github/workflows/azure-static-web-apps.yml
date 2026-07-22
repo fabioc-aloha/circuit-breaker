@@ -36,6 +36,10 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Install API dependencies
+        working-directory: api
+        run: npm ci --no-audit --no-fund
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -61,7 +65,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: upload
           app_location: dist
-          api_location: ''
+          api_location: api
           skip_app_build: true
 
   close_pull_request:

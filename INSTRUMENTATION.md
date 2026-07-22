@@ -6,7 +6,7 @@ CorreaX Constellation Tracker and which game data must remain local.
 Read this before changing tracker scripts, production activation, Content Security
 Policy, client cache headers, URLs, or browser storage.
 
-Last updated: 2026-07-21.
+Last updated: 2026-07-22.
 
 ## Portfolio Setup
 
@@ -19,8 +19,20 @@ Last updated: 2026-07-21.
 ## Site Role
 
 Circuit Breaker is a one-page browser game. It has no accounts, forms, cloud saves,
-backend API, or client-side router. Tracking exists to measure discovery of the public
-homepage, not gameplay.
+or client-side router. Tracking exists to measure discovery of the public homepage,
+not gameplay. Its only backend endpoint is a cached delayed-market-data feed used for
+the decorative arcade ticker.
+
+## Delayed Market Data
+
+- The browser requests only the first-party `/api/quotes` endpoint.
+- The endpoint fetches delayed quotes server-side, applies a three-second request
+  deadline and bounded exponential retries, caches normalized results for five
+  minutes, and returns only symbol, price, percentage change, direction, and timestamp.
+- The browser never contacts the quote provider directly and no provider key is exposed.
+- Quote fetch failures retain the normal arcade crawl; they do not block or change play.
+- The ticker has no event telemetry. Quote symbols, values, or ticker interaction must
+  never be attached to the tracker payload.
 
 ## Payload Contract
 
@@ -44,7 +56,7 @@ Unknown fields are rejected. The request body limit is 1024 bytes.
 
 Circuit Breaker emits one `page_view` after a production page load. It does not emit
 route-change events because the game has one canonical route. It does not use the
-portfolio's retail-click event.
+portfolio's retail-click event, including for the external Loop Engineering purchase link.
 
 ## Data That Must Never Leave the Browser
 
@@ -54,6 +66,7 @@ portfolio's retail-click event.
 - Audio volume and mute preferences.
 - Timing, frame rate, or session duration.
 - Any local-storage value other than tracker consent state.
+- Market-ticker request timing, errors, quote values, or ticker interaction.
 - Query parameters other than the three approved UTM fields.
 - URL fragments, full URLs, credentials, or visitor identity.
 
@@ -109,6 +122,8 @@ unapproved field, or if the tracker causes a game regression.
 - Game-only changes ship normally when tracker tests remain green.
 - Changes to paths, storage, CSP, tracker scripts, or activation require the full local
   validation gate.
+- Changes to the delayed quote provider, cache policy, or API response contract require
+  the full local validation gate and must preserve the first-party browser boundary.
 - New events, fields, retention, joins, or identity require a portfolio contract change
   in `seo-correax` and `analytics-correax` before site implementation.
 - Do not fork the server payload contract in this repository.

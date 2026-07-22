@@ -12,5 +12,6 @@
 - Boss Rush contains five rogue-AI encounters with distinct attack patterns; defeating a boss advances the voltage tier.
 - A four-line clear triggers a `MAIN BREAKER TRIPPED` banner and a giant cyberpunk breaker Pacman.
 - Music and sound effects are synthesized in the browser with the Web Audio API. Master, SFX, and BGM levels persist locally, as does mute state.
+- The visual arcade ticker mixes game phrases with delayed market quotes from the first-party `/api/quotes` endpoint; ticker data is not analytics.
 - Scores, volume preferences, and mute state remain in the visitor's browser and are not sent to the CorreaX tracker.
 - Source code is available from the [Circuit Breaker repository](https://github.com/fabioc-aloha/circuit-breaker).

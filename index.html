@@ -34,9 +34,9 @@
             <div class="chase-lights bottom" aria-hidden="true"></div>
           </div>
           <div class="ticker">
-            <div class="ticker-track">
-              <span>◆ HIGH VOLTAGE BLOCK STACKER ◆ BOSS RUSH PROTOCOL ◆ STACK THE CURRENT ◆ TRIP THE MAINFRAME ◆ INSERT COIN TO CONTINUE ◆ HIGH VOLTAGE BLOCK STACKER ◆ BOSS RUSH PROTOCOL ◆ STACK THE CURRENT ◆ TRIP THE MAINFRAME ◆ INSERT COIN TO CONTINUE ◆&nbsp;</span>
-              <span>◆ HIGH VOLTAGE BLOCK STACKER ◆ BOSS RUSH PROTOCOL ◆ STACK THE CURRENT ◆ TRIP THE MAINFRAME ◆ INSERT COIN TO CONTINUE ◆ HIGH VOLTAGE BLOCK STACKER ◆ BOSS RUSH PROTOCOL ◆ STACK THE CURRENT ◆ TRIP THE MAINFRAME ◆ INSERT COIN TO CONTINUE ◆&nbsp;</span>
+            <div id="ticker-track" class="ticker-track" aria-label="Arcade ticker and delayed market quotes">
+              <div class="ticker-loop">◆ HIGH VOLTAGE BLOCK STACKER ◆ BOSS RUSH PROTOCOL ◆ STACK THE CURRENT ◆ TRIP THE MAINFRAME ◆ INSERT COIN TO CONTINUE ◆</div>
+              <div class="ticker-loop" aria-hidden="true">◆ HIGH VOLTAGE BLOCK STACKER ◆ BOSS RUSH PROTOCOL ◆ STACK THE CURRENT ◆ TRIP THE MAINFRAME ◆ INSERT COIN TO CONTINUE ◆</div>
             </div>
           </div>
         </div>
@@ -51,6 +51,21 @@
           </div>
           <div id="hint">CLICK / PRESS ANY KEY TO INITIALIZE</div>
         </div>
+        <aside id="coin-slot" aria-labelledby="coin-slot-title">
+          <div class="coin-slot-bezel" aria-hidden="true"></div>
+          <div class="coin-slot-copy">
+            <span id="coin-slot-title">INSERT COIN TO PLAY</span>
+          </div>
+          <div class="coin-slot-purchase">
+            <span>LOOP ENGINEERING</span>
+            <a
+              class="coin-slot-action"
+              href="https://a.co/d/0i5XuFTn"
+              target="_blank"
+              rel="noopener noreferrer"
+            >BUY THE BOOK</a>
+          </div>
+        </aside>
         <section id="audio-console" aria-label="Audio mixer">
           <div class="audio-console-title">AUDIO MIX</div>
           <label class="audio-control" for="volume-master">

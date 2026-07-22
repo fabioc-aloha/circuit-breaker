@@ -158,15 +158,49 @@ body {
 }
 .ticker-track {
   display: flex;
-  gap: 20px;
+  width: max-content;
   white-space: nowrap;
-  animation: scroll-x 30s linear infinite;
+  animation: scroll-x 28s linear infinite;
   color: var(--yellow);
   font-size: 12px;
   letter-spacing: 3px;
   line-height: 22px;
   text-shadow: 0 0 6px var(--yellow);
   will-change: transform;
+}
+
+.ticker-loop {
+  display: flex;
+  flex: none;
+  gap: 18px;
+  padding-right: 18px;
+  white-space: nowrap;
+}
+
+.ticker-segment {
+  display: inline-block;
+}
+
+.ticker-quote {
+  padding: 0 12px 0 10px;
+  border-left: 1px solid rgba(230, 248, 255, 0.32);
+  border-right: 1px solid rgba(230, 248, 255, 0.32);
+  color: var(--fg);
+  font-weight: 700;
+}
+
+.ticker-up {
+  color: var(--cyan);
+  text-shadow: 0 0 8px var(--cyan);
+}
+
+.ticker-down {
+  color: var(--red);
+  text-shadow: 0 0 8px var(--red);
+}
+
+.ticker-flat {
+  color: var(--yellow);
 }
 
 /* -------- SCREEN -------- */
@@ -220,6 +254,115 @@ body {
   box-shadow:
     0 0 30px rgba(0, 240, 255, 0.12),
     0 0 80px rgba(255, 43, 214, 0.06);
+}
+
+/* -------- INSERT COIN / BOOK SLOT -------- */
+#coin-slot {
+  width: min(820px, 96vw);
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 3px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 230, 0, 0.36);
+  border-radius: 6px;
+  background:
+    linear-gradient(90deg, rgba(255, 230, 0, 0.11), transparent 30%),
+    rgba(5, 1, 15, 0.9);
+  box-shadow:
+    inset 0 0 20px rgba(255, 230, 0, 0.06),
+    0 0 18px rgba(255, 230, 0, 0.08);
+}
+
+.coin-slot-bezel {
+  grid-row: 1;
+  position: relative;
+  width: 46px;
+  height: 44px;
+  border: 2px solid #a44d43;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #8f2c25, #3a100e 58%, #120404);
+  box-shadow:
+    inset 0 0 0 4px #5e1915,
+    inset 0 -5px 0 #200504,
+    0 0 9px rgba(255, 43, 74, 0.35);
+}
+
+.coin-slot-bezel::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 10px;
+  width: 10px;
+  border: 1px solid #050607;
+  border-radius: 2px;
+  background: #010203;
+  box-shadow: inset 1px 0 0 rgba(230, 248, 255, 0.12);
+}
+
+.coin-slot-bezel::after {
+  content: '';
+  position: absolute;
+  right: 5px;
+  bottom: 7px;
+  width: 13px;
+  height: 10px;
+  border: 1px solid #a44d43;
+  border-radius: 2px;
+  background: linear-gradient(#2d0908, #090101);
+}
+
+.coin-slot-copy {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  color: var(--yellow);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-shadow: 0 0 8px var(--yellow);
+}
+
+.coin-slot-purchase {
+  grid-column: 3;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--fg);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.coin-slot-purchase > span {
+  color: var(--fg);
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+
+.coin-slot-action {
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 43, 214, 0.62);
+  border-radius: 4px;
+  color: var(--fg);
+  background: rgba(255, 43, 214, 0.12);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-decoration: none;
+  text-shadow: 0 0 7px var(--magenta);
+}
+
+.coin-slot-action:hover,
+.coin-slot-action:focus-visible {
+  outline: none;
+  border-color: var(--magenta);
+  background: rgba(255, 43, 214, 0.24);
+  box-shadow: 0 0 12px rgba(255, 43, 214, 0.45);
 }
 
 /* -------- AUDIO MIXER -------- */
@@ -413,6 +556,38 @@ body {
     gap: 7px 10px;
     padding: 8px;
   }
+
+  #coin-slot {
+    width: 100%;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    column-gap: 8px;
+    padding: 7px;
+  }
+
+  .coin-slot-bezel {
+    width: 36px;
+    height: 34px;
+  }
+
+  .coin-slot-copy {
+    gap: 5px;
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
+
+  .coin-slot-purchase > span {
+    display: none;
+  }
+
+  .coin-slot-purchase {
+    gap: 0;
+  }
+
+  .coin-slot-action {
+    padding: 7px 8px;
+    font-size: 8px;
+  }
+
 
   .audio-console-title {
     grid-column: 1 / -1;
