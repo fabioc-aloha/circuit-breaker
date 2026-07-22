@@ -47,16 +47,30 @@ export const KONG_HEIGHT = 100; // canvas-px bounding box height (feet at HEIGHT
 export const KONG_PIXEL_SCALE = 3;
 
 const SPRITE_URL = '/kong-sprite.png';
+const DANCE_URL = '/kong-dance.png';
 // Frame rectangles measured from the sprite sheet (3088×3040). The sheet is
 // hand-laid-out with variable-sized poses, so frames are hardcoded from a
 // one-off flood-fill measurement pass rather than derived from a rigid grid.
 // Frame picks below are PROVISIONAL — a numbered preview grid is available
 // via scripts/kong-frame-preview to swap in specific frames per state.
-interface FrameSpec { sx: number; sy: number; sw: number; sh: number; rowH: number; }
+interface FrameSpec {
+  sx: number;
+  sy: number;
+  sw: number;
+  sh: number;
+  rowH: number;
+  /** Which cached bitmap to sample from. Defaults to the main sprite sheet. */
+  atlas?: 'main' | 'dance';
+}
 // Reference heights — scale factor within a set uses the tallest frame in
 // that set as the canonical size so animation frames don't jitter.
 const ROW_H_SMALL = 155;  // row-1 short standing poses
 const ROW_H_TALL = 210;   // row-1 tall action/throw poses
+// Dance strip is a separate 1286×196 PNG (public/kong-dance.png) with real
+// alpha. Poses have varying widths (139–288 px) so per-frame boxes below
+// are auto-measured; rowH is the tallest pose so all frames render at the
+// same on-screen size.
+const ROW_H_DANCE = 188;
 
 // Provisional idle cycle — first four row-1 frames (subtle head-turn variants).
 const F_IDLE: FrameSpec[] = [
@@ -82,15 +96,29 @@ const F_THROW: FrameSpec[] = [
   { sx: 2279, sy: 1, sw: 161, sh: 187, rowH: ROW_H_TALL },
 ];
 // Chest-beat — alternate two row-1 frames with different arm positions.
+// Still used for the intro chest-beat (F_DANCE takes over once the run ends).
 const F_CHEST: FrameSpec[] = [
   { sx: 674, sy: 1, sw: 164, sh: 149, rowH: ROW_H_SMALL },
   { sx: 2442, sy: 1, sw: 193, sh: 190, rowH: ROW_H_TALL }, // wider arm-out variant
+];
+// Dance strip — five distinct victory poses on public/kong-dance.png.
+// Bounding boxes were auto-measured against the alpha channel (poses are
+// separated by fully-transparent columns) so widths and heights vary per
+// pose. rowH is fixed at the tallest pose so all frames render at the same
+// on-screen size — otherwise shorter poses would balloon larger.
+const F_DANCE: FrameSpec[] = [
+  { sx: 1,   sy: 6, sw: 279, sh: 184, rowH: ROW_H_DANCE, atlas: 'dance' }, // pose 1
+  { sx: 282, sy: 6, sw: 279, sh: 184, rowH: ROW_H_DANCE, atlas: 'dance' }, // pose 2
+  { sx: 564, sy: 8, sw: 139, sh: 188, rowH: ROW_H_DANCE, atlas: 'dance' }, // pose 3 (narrower)
+  { sx: 707, sy: 8, sw: 288, sh: 178, rowH: ROW_H_DANCE, atlas: 'dance' }, // pose 4
+  { sx: 997, sy: 7, sw: 288, sh: 179, rowH: ROW_H_DANCE, atlas: 'dance' }, // pose 5
 ];
 
 // Module-level cache: load the sprite bitmap once, share across Kong instances.
 // PNG has native alpha so we can hand the decoded Image straight to drawImage
 // without any pre-processing.
 let cachedSprite: HTMLImageElement | null = null;
+let cachedDanceSprite: HTMLImageElement | null = null;
 let spriteLoadStarted = false;
 
 function loadSprite(): void {
@@ -103,6 +131,14 @@ function loadSprite(): void {
     console.error('[Kong] sprite load failed:', SPRITE_URL);
   };
   img.src = SPRITE_URL;
+
+  const dance = new Image();
+  dance.onload = () => { cachedDanceSprite = dance; };
+  dance.onerror = () => {
+    // eslint-disable-next-line no-console
+    console.error('[Kong] dance sprite load failed:', DANCE_URL);
+  };
+  dance.src = DANCE_URL;
 }
 
 // Fire the load immediately at module init so the sprite is warm by the time
@@ -391,8 +427,6 @@ export class Kong {
     // regardless, so gameplay isn't blocked on the asset.
     if (!cachedSprite) return;
 
-    const sprite = cachedSprite;
-
     ctx.save();
     // Anchor is bottom-center (feet). Translate to top-left of bounding box.
     const originX = Math.round(this.x - KONG_WIDTH / 2);
@@ -424,13 +458,12 @@ export class Kong {
         break;
       }
       case 'celebrating': {
-        // Slightly bigger, faster chest-beat than the intro version — this
-        // is the victory lap, not a warm-up. Adds a small vertical hop on
-        // every beat so he looks like he's genuinely gloating.
-        const beatPhase = (this.stateElapsed % 240) / 240;
-        scaleX = 1 + Math.sin(beatPhase * Math.PI * 2) * 0.12;
-        scaleY = 1 - Math.sin(beatPhase * Math.PI * 2) * 0.06;
-        bobY = -Math.abs(Math.sin(beatPhase * Math.PI * 2)) * 4;
+        // Vertical hop synced to the dance-frame cadence (~200 ms per pose)
+        // so Kong bounces on each new stance. Skip the horizontal squash
+        // used in intro-chest — the dance frames carry the shape change
+        // and doubling it distorts the sprite.
+        const beatPhase = (this.stateElapsed % 400) / 400;
+        bobY = -Math.abs(Math.sin(beatPhase * Math.PI * 2)) * 5;
         break;
       }
       case 'intro-climb': {
@@ -464,17 +497,29 @@ export class Kong {
 
     // Pick the current animation frame from the sprite sheet based on state.
     const frame = this.currentFrame();
+    // Route the frame to its source atlas. Dance frames live on their own PNG;
+    // if the dance sprite hasn't loaded yet, fall back to the main sheet's idle
+    // pose to avoid a blank frame.
+    let sprite: HTMLImageElement = cachedSprite;
+    let frameToDraw: FrameSpec = frame;
+    if (frame.atlas === 'dance') {
+      if (cachedDanceSprite) {
+        sprite = cachedDanceSprite;
+      } else {
+        frameToDraw = F_IDLE[0];
+      }
+    }
     // Scale by the row's canonical height so different-width frames within a
     // row render at consistent size. Anchor at feet (dest y=0 after translate).
-    const scale = KONG_HEIGHT / frame.rowH;
-    const destW = frame.sw * scale;
-    const destH = frame.sh * scale;
+    const scale = KONG_HEIGHT / frameToDraw.rowH;
+    const destW = frameToDraw.sw * scale;
+    const destH = frameToDraw.sh * scale;
     ctx.drawImage(
       sprite,
-      frame.sx,
-      frame.sy,
-      frame.sw,
-      frame.sh,
+      frameToDraw.sx,
+      frameToDraw.sy,
+      frameToDraw.sw,
+      frameToDraw.sh,
       -destW / 2,
       -destH,
       destW,
@@ -616,9 +661,12 @@ export class Kong {
         return F_CHEST[beatPhase];
       }
       case 'celebrating': {
-        // Same two chest-beat frames, faster cycle — the victory version.
-        const beatPhase = Math.floor(this.stateElapsed / 120) % 2;
-        return F_CHEST[beatPhase];
+        // Cycle forward through the dance poses on a loop, in the order
+        // 1→2→3→4→0→1→… ~200 ms per pose reads as a deliberate spin.
+        const period = 200;
+        const step = Math.floor(this.stateElapsed / period) % F_DANCE.length;
+        const idx = (step + 1) % F_DANCE.length;
+        return F_DANCE[idx];
       }
       case 'winding-up': {
         // First throw-prep frame — arms raising.
