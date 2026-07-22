@@ -1,0 +1,15 @@
+# Circuit Breaker
+
+> Circuit Breaker is a browser-playable cyberpunk block-stacker with a five-stage Boss Rush mode.
+
+## Canonical resource
+
+- [Play Circuit Breaker](https://cb.correax.com/): Start the game, review the controls, and play Boss Rush in a modern browser.
+
+## Published facts
+
+- The game uses seven tetrominoes, SRS rotation, a seven-bag randomizer, hold, ghost preview, and a local high score.
+- Boss Rush contains five rogue-AI encounters with distinct attack patterns.
+- Music and sound effects are synthesized in the browser with the Web Audio API.
+- Scores, volume preferences, and mute state remain in the visitor's browser and are not sent to the CorreaX tracker.
+- Source code is available from the [Circuit Breaker repository](https://github.com/fabioc-aloha/circuit-breaker).

@@ -1,0 +1,41 @@
+{
+  "routes": [
+    {
+      "route": "/client/*",
+      "headers": {
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "route": "/assets/*",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "route": "/",
+      "headers": {
+        "Cache-Control": "public, must-revalidate, max-age=60"
+      }
+    },
+    {
+      "route": "/index.html",
+      "headers": {
+        "Cache-Control": "public, must-revalidate, max-age=60"
+      }
+    }
+  ],
+  "globalHeaders": {
+    "Content-Security-Policy": "default-src 'self'; base-uri 'self'; connect-src 'self' https://tracker.correax.com; frame-ancestors 'none'; form-action 'none'; img-src 'self' data:; object-src 'none'; script-src 'self' 'sha256-dn1n53bEKjbo9JEDirosL5oWqfC8HP52fFDkdu20xMs='; style-src 'self'; upgrade-insecure-requests",
+    "Permissions-Policy": "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY"
+  },
+  "mimeTypes": {
+    ".js": "text/javascript; charset=utf-8",
+    ".txt": "text/plain; charset=utf-8",
+    ".xml": "application/xml; charset=utf-8"
+  }
+}

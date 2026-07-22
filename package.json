@@ -4,17 +4,20 @@
   "version": "0.1.0",
   "type": "module",
   "description": "CIRCUIT BREAKER - a high-voltage cyberpunk block-stacker with Boss Rush mode",
+  "engines": {
+    "node": ">=22 <25"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test scripts/*.test.mjs",
+    "validate": "node scripts/validate-site.mjs",
+    "check": "npm run typecheck && npm test && npm run build && npm run validate"
   },
   "devDependencies": {
     "typescript": "^5.6.3",
-    "vite": "^5.4.10"
-  },
-  "allowScripts": {
-    "esbuild@0.21.5": true
+    "vite": "^8.1.4"
   }
 }

@@ -1,19 +1,13 @@
-<p align="center">
-  <img src="docs/banner.png" alt="CIRCUIT BREAKER" width="820" />
-</p>
+# Circuit Breaker
 
-<p align="center">
-  <a href="https://cb.correax.com">
-    <img src="https://img.shields.io/badge/PLAY%20NOW-cb.correax.com-ff00e5?style=for-the-badge&labelColor=05010f" alt="Play now" />
-  </a>
-  <img src="https://img.shields.io/badge/stack-TypeScript%20%2B%20Canvas%20%2B%20WebAudio-00f0ff?style=for-the-badge&labelColor=05010f" alt="Stack" />
-  <img src="https://img.shields.io/badge/deps-zero-ffe066?style=for-the-badge&labelColor=05010f" alt="Zero runtime deps" />
-</p>
+![Circuit Breaker cyberpunk arcade banner](docs/banner.png)
 
-<p align="center">
-  <em>A high-voltage cyberpunk block-stacker with <b>Boss Rush</b> mode.<br/>
-  Stack the current. Trip the mainframe.</em>
-</p>
+[![Play now](https://img.shields.io/badge/PLAY%20NOW-cb.correax.com-ff00e5?style=for-the-badge&labelColor=05010f)](https://cb.correax.com)
+![TypeScript, Canvas, and WebAudio](https://img.shields.io/badge/stack-TypeScript%20%2B%20Canvas%20%2B%20WebAudio-00f0ff?style=for-the-badge&labelColor=05010f)
+![Zero runtime dependencies](https://img.shields.io/badge/deps-zero-ffe066?style=for-the-badge&labelColor=05010f)
+
+*A high-voltage cyberpunk block-stacker with **Boss Rush** mode. Stack the
+current. Trip the mainframe.*
 
 ---
 
@@ -49,34 +43,38 @@ npm run preview
 | M             | Mute audio      |
 | R             | Restart run     |
 
-Click or press any key to boot up the cabinet — the browser needs a user gesture before the audio graph starts.
+Click or press any key to boot up the cabinet -- the browser needs a user gesture before the audio graph starts.
 
 ## 🕹️ Features
 
 ### Modern block-stacker fundamentals
+
 - 7 tetrominoes with full **SRS rotation + wall-kick tables** (JLSTZ + I)
 - **7-bag randomizer**, hold piece (one-swap-per-drop), ghost preview, next-3 queue
 - Combo tracker (⚡ **AMPERAGE ×N**), level-based gravity, local high score
 
 ### Boss Rush
+
 Five rogue AIs stand between you and the mainframe:
 
-1. **SURGE.exe** — the warm-up, occasional voltage spikes
-2. **BLACKOUT** — hides your NEXT preview at random intervals
-3. **SHORTFUSE** — dumps garbage lines when you dawdle
-4. **FEEDBACK LOOP** — scrambles columns
-5. **THE MAINFRAME** — every attack, twice as fast
+1. **SURGE.exe** -- the warm-up, occasional voltage spikes
+2. **BLACKOUT** -- hides your NEXT preview at random intervals
+3. **SHORTFUSE** -- dumps garbage lines when you dawdle
+4. **FEEDBACK LOOP** -- scrambles columns
+5. **THE MAINFRAME** -- every attack, twice as fast
 
 Each fight tracks **BOSS INTEGRITY**; the BGM drops to a frantic *boss-low* mix under 25% HP.
 
 ### Audio (100% procedural, no assets)
+
 - Web Audio graph with reverb send/return bus + master DynamicsCompressor
 - Synthwave sequencer: chord progressions, detuned-saw lead, ambient pad, real drum kit
 - Punchy layered SFX: hard-drop sub boom, chromatic line-clear zaps, tetris BOOM with fanfare stab
 
 ### The look
+
 - Circuit-trace animated background, CRT scanlines, screen shake, chromatic flash
-- **Neon Pacman line-clear** — one chomping cyberpunk Pacman per cleared row, alternating direction, RGB-split, glowing pellet trail
+- **Neon Pacman line-clear** -- one chomping cyberpunk Pacman per cleared row, alternating direction, RGB-split, glowing pellet trail
 - Arcade cabinet chrome with animated marquee, chase lights, and scrolling ticker
 
 ## 🛠️ Tech
@@ -88,7 +86,7 @@ Each fight tracks **BOSS INTEGRITY**; the BGM drops to a frantic *boss-low* mix 
 
 ## 📂 Project layout
 
-```
+```text
 src/
 ├── main.ts           # boot, game loop, wiring
 ├── game.ts           # phase machine, scoring, boss orchestration
@@ -107,7 +105,14 @@ src/
 
 ## 🚀 Deploy
 
-The site is a static bundle — any static host works. This repo's live build is on Azure:
+The live site uses Azure Static Web Apps. A push to `main` runs typecheck, tests,
+production build, artifact validation, and deployment through
+`.github/workflows/azure-static-web-apps.yml`.
+
+Pull requests deploy tracker-disabled preview environments. Production pushes set
+`CB_TRACKER_ENABLED=true` so only the default environment emits page views.
+
+For emergency recovery when GitHub Actions is unavailable:
 
 ```bash
 npm run build
@@ -116,7 +121,8 @@ npx @azure/static-web-apps-cli deploy ./dist \
   --env production
 ```
 
+The manual command is a recovery path, not the normal release process.
+
 ## 📜 License
 
-MIT — hack it, remix it, ship your own arcade cabinet.
-
+MIT -- hack it, remix it, ship your own arcade cabinet.
