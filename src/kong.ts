@@ -43,8 +43,6 @@ const THROW_EMIT_FRACTION = 0.65;
 // the file from /kong-sprite.png (PNG already has alpha — no white-keying).
 export const KONG_WIDTH = 90;   // canvas-px bounding box width (rendered size)
 export const KONG_HEIGHT = 100; // canvas-px bounding box height (feet at HEIGHT)
-// Kept exported for tests that reference the old constant name.
-export const KONG_PIXEL_SCALE = 3;
 
 const SPRITE_URL = '/kong-sprite.png';
 const DANCE_URL = '/kong-dance.png';
@@ -106,13 +104,19 @@ const F_CHEST: FrameSpec[] = [
 // separated by fully-transparent columns) so widths and heights vary per
 // pose. rowH is fixed at the tallest pose so all frames render at the same
 // on-screen size — otherwise shorter poses would balloon larger.
+// Facing direction is annotated in the comments: the sequence reads as a
+// 360° spin when interleaved through the side-profile transition frame.
 const F_DANCE: FrameSpec[] = [
-  { sx: 1,   sy: 6, sw: 279, sh: 184, rowH: ROW_H_DANCE, atlas: 'dance' }, // pose 1
-  { sx: 282, sy: 6, sw: 279, sh: 184, rowH: ROW_H_DANCE, atlas: 'dance' }, // pose 2
-  { sx: 564, sy: 8, sw: 139, sh: 188, rowH: ROW_H_DANCE, atlas: 'dance' }, // pose 3 (narrower)
-  { sx: 707, sy: 8, sw: 288, sh: 178, rowH: ROW_H_DANCE, atlas: 'dance' }, // pose 4
-  { sx: 997, sy: 7, sw: 288, sh: 179, rowH: ROW_H_DANCE, atlas: 'dance' }, // pose 5
+  { sx: 1,   sy: 6, sw: 279, sh: 184, rowH: ROW_H_DANCE, atlas: 'dance' }, // 0 back  (arms extended, viewer sees back)
+  { sx: 282, sy: 6, sw: 279, sh: 184, rowH: ROW_H_DANCE, atlas: 'dance' }, // 1 back  (variant, arms extended)
+  { sx: 564, sy: 8, sw: 139, sh: 188, rowH: ROW_H_DANCE, atlas: 'dance' }, // 2 side  (profile, transitional spin frame)
+  { sx: 707, sy: 8, sw: 288, sh: 178, rowH: ROW_H_DANCE, atlas: 'dance' }, // 3 front (arms wide, facing viewer)
+  { sx: 997, sy: 7, sw: 288, sh: 179, rowH: ROW_H_DANCE, atlas: 'dance' }, // 4 front (variant, arms wide)
 ];
+// Play order for the celebration dance: front → side → back → side → (variant
+// front) → side → (variant back) → side. Reads as a rhythmic 360° victory
+// spin because the side-profile frame slots in between every direction change.
+const DANCE_ORDER = [3, 2, 0, 2, 4, 2, 1, 2] as const;
 
 // Module-level cache: load the sprite bitmap once, share across Kong instances.
 // PNG has native alpha so we can hand the decoded Image straight to drawImage
@@ -201,7 +205,7 @@ export class Kong {
     this.pendingKind = kind;
     this.state = 'winding-up';
     this.stateElapsed = 0;
-    this.throwColumn = this.computeSpawnColumn(kind);
+    this.throwColumn = this.spawnColumnFor(kind);
     // Same reason as above: previous throw's emitReady flag might still be
     // true if takeSpawnRequest hasn't been polled yet. Reset explicitly so
     // the game doesn't consume this piece before its wind-up animation runs.
@@ -291,7 +295,7 @@ export class Kong {
         if (this.pendingKind !== null) {
           this.state = 'winding-up';
           this.stateElapsed = 0;
-          this.throwColumn = this.computeSpawnColumn(this.pendingKind);
+          this.throwColumn = this.spawnColumnFor(this.pendingKind);
         }
         break;
       case 'winding-up':
@@ -405,11 +409,6 @@ export class Kong {
 
   /** Map Kong's canvas-x to a valid spawn column for the given piece kind. */
   spawnColumnFor(kind: PieceKind): number {
-    return this.computeSpawnColumn(kind);
-  }
-
-  /** Map Kong's canvas-x to a valid spawn column for the given piece kind. */
-  private computeSpawnColumn(kind: PieceKind): number {
     const boardX = this.cfg.ledgeLeftX; // ledge left edge is board left edge
     const rawCol = Math.round((this.x - boardX) / CELL) - 1; // -1 to roughly center piece
     const [minX, maxX] = spawnRangeX(kind);
@@ -458,12 +457,10 @@ export class Kong {
         break;
       }
       case 'celebrating': {
-        // Vertical hop synced to the dance-frame cadence (~200 ms per pose)
-        // so Kong bounces on each new stance. Skip the horizontal squash
-        // used in intro-chest — the dance frames carry the shape change
-        // and doubling it distorts the sprite.
+        // Bounce peaks when a major pose lands (front / back), dips through
+        // the side-profile transition, so Kong reads as landing each stance.
         const beatPhase = (this.stateElapsed % 400) / 400;
-        bobY = -Math.abs(Math.sin(beatPhase * Math.PI * 2)) * 5;
+        bobY = -Math.abs(Math.cos(beatPhase * Math.PI)) * 6;
         break;
       }
       case 'intro-climb': {
@@ -661,12 +658,11 @@ export class Kong {
         return F_CHEST[beatPhase];
       }
       case 'celebrating': {
-        // Cycle forward through the dance poses on a loop, in the order
-        // 1→2→3→4→0→1→… ~200 ms per pose reads as a deliberate spin.
+        // Step through DANCE_ORDER so the side-profile frame slots between
+        // each direction change, reading as a continuous 360° spin.
         const period = 200;
-        const step = Math.floor(this.stateElapsed / period) % F_DANCE.length;
-        const idx = (step + 1) % F_DANCE.length;
-        return F_DANCE[idx];
+        const step = Math.floor(this.stateElapsed / period) % DANCE_ORDER.length;
+        return F_DANCE[DANCE_ORDER[step]];
       }
       case 'winding-up': {
         // First throw-prep frame — arms raising.

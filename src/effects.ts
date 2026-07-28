@@ -5,6 +5,19 @@ const MAX_PARTICLES = 600;
 const MAX_LIGHTNING = 12;
 const MAX_PACMEN = 8;
 
+// In-place write-index compaction. Avoids the per-frame `.filter()` allocation
+// on hot animation arrays (particles/lightning/pacmen/pellets tick every frame).
+function compact<T>(arr: T[], keep: (item: T) => boolean): void {
+  let write = 0;
+  for (let read = 0; read < arr.length; read++) {
+    if (keep(arr[read])) {
+      if (write !== read) arr[write] = arr[read];
+      write++;
+    }
+  }
+  arr.length = write;
+}
+
 export interface LightningBolt {
   points: { x: number; y: number }[];
   life: number;
@@ -99,11 +112,15 @@ export class EffectsManager {
   }
 
   spawnPacman(startX: number, y: number, endX: number, color: string, size = 14): void {
-    this.createPacman(startX, y, endX, color, size, 'standard', 30);
+    // 16 frames ≈ 267ms — synced with LINE_CLEAR_HOLD_MS so the pacman finishes
+    // its run just as the cleared rows drop out of the board.
+    this.createPacman(startX, y, endX, color, size, 'standard', 16);
   }
 
   spawnBreakerPacman(startX: number, y: number, endX: number, color: string, size = 48): void {
-    this.createPacman(startX, y, endX, color, size, 'breaker', 42);
+    // Tetris flourish runs slightly slower for drama, still tuned to overlap
+    // the cleared-row hold rather than trail behind it.
+    this.createPacman(startX, y, endX, color, size, 'breaker', 22);
     const boltOffsets = [-size / 2, 0, size / 2];
     const boltColors = [color, '#00f0ff', '#ff2bd6'];
     for (let index = 0; index < boltOffsets.length; index++) {
@@ -198,7 +215,7 @@ export class EffectsManager {
     }
 
     for (const bolt of this.lightning) bolt.life -= 0.045 * dt;
-    this.lightning = this.lightning.filter((bolt) => bolt.life > 0);
+    compact(this.lightning, (bolt) => bolt.life > 0);
 
     this.ambientLightningTimer -= dtMs;
     if (this.ambientLightningTimer <= 0) {
@@ -217,7 +234,7 @@ export class EffectsManager {
       p.vx *= 0.98;
       p.life -= 0.018 * dt;
     }
-    this.particles = this.particles.filter((p) => p.life > 0);
+    compact(this.particles, (p) => p.life > 0);
 
     for (const pm of this.pacmen) {
       pm.x += pm.vx * dt;
@@ -228,10 +245,10 @@ export class EffectsManager {
         pm.lastPelletX = pm.x;
       }
       for (const pel of pm.pellets) pel.life -= 0.04 * dt;
-      pm.pellets = pm.pellets.filter((pel) => pel.life > 0);
+      compact(pm.pellets, (pel) => pel.life > 0);
       pm.life -= 0.02 * dt;
     }
-    this.pacmen = this.pacmen.filter((pm) => pm.life > 0 || pm.pellets.length > 0);
+    compact(this.pacmen, (pm) => pm.life > 0 || pm.pellets.length > 0);
   }
 
   currentAnnouncement(): Announcement | null {

@@ -114,8 +114,8 @@ export class SFX {
     if (o.verb) {
       tone(o.ctx, o.verb, 'sine', base * 3, 0.005, 0.4, 0.12, base * 5);
     }
-    // Bright ping
-    const notes = [880, 1108, 1319][rows - 1] ? [660, 880, 1108, 1319].slice(0, rows) : [880];
+    // Bright ping — one note per row cleared, ascending.
+    const notes = [660, 880, 1108, 1319].slice(0, Math.max(1, Math.min(4, rows)));
     notes.forEach((n, i) => {
       const t = o.ctx.currentTime + i * 0.03;
       const osc = o.ctx.createOscillator();

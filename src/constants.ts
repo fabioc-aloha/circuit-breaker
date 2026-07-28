@@ -52,13 +52,11 @@ export const BOSS_DAMAGE: Record<number, number> = { 1: 1, 2: 3, 3: 5, 4: 10 };
 export const COLORS = {
   bg: '#05010f',
   grid: 'rgba(0, 240, 255, 0.06)',
-  gridStrong: 'rgba(0, 240, 255, 0.12)',
   copperTrace: 'rgba(140, 80, 20, 0.18)',
   panelBg: 'rgba(10, 5, 24, 0.85)',
   panelBorder: 'rgba(0, 240, 255, 0.3)',
   hudText: '#e6f8ff',
   hudDim: '#7aa9b8',
-  ghost: 'rgba(255, 255, 255, 0.14)',
   bossHp: '#ff2b4a',
   bossHpLow: '#ffe600',
   warn: '#ffe600',

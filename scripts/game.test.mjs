@@ -269,7 +269,7 @@ test('replaces row Pacmen with one breaker Pacman for a four-line clear', () => 
   assert.equal(effects.breakerSize, 60);
 });
 
-test('does not increase voltage tier from cleared-line thresholds', () => {
+test('advances voltage tier every LINES_PER_LEVEL line clears', () => {
   const game = createGame();
   game.beginRun();
   game.lines = 9;
@@ -278,6 +278,20 @@ test('does not increase voltage tier from cleared-line thresholds', () => {
 
   game.lockAndAdvance();
 
+  assert.equal(game.lines, 10);
+  assert.equal(game.level, 2);
+});
+
+test('holds voltage tier when a clear does not cross the tier threshold', () => {
+  const game = createGame();
+  game.beginRun();
+  game.lines = 3;
+  game.active = { kind: 'I', rotation: 0, x: 3, y: 20 };
+  game.board.grid[21] = ['J', 'J', 'J', 0, 0, 0, 0, 'J', 'J', 'J'];
+
+  game.lockAndAdvance();
+
+  assert.equal(game.lines, 4);
   assert.equal(game.level, 1);
 });
 
@@ -294,6 +308,31 @@ test('increases voltage tier after defeating a boss', () => {
   game.lockAndAdvance();
 
   assert.equal(game.level, 2);
+});
+
+test('flushes a pending line-clear before applying a garbage attack', () => {
+  const game = createGame();
+  game.beginRun();
+  // Set up a completed row that would be pending-cleared, then simulate a
+  // boss garbage attack firing before the 260 ms hold expires.
+  game.board.grid[21] = ['J', 'J', 'J', 'J', 'J', 'J', 'J', 'J', 'J', 'J'];
+  game.pendingLineClear = { rows: [21], remainingMs: 200 };
+  game.board.clearingRows.add(21);
+
+  const originalRandom = Math.random;
+  Math.random = () => 0.5;
+  try {
+    game.executeAttack('garbage');
+  } finally {
+    Math.random = originalRandom;
+  }
+
+  // Pending clear resolved: the full row is gone, clearing set empty, and
+  // one garbage row now sits at the bottom.
+  assert.equal(game.pendingLineClear, null);
+  assert.equal(game.board.clearingRows.size, 0);
+  assert.equal(game.board.grid[21].filter((v) => v === 'G').length, 9);
+  assert.equal(game.board.grid[21].filter((v) => v === 0).length, 1);
 });
 
 test('ends the run when garbage displaces blocks above the board', () => {

@@ -1,36 +1,44 @@
 # Third-Party Asset Credits
 
-## Kong sprite
+## Kong sprites
 
-- **Deployed file**: [public/kong-sprite.png](public/kong-sprite.png) — the
-  transparent PNG the game loads at runtime.
+Both PNG files in `public/` — `kong-sprite.png` (main sheet used for the idle,
+walk, and throw animations) and `kong-dance.png` (five-pose celebration strip
+used on victory / game over) — are attributed to:
+
+- **Artist**: [JayHyperStarX](https://www.deviantart.com/jayhyperstarx) on
+  DeviantArt (US-based digital art hobbyist; open for commissions).
+- **Deviation**: *Donkey Kong — Sprite Sheet*, published on the artist's
+  DeviantArt gallery. Visit the gallery to browse.
 - **Reference sources** (kept for provenance, not shipped to the browser):
-  - [docs/assets/sources/kong-sprite-original.png](docs/assets/sources/kong-sprite-original.png) — the raw asset the deployed sprite was derived from.
-  - [docs/assets/sources/kong-vector-reference.jpg](docs/assets/sources/kong-vector-reference.jpg) — vector-style reference used during earlier iteration passes.
-- **Content**: cartoon gorilla character sprite sheet used for the Kong intro
-  animation and thrower on the game board.
-- **Source**: _TODO — user to add attribution._ The asset was supplied as an
-  open-source / stock file during development on 2026-07-22. Please replace
-  this line with the artist name, source URL, and specific license
-  (e.g. CC0, CC-BY 4.0, OGA-BY 3.0) before shipping to a wider public audience
-  so downstream users know the reuse terms.
-- **License**: _TODO — pending confirmation of the specific open-source license._
+  - [docs/assets/sources/kong-sprite-original.png](docs/assets/sources/kong-sprite-original.png)
+    — the raw asset the deployed sprite was derived from.
+  - [docs/assets/sources/kong-vector-reference.jpg](docs/assets/sources/kong-vector-reference.jpg)
+    — vector-style reference used during earlier iteration passes.
 
-If the license requires visible attribution (CC-BY family), also surface a
-short credit line in the game UI or in the site footer.
+### Character copyright
 
-## Kong celebration dance strip
+The Donkey Kong character depicted in these sprites (proportions, palette,
+DK-monogrammed red necktie) is **© Nintendo Co., Ltd.**, first introduced in
+1981 and redesigned by Rareware in *Donkey Kong Country* (1994). JayHyperStarX
+drew the sprite sheet as fan art. No license from Nintendo has been granted
+for the use of the character on this site; this deployment is a
+**non-commercial fan homage** and is not affiliated with, endorsed by, or
+sponsored by Nintendo.
 
-- **Deployed file**: [public/kong-dance.png](public/kong-dance.png) — the
-  1286×196 transparent PNG loaded when the run ends (top-out or victory).
-- **Content**: five-pose horizontal strip of the same cartoon gorilla
-  character mid-dance, used only in the celebration state.
-- **Source**: _TODO — user to add attribution._ The asset was supplied as an
-  open-source / stock file during development on 2026-07-22. Please replace
-  this line with the artist name, source URL, and specific license
-  (e.g. CC0, CC-BY 4.0, OGA-BY 3.0) before shipping to a wider public
-  audience so downstream users know the reuse terms.
-- **License**: _TODO — pending confirmation of the specific open-source license._
+### Sprite sheet license
 
-Same attribution rule as the sprite sheet above: if the license requires
-visible attribution, surface it in the UI or footer.
+The sprite sheet itself carries **no explicit license** on the artist's
+DeviantArt page. Under DeviantArt's default terms, the sprite art is
+copyrighted by the artist, and re-use requires the artist's permission. This
+site displays the sheet without explicit permission on the strength of the
+non-commercial fan-tribute context and the attribution above. If the game is
+promoted, monetised, or expanded beyond a personal portfolio, contact the
+artist for a use grant (their commissions were open at the time of writing).
+
+### Removal / takedown
+
+If either the character rights-holder or the sprite artist requests removal,
+the sprites will be replaced with an original ape character or the Kong
+thrower will be removed entirely from the game. Contact via the repository's
+issue tracker.

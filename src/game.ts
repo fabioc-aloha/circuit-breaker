@@ -16,9 +16,12 @@ import {
     HUD_PADDING,
     KONG_LEDGE_H,
     LINE_SCORE,
+    LINES_PER_LEVEL,
     LOCK_DELAY_MS,
+    LOW_HP_THRESHOLD,
     PIECE_COLORS,
     SIDE_PANEL_W,
+    SOFT_DROP_FACTOR,
     SOFT_DROP_POINTS,
     SPIKE_DURATION_MS,
     SPIKE_MULTIPLIER,
@@ -32,6 +35,9 @@ import type { ActiveBoss, ActivePiece, BossAttackKind, CutsceneState, GamePhase,
 
 const BOARD_PIXEL_ORIGIN_X = HUD_PADDING + SIDE_PANEL_W + HUD_PADDING;
 const BOARD_PIXEL_ORIGIN_Y = HUD_PADDING + KONG_LEDGE_H;
+// Hold cleared rows visible-but-empty for this many ms so the pacman burst
+// finishes crossing them before the stack drops. Matches pacman travel time.
+const LINE_CLEAR_HOLD_MS = 260;
 
 export class Game implements InputActions {
   phase: GamePhase = 'ready';
@@ -56,6 +62,9 @@ export class Game implements InputActions {
   softDropHeld = false;
   spikeUntil = 0;
   blackoutUntil = 0;
+  // Row indices held visible-empty during a line-clear animation. When the
+  // timer expires, board.removeRows is called and the stack falls.
+  private pendingLineClear: { rows: number[]; remainingMs: number } | null = null;
 
   // Kong paces the girder above the board and throws each new piece down
   // from his current column. Constructed here so tests can inspect state.
@@ -82,8 +91,11 @@ export class Game implements InputActions {
     this.cutscene = null;
     this.gravityTimer = 0;
     this.lockTimer = 0;
+    this.softDropTimer = 0;
+    this.softDropHeld = false;
     this.spikeUntil = 0;
     this.blackoutUntil = 0;
+    this.pendingLineClear = null;
     this.active = null;
     // Fresh Kong for this run — he climbs the ladder and beats his chest
     // before the first piece drops. Piece queued now, released after intro.
@@ -94,6 +106,16 @@ export class Game implements InputActions {
   }
 
   update(dtMs: number): void {
+    // Tick the deferred line-clear regardless of phase so a boss-defeat
+    // cutscene doesn't strand the board with permanently-empty rows.
+    if (this.pendingLineClear && this.phase !== 'paused') {
+      this.pendingLineClear.remainingMs -= dtMs;
+      if (this.pendingLineClear.remainingMs <= 0) {
+        this.board.removeRows(this.pendingLineClear.rows);
+        this.pendingLineClear = null;
+      }
+    }
+
     if (this.phase !== 'playing') {
       if (this.cutscene) {
         this.cutscene.timer -= dtMs;
@@ -136,6 +158,22 @@ export class Game implements InputActions {
       this.stepGravity();
     }
 
+    // Soft drop is polled via InputController every frame; ticking here with
+    // the real frame dt keeps drop rate stable across refresh rates.
+    if (this.softDropHeld && this.active) {
+      this.softDropTimer += dtMs;
+      const interval = Math.max(20, gravityBase / SOFT_DROP_FACTOR);
+      while (this.softDropTimer >= interval) {
+        this.softDropTimer -= interval;
+        if (this.board.softDrop(this.active)) {
+          this.score += SOFT_DROP_POINTS;
+          this.sfx.softDropTick();
+        } else break;
+      }
+    } else {
+      this.softDropTimer = 0;
+    }
+
     // Boss attacks
     if (this.boss) {
       this.boss.attackTimer -= dtMs;
@@ -158,7 +196,7 @@ export class Game implements InputActions {
 
   private updateMusicMode(): void {
     if (this.phase !== 'playing') return;
-    if (this.boss && this.boss.hp / this.boss.maxHp < 0.25) this.music.setMode('boss-low');
+    if (this.boss && this.boss.hp / this.boss.maxHp < LOW_HP_THRESHOLD) this.music.setMode('boss-low');
     else this.music.setMode('boss');
   }
 
@@ -178,10 +216,13 @@ export class Game implements InputActions {
     if (!this.active) return;
     this.board.lock(this.active);
     this.sfx.lock();
-    // Line clears
-    const cleared = this.board.clearLines();
+    // Detect full rows but leave them in the grid — the renderer hides them
+    // via board.clearingRows so the pacman burst crosses empty space, and
+    // pendingLineClear will remove them once the animation window closes.
+    const cleared = this.board.getFullRows();
     const rows = cleared.length;
     if (rows > 0) {
+      for (const r of cleared) this.board.clearingRows.add(r);
       this.combo += 1;
       const base = LINE_SCORE[rows] ?? 0;
       const gained = base * this.level * (this.combo > 1 ? this.combo : 1);
@@ -226,6 +267,23 @@ export class Game implements InputActions {
       // Boss damage
       if (this.boss) this.damageBoss(BOSS_DAMAGE[rows] * (this.combo > 1 ? this.combo : 1));
       if (this.phase === 'victory') return;
+      // Schedule the actual grid mutation so the pacman burst can finish
+      // crossing the empty rows before the stack drops.
+      this.pendingLineClear = { rows: cleared, remainingMs: LINE_CLEAR_HOLD_MS };
+      // Tier advances by lines OR boss stage, whichever is higher. Boss defeat
+      // bumps bossIndex inside damageBoss above, so the max() picks it up here.
+      const nextLevel = Math.max(
+        1 + Math.floor(this.lines / LINES_PER_LEVEL),
+        this.bossIndex + 1,
+      );
+      if (nextLevel > this.level) {
+        this.level = nextLevel;
+        this.effects.flash(0.35, 220);
+        this.sfx.uiBlip();
+        // On a tetris the MAIN BREAKER banner is already flashing; don't
+        // stomp it with the tier callout.
+        if (rows < 4) this.effects.showAnnouncement('VOLTAGE TIER UP', `TIER ${this.level} ONLINE`, 900);
+      }
     } else {
       this.combo = 0;
     }
@@ -262,7 +320,6 @@ export class Game implements InputActions {
       }
       const next = BOSSES[this.bossIndex];
       this.boss = makeActiveBoss(next);
-      this.level = this.bossIndex + 1;
       this.cutscene = {
         text: [
           `${defeated.name}: ${defeated.defeatQuote}`,
@@ -281,11 +338,21 @@ export class Game implements InputActions {
     return kinds[Math.floor(Math.random() * kinds.length)];
   }
 
+  /** Force the deferred line-clear to resolve immediately. Called before boss
+   *  attacks that mutate the grid — otherwise the pending row indices would
+   *  point at stale rows after a garbage push or a scramble. */
+  private flushPendingLineClear(): void {
+    if (!this.pendingLineClear) return;
+    this.board.removeRows(this.pendingLineClear.rows);
+    this.pendingLineClear = null;
+  }
+
   private executeAttack(kind: BossAttackKind): void {
     this.sfx.alarm();
     this.effects.shake(4, 300);
     switch (kind) {
       case 'garbage': {
+        this.flushPendingLineClear();
         const rows = 1 + Math.floor(Math.random() * 4);
         const displacedBlocks = this.board.addGarbage(rows);
         if (this.active) this.active.y -= rows;
@@ -299,6 +366,7 @@ export class Game implements InputActions {
         this.blackoutUntil = performance.now() + BLACKOUT_DURATION_MS;
         break;
       case 'scramble': {
+        this.flushPendingLineClear();
         const a = Math.floor(Math.random() * COLS);
         let b = Math.floor(Math.random() * COLS);
         while (b === a) b = Math.floor(Math.random() * COLS);
@@ -362,18 +430,12 @@ export class Game implements InputActions {
     }
   }
   softDrop(hold: boolean): void {
-    if (this.phase !== 'playing' || !this.active) return;
-    this.softDropHeld = hold;
-    if (!hold) return;
-    this.softDropTimer += 16;
-    const interval = Math.max(20, gravityFor(this.level) / 20);
-    while (this.softDropTimer >= interval) {
-      this.softDropTimer -= interval;
-      if (this.board.softDrop(this.active)) {
-        this.score += SOFT_DROP_POINTS;
-        this.sfx.softDropTick();
-      } else break;
+    if (this.phase !== 'playing' || !this.active) {
+      this.softDropHeld = false;
+      return;
     }
+    this.softDropHeld = hold;
+    if (!hold) this.softDropTimer = 0;
   }
   hardDrop(): void {
     if (this.phase !== 'playing' || !this.active) return;

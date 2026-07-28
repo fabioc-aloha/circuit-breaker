@@ -85,11 +85,6 @@ export function cellsOf(piece: ActivePiece): Point[] {
   return shape.map((c) => P(piece.x + c.x, piece.y + c.y));
 }
 
-export function cellsAtRotation(piece: ActivePiece, rot: Rotation): Point[] {
-  const shape = SHAPES[piece.kind][rot];
-  return shape.map((c) => P(piece.x + c.x, piece.y + c.y));
-}
-
 /** Get wall-kick offsets to try, converting SRS (y+ = up) to board (y+ = down). */
 export function kicksFor(kind: PieceKind, from: Rotation, to: Rotation): Point[] {
   if (kind === 'O') return [P(0, 0)];

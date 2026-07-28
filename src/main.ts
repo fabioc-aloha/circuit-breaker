@@ -162,7 +162,6 @@ function loop(now: number): void {
     paused: game.phase === 'paused',
     gameOver: game.phase === 'gameover',
     victory: game.phase === 'victory',
-    bootText: null,
     cutsceneText: game.cutscene?.text ?? null,
     muted: audio.muted,
     kong: game.kong,

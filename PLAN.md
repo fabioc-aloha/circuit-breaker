@@ -7,7 +7,8 @@
 | Status | Area | Evidence or next action |
 | --- | --- | --- |
 | Complete | Core block-stacker | Seven-bag, SRS, collision, hold, ghost, scoring, gravity, pause, restart, and local high score are implemented. |
-| Complete | Boss Rush | Five bosses, boss-driven voltage tiers, distinct HUD silhouettes, integrity, damage, attacks, cutscenes, victory, and terminal-state regression coverage are implemented. |
+| Complete | Boss Rush | Five bosses, dual-source voltage tiers (whichever is higher of `1 + floor(lines / LINES_PER_LEVEL)` and `bossIndex + 1`, with `NEXT TIER IN N` progress bar and tier-up announcement), distinct HUD silhouettes, integrity, damage, attacks, cutscenes, victory, and terminal-state regression coverage are implemented. |
+| Complete | Line-clear animation | Cleared rows hold visible-but-empty for 260 ms while the neon Pacman crosses; grid mutation is deferred so the effect and the drop land together. |
 | Complete | Audio baseline | Procedural SFX/BGM, mute persistence, boss-low mode, and autoplay-safe boot are implemented. |
 | Complete | Visual baseline | Responsive cabinet framing, HUD hierarchy, bezel reflection and screws, circuit-grid background, ambient and boot lightning, neon blocks, scanlines, particles, flash, shake, row Pacmen, the giant Tetris breaker Pacman with foreground lightning arcs, the top-layer board-roaming game-over Grid Wraith, boot text, and favicon are implemented. |
 | Complete | Delivery | Vite build, resilient cached Static Web Apps quote API, static deployment configuration, SEO assets, privacy-safe visit instrumentation, and the local validation gate are implemented. |
@@ -192,6 +193,6 @@ GLITCH.exe  │               │  LINES
 | Core engine | Complete | Board state, collision, locking, clearing, gravity, and fixed animation updates are implemented. |
 | Rendering | Complete | Hold, board, next queue, ghost piece, HUD, overlays, boss silhouettes, and responsive cabinet framing are implemented. |
 | Input and scoring | Complete | DAS/ARR, drops, rotation, hold, pause, restart, scoring, level progression, and local high score are implemented. |
-| Boss Rush | Complete | Five bosses, boss-driven voltage tiers, damage, combo scaling, four attacks, cutscenes, victory, and the planned garbage-row range are implemented. |
+| Boss Rush | Complete | Five bosses, dual-source voltage tiers (line-count and boss defeat, whichever is higher), damage, combo scaling, four attacks, cutscenes, victory, and the planned garbage-row range are implemented. |
 | Audio | Complete | Procedural music and effects, mute, persisted volume controls, and autoplay-safe initialization are implemented. |
 | Polish | Complete | The arcade visual system, lightning, particles, clear effects, boot sequence, favicon, README, SEO, and instrumentation are complete. |

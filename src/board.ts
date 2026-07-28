@@ -1,11 +1,15 @@
 // CIRCUIT BREAKER — board (grid + collisions + line clears)
-import type { ActivePiece, CellValue, PieceKind, Rotation } from './types';
 import { COLS, HIDDEN_ROWS, TOTAL_ROWS } from './constants';
 import { cellsOf, kicksFor } from './piece';
+import type { ActivePiece, CellValue, PieceKind, Rotation } from './types';
 
 export class Board {
   // grid[row][col]; row 0 = top; TOTAL_ROWS = ROWS + HIDDEN_ROWS
   grid: CellValue[][];
+  // Rows currently being animated out by a line-clear. Content is still in the
+  // grid so scoring/topout stay consistent, but the renderer skips drawing
+  // block cells here so effects (pacman burst) can cross empty space.
+  clearingRows: Set<number> = new Set();
 
   constructor() {
     this.grid = Board.emptyGrid();
@@ -17,6 +21,7 @@ export class Board {
 
   reset(): void {
     this.grid = Board.emptyGrid();
+    this.clearingRows.clear();
   }
 
   inBounds(x: number, y: number): boolean {
@@ -102,16 +107,29 @@ export class Board {
 
   /** Detect and clear full lines. Returns cleared row indices (top->bottom order). */
   clearLines(): number[] {
-    const cleared: number[] = [];
-    for (let y = 0; y < TOTAL_ROWS; y++) {
-      if (this.grid[y].every((v) => v !== 0)) cleared.push(y);
-    }
+    const cleared = this.getFullRows();
     if (cleared.length === 0) return cleared;
-    // Remove cleared rows and prepend empty ones so the stack falls.
-    const kept = this.grid.filter((_, y) => !cleared.includes(y));
+    this.removeRows(cleared);
+    return cleared;
+  }
+
+  /** Return indices of currently-full rows without mutating the grid. */
+  getFullRows(): number[] {
+    const rows: number[] = [];
+    for (let y = 0; y < TOTAL_ROWS; y++) {
+      if (this.grid[y].every((v) => v !== 0)) rows.push(y);
+    }
+    return rows;
+  }
+
+  /** Remove the given row indices and shift above blocks down to fill. */
+  removeRows(indices: number[]): void {
+    if (indices.length === 0) return;
+    const set = new Set(indices);
+    const kept = this.grid.filter((_, y) => !set.has(y));
     while (kept.length < TOTAL_ROWS) kept.unshift(Array<CellValue>(COLS).fill(0));
     this.grid = kept;
-    return cleared;
+    this.clearingRows.clear();
   }
 
   /** Rise N garbage rows from the bottom with a random hole column. */

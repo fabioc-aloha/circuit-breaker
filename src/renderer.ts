@@ -12,6 +12,7 @@ import {
     HIDDEN_ROWS,
     HUD_PADDING,
     KONG_LEDGE_H,
+    LINES_PER_LEVEL,
     PIECE_COLORS,
     ROWS,
     SIDE_PANEL_W,
@@ -39,7 +40,6 @@ export interface RenderState {
   paused: boolean;
   gameOver: boolean;
   victory: boolean;
-  bootText: string | null;
   cutsceneText: string[] | null;
   muted: boolean;
   kong: Kong;
@@ -52,6 +52,7 @@ export class Renderer {
   private boardY: number;
   private leftPanelX: number;
   private rightPanelX: number;
+  private scanlinePattern: CanvasPattern | null = null;
 
   constructor(canvas: HTMLCanvasElement, private effects: EffectsManager) {
     canvas.width = CANVAS_W;
@@ -114,24 +115,23 @@ export class Renderer {
     const ctx = this.ctx;
     ctx.fillStyle = COLORS.bg;
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-    // Animated circuit-trace grid
+    // Animated circuit-trace grid — batched into one path per orientation
+    // (previously begin/stroke per line = ~40 draw calls per frame).
     ctx.strokeStyle = COLORS.copperTrace;
     ctx.lineWidth = 1;
     const t = s.time / 4000;
+    ctx.beginPath();
     for (let x = 0; x < CANVAS_W; x += 40) {
       const off = ((t * 20 + x) % 40) - 20;
-      ctx.beginPath();
       ctx.moveTo(x + off, 0);
       ctx.lineTo(x + off, CANVAS_H);
-      ctx.stroke();
     }
     for (let y = 0; y < CANVAS_H; y += 40) {
       const off = ((t * 15 + y) % 40) - 20;
-      ctx.beginPath();
       ctx.moveTo(0, y + off);
       ctx.lineTo(CANVAS_W, y + off);
-      ctx.stroke();
     }
+    ctx.stroke();
   }
 
   private drawLightning(foreground: boolean): void {
@@ -164,24 +164,26 @@ export class Renderer {
     // Panel bg + border
     this.drawPanel(this.boardX - 4, this.boardY - 4, BOARD_PX_W + 8, BOARD_PX_H + 8);
 
-    // Grid
+    // Grid — batched into one path (was 32 begin/stroke pairs per frame).
     ctx.strokeStyle = COLORS.grid;
     ctx.lineWidth = 1;
+    ctx.beginPath();
     for (let x = 0; x <= COLS; x++) {
-      ctx.beginPath();
-      ctx.moveTo(this.boardX + x * CELL + 0.5, this.boardY);
-      ctx.lineTo(this.boardX + x * CELL + 0.5, this.boardY + BOARD_PX_H);
-      ctx.stroke();
+      const gx = this.boardX + x * CELL + 0.5;
+      ctx.moveTo(gx, this.boardY);
+      ctx.lineTo(gx, this.boardY + BOARD_PX_H);
     }
     for (let y = 0; y <= ROWS; y++) {
-      ctx.beginPath();
-      ctx.moveTo(this.boardX, this.boardY + y * CELL + 0.5);
-      ctx.lineTo(this.boardX + BOARD_PX_W, this.boardY + y * CELL + 0.5);
-      ctx.stroke();
+      const gy = this.boardY + y * CELL + 0.5;
+      ctx.moveTo(this.boardX, gy);
+      ctx.lineTo(this.boardX + BOARD_PX_W, gy);
     }
+    ctx.stroke();
 
-    // Locked cells
+    // Locked cells (rows currently animating out are skipped so the line-clear
+    // pacman can zip across empty space instead of through shifted-down blocks).
     for (let y = HIDDEN_ROWS; y < HIDDEN_ROWS + ROWS; y++) {
+      if (s.board.clearingRows.has(y)) continue;
       for (let x = 0; x < COLS; x++) {
         const v = s.board.grid[y][x];
         if (v !== 0) {
@@ -334,23 +336,36 @@ export class Renderer {
 
     // Stats
     const sy = y + 280;
-    this.drawPanel(x, sy, SIDE_PANEL_W, 200);
+    this.drawPanel(x, sy, SIDE_PANEL_W, 220);
     this.drawStat(x + 12, sy + 24, 'SCORE', s.score.toString());
     this.drawStat(x + 12, sy + 60, 'HI-SCORE', s.hiScore.toString());
     this.drawStat(x + 12, sy + 96, 'VOLTAGE TIER', s.level.toString());
     this.drawStat(x + 12, sy + 132, 'LINES', s.lines.toString());
+    // Progress bar toward the next tier — lines-based advancement.
+    const linesInTier = s.lines % LINES_PER_LEVEL;
+    const barX = x + 12;
+    const barY = sy + 170;
+    const barW = SIDE_PANEL_W - 24;
+    const barH = 4;
+    ctx.fillStyle = 'rgba(0, 240, 255, 0.12)';
+    ctx.fillRect(barX, barY, barW, barH);
+    ctx.fillStyle = COLORS.cyan;
+    ctx.fillRect(barX, barY, Math.floor(barW * (linesInTier / LINES_PER_LEVEL)), barH);
+    ctx.fillStyle = COLORS.hudDim;
+    ctx.font = '9px Consolas, monospace';
+    ctx.fillText(`NEXT TIER IN ${LINES_PER_LEVEL - linesInTier}`, barX, barY + barH + 10);
     if (s.combo > 1) {
       ctx.fillStyle = COLORS.warn;
       ctx.shadowColor = COLORS.warn;
       ctx.shadowBlur = 8;
       ctx.font = 'bold 14px Consolas, monospace';
-      ctx.fillText(`AMPERAGE ×${s.combo}`, x + 12, sy + 170);
+      ctx.fillText(`AMPERAGE ×${s.combo}`, x + 12, sy + 200);
       ctx.shadowBlur = 0;
     }
     if (s.spike) {
       ctx.fillStyle = COLORS.warn;
-      ctx.font = 'bold 12px Consolas, monospace';
-      ctx.fillText('⚡ VOLTAGE SPIKE', x + 12, sy + 190);
+      ctx.font = 'bold 11px Consolas, monospace';
+      ctx.fillText('⚡ VOLTAGE SPIKE', x + SIDE_PANEL_W - 12 - ctx.measureText('⚡ VOLTAGE SPIKE').width, sy + 200);
     }
   }
 
@@ -666,10 +681,23 @@ export class Renderer {
 
   private drawScanlines(): void {
     const ctx = this.ctx;
+    // One repeating 1×3 pattern (2px transparent + 1px dark) instead of
+    // ~240 fillRects per frame.
+    if (!this.scanlinePattern) {
+      const tile = document.createElement('canvas');
+      tile.width = 1;
+      tile.height = 3;
+      const tctx = tile.getContext('2d');
+      if (tctx) {
+        tctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+        tctx.fillRect(0, 2, 1, 1);
+        this.scanlinePattern = ctx.createPattern(tile, 'repeat');
+      }
+    }
+    if (!this.scanlinePattern) return;
     ctx.save();
-    ctx.globalAlpha = 0.06;
-    ctx.fillStyle = '#000';
-    for (let y = 0; y < CANVAS_H; y += 3) ctx.fillRect(0, y, CANVAS_W, 1);
+    ctx.fillStyle = this.scanlinePattern;
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
     ctx.restore();
   }
 

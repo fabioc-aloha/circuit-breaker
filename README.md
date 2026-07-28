@@ -96,7 +96,8 @@ cleanly from Tetr.io / Jstris:
 
 - Seven tetrominoes with full **SRS rotation + wall-kick tables** for JLSTZ and I
 - **7-bag randomizer**, one-swap-per-drop hold, ghost preview, and next-three queue
-- **AMPERAGE xN** combo tracker, boss-driven voltage tiers and gravity, and a local high score
+- **AMPERAGE ×N** combo tracker, **VOLTAGE TIER** that rises every ten line clears *and* on each boss defeat (whichever comes first) with a live *NEXT TIER IN N* progress bar under the LINES stat, gravity curve tied to tier, and a local high score
+- Line clears freeze the row visibly-but-briefly while a neon Pacman streaks across the empty space, then the stack drops — the animation and the mutation happen together instead of the clear finishing before the effect starts
 
 ### Kong on the girder
 
@@ -112,8 +113,10 @@ the spawn point:
   drift matters, and you learn to read his facing direction
 - He goes silent and still when you pause (**P**) so you can screenshot the
   throw mid-flight
-- When the run ends (top-out or victory) he breaks into a five-pose
-  celebration dance on the girder — because of course he does
+- When the run ends (top-out or victory) he breaks into a **five-pose
+  360° victory spin** on the girder — front pose → side-profile spin →
+  back pose → side → alt-front → side → alt-back → side, bouncing on each
+  landing — because of course he does
 
 ### Boss Rush
 
@@ -244,6 +247,6 @@ The manual command is a recovery path, not the normal release process.
 
 MIT -- hack it, remix it, ship your own arcade cabinet.
 
-Third-party art assets (currently: the Kong sprite sheet) are credited
+Third-party art assets (currently: the Kong sprite sheet + celebration dance strip) are credited
 separately in [CREDITS.md](CREDITS.md). Please preserve those attributions
 if you fork the game.

@@ -46,11 +46,6 @@ export interface ActiveBoss {
   attackTimer: number; // ms until next attack
 }
 
-export interface EffectFlags {
-  blackoutUntil: number; // performance.now() ms
-  spikeUntil: number;
-}
-
 export interface Particle {
   x: number;
   y: number;
