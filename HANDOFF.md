@@ -1,6 +1,16 @@
 # Session Handoff
 
-Last updated: 2026-07-28
+Last updated: 2026-08-08 (instrumentation health audit; prior handoff follows)
+
+## 2026-08-08 - Circuit Breaker instrumentation health
+
+Production passed the complete tracker contract: activation, both client assets,
+`circuit-breaker` site key, tracker endpoint, CSP, exact-origin preflight, and
+collector POST. Both clients return `Cache-Control: no-store`, no gameplay or
+score state appears in the tracker payload, and no Umami residue was found. No
+Circuit Breaker code or configuration change was needed. The worktree was clean
+at audit start; the older uncommitted-work snapshot below is historical.
+Portfolio evidence: [2026-08-08 audit](https://github.com/fabioc-aloha/seo-correax/blob/main/reports/2026-08-08-instrumentation-health-audit.md).
 
 ## Just shipped (in working tree — not yet committed)
 
