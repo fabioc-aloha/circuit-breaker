@@ -81,5 +81,8 @@
   "azureFunctions.projectRuntime": "~4",
   "debug.internalConsoleOptions": "neverOpen",
   "azureFunctions.projectLanguageModel": 4,
-  "azureFunctions.preDeployTask": "npm prune (functions)"
+  "azureFunctions.preDeployTask": "npm prune (functions)",
+  "$comment": "Scout workspace settings remain portable and profile-neutral. This project starts without Alex ACT skill, prompt, agent, or instruction discovery paths.",
+  "markdown.validate.enabled": true,
+  "markdown.updateLinksOnFileMove.enabled": "prompt"
 }
