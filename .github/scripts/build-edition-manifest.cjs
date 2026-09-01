@@ -72,10 +72,8 @@ const EDITION_CONFIG_FILES = new Set([
   'README.md',
 ]);
 
-// Edition-owned VS Code assets (heir-owned like settings.json + extensions.json excluded).
-const EDITION_VSCODE_FILES = new Set([
-  'markdown-light.css',
-]);
+// Project-local VS Code assets are not shipped; Markdown Preview uses user-level defaults.
+const EDITION_VSCODE_FILES = new Set();
 
 const args = process.argv.slice(2);
 const checkOnly = args.includes('--check');

@@ -326,7 +326,6 @@ if (!APPLY) {
 // Step 1: Copy heir-owned files to temp holding area
 const holdDir = fs.mkdtempSync(path.join(os.tmpdir(), 'heir-owned-'));
 let backupCreated = false;
-let editionAssetsRefreshed = 0;
 let recovered = 0;
 let relocated = 0;
 let templatesSeeded = 0;
@@ -351,23 +350,6 @@ try {
         heirOwnedPatterns: HEIR_OWNED,
         bootstrapTemplateSet,
     });
-
-// Step 3.5: Refresh EDITION_OWNED files outside .github/.
-// Step 3 only refreshes the .github/ subtree. Anything EDITION_OWNED that lives
-// elsewhere (today: .vscode/markdown-light.css) would otherwise silently drift.
-// HEIR_OWNED .vscode/ files (.vscode/settings.json, .vscode/extensions.json)
-// are NOT in EDITION_OWNED and are preserved via the existing backup/restore.
-for (const pattern of EDITION_OWNED) {
-    if (pattern.startsWith('.github/')) continue;
-    for (const rel of expandGlob(tmp, pattern)) {
-        const src = path.join(tmp, rel);
-        const dst = path.join(HEIR_ROOT, rel);
-        if (!fs.existsSync(src)) continue;
-        fs.mkdirSync(path.dirname(dst), { recursive: true });
-        fs.copyFileSync(src, dst);
-        editionAssetsRefreshed++;
-    }
-}
 
 // Step 4: Restore heir-owned files (with relocations applied)
 const relocationMap = new Map();
@@ -446,9 +428,6 @@ if (memoryBus && memoryBus.message) console.log(memoryBus.message);
 console.log('');
 console.log(`Upgrade complete: ${currentVersion} -> ${newVersion}`);
 console.log(`Fresh brain installed. ${recovered} heir-owned files recovered. ${relocated} relocated to local/.`);
-if (editionAssetsRefreshed > 0) {
-    console.log(`Edition assets refreshed outside .github/: ${editionAssetsRefreshed}`);
-}
 if (templatesSeeded > 0) {
     console.log(`Bootstrap templates seeded: ${templatesSeeded}`);
 }

@@ -206,7 +206,6 @@ const EDITION_OWNED = [
     '.github/scripts/_registry.cjs',
     '.github/scripts/CONVERTER-CHANGELOG.md',
     '.github/VERSION',
-    '.vscode/markdown-light.css',
 ];
 
 const HEIR_OWNED = [

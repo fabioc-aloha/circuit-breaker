@@ -46,16 +46,6 @@
         "  `claudeAgent.allowAutoPermissions: false` + `claudeAgent.allowDangerouslySkipPermissions: false`",
         "  (those are policy locks — ACT holds them; the chat permission level is workflow choice).",
         "",
-        "Why `markdown.styles` (added 2026-06-30):",
-        "  Edition ships `.vscode/markdown-light.css` as an EDITION_OWNED vscode_asset; the matching",
-        "  settings key `markdown.styles: ['.vscode/markdown-light.css']` makes VS Code's markdown",
-        "  preview pick it up. Fresh bootstraps already land this key because Edition's own",
-        "  `.vscode/settings.json` (seeded as a `bootstrap_template` first-install file) carries it.",
-        "  The baseline entry closes the gap for heirs whose `.vscode/settings.json` was preserved as",
-        "  HEIR_OWNED before the template seed (bootstrap-template is first-install-only) and never",
-        "  received the key. Mode: `set-if-absent` — heirs who customized `markdown.styles` to include",
-        "  their own CSS files keep their array unchanged.",
-        "",
         "Merge modes (per-key, optional; default `enforce`):",
         "  - `enforce` (default) — overwrite heir's value if it differs (current behaviour).",
         "    Used for the three discovery-locations objects: their sub-keys must always be present",
@@ -84,11 +74,9 @@
             ".github/agents": true,
             ".github/agents/local": true
         },
-        "chat.permissions.default": "default",
-        "markdown.styles": [".vscode/markdown-light.css"]
+        "chat.permissions.default": "default"
     },
     "mergeMode": {
-        "chat.permissions.default": "set-if-absent",
-        "markdown.styles": "set-if-absent"
+        "chat.permissions.default": "set-if-absent"
     }
 }

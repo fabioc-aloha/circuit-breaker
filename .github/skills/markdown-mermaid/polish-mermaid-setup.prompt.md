@@ -62,15 +62,7 @@ For `bierner.markdown-mermaid` (recommended):
 
 ### Step 4: Custom CSS (Optional)
 
-Edition ships a curated stylesheet at `.vscode/markdown-light.css` (Mermaid-friendly light theme + blockquote/table polish). The bootstrap-copied `.vscode/settings.json` already activates it via:
-
-```json
-{
-  "markdown.styles": [".vscode/markdown-light.css"]
-}
-```
-
-The CSS file is edition-owned and refreshed on every `/upgrade`. The settings.json is heir-owned — if you remove the `markdown.styles` entry, Edition won't add it back. Heir-side CSS customizations should go in `.vscode/local-markdown.css` and be added to `markdown.styles` alongside the shipped CSS.
+Markdown Preview uses VS Code user-level defaults. Optional personal styling belongs in the user profile, not project configuration.
 
 ### Step 5: Test Rendering
 

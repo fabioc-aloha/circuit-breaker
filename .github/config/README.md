@@ -34,4 +34,4 @@ If you author a local instruction or skill that needs a config file, drop it in 
 ## Notes
 
 - The Edition copy of `cognitive-config.json` is a template rendered by `bootstrap-heir.cjs` on first install. Once a heir has its own copy, Edition upgrades leave it alone (declared `HEIR_OWNED` in `_registry.cjs`).
-- VS Code editor assets (markdown preview theme, workspace settings, recommended extensions) belong in `.vscode/`, not here. Edition ships `.vscode/markdown-light.css` (edition-owned, refreshed on `/upgrade`) for Mermaid-friendly markdown preview; activate it via `"markdown.styles": [".vscode/markdown-light.css"]` in your settings. The `/polish-mermaid-setup` prompt documents the activation step.
+- Markdown Preview uses VS Code user-level defaults. Optional personal styling belongs in the user profile, not project configuration.

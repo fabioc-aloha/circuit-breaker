@@ -8,7 +8,7 @@ lastReviewed: 2026-06-30
 Use this on first session setup (or when moving to a new machine) to apply a stable user-level VS Code policy.
 
 For a first-session **orientation tour** (identity, what's loaded, where to start), use `/welcome` instead.
-For WORKSPACE-scope settings + `.vscode/` assets (`markdown-light.css`, discovery-location keys), use `/configure-workspace`.
+For workspace discovery-location settings, use `/configure-workspace`. Markdown Preview uses VS Code user-level defaults; optional personal styling belongs in the user profile.
 
 ## Objective
 

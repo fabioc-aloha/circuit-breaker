@@ -155,10 +155,9 @@ Alex: [uses renderMermaidDiagram tool]
 
 | File | Purpose |
 | ---- | ------- |
-| `markdown-light.css` | VS Code preview styling |
 | `polish-mermaid-setup.prompt.md` | Interactive Mermaid configuration helper |
 
-**Setup:** Copy CSS to `.vscode/`, add `"markdown.styles": [".vscode/markdown-light.css"]` to settings.
+**Markdown Preview:** Uses VS Code user-level defaults. Optional personal styling belongs in the user profile, not project configuration.
 
 **Mermaid Config:** Run the "Polish Mermaid Setup" prompt to configure Mermaid rendering for your VS Code environment.
 
