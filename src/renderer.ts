@@ -20,7 +20,14 @@ import {
 import { gameOverWraithPosition, type EffectsManager } from './effects';
 import type { Kong } from './kong';
 import { cellsOf, SHAPES } from './piece';
-import type { ActiveBoss, ActivePiece, CellValue, PieceKind } from './types';
+import type {
+  ActiveBoss,
+  ActivePiece,
+  CellValue,
+  PendingAttack,
+  PieceKind,
+  RunStats,
+} from './types';
 
 export interface RenderState {
   board: Board;
@@ -44,6 +51,10 @@ export interface RenderState {
   muted: boolean;
   kong: Kong;
   time: number; // performance.now()
+  danger: boolean;
+  attackWarning: PendingAttack | null;
+  stats: RunStats | null;
+  hint: string | null;
 }
 
 export class Renderer {
@@ -105,7 +116,11 @@ export class Renderer {
     // any UI chrome covering the action. Press P again to resume.
     if (s.gameOver) this.drawCenterBanner('⚡ CIRCUIT BROKEN ⚡', 'PRESS R TO REBOOT', 0.58);
     if (s.victory) this.drawCenterBanner('▲ GRID CLEARED ▲', 'PRESS R FOR NEW RUN');
+    if ((s.gameOver || s.victory) && s.stats) this.drawRunSummary(s.stats);
     if (s.cutsceneText) this.drawCutscene(s.cutsceneText);
+    if (s.attackWarning) this.drawAttackWarning(s.attackWarning, s.time);
+    if (s.danger && !s.gameOver && !s.victory) this.drawDangerVignette(s.time);
+    if (s.hint) this.drawHint(s.hint);
     if (s.muted) this.drawMuteBadge();
     if (s.gameOver) this.drawGameOverWraith(s.time);
   }
@@ -848,6 +863,111 @@ export class Renderer {
       ctx.fillText(line, cx, y);
       y += 26;
     }
+    ctx.textAlign = 'start';
+    ctx.shadowBlur = 0;
+  }
+
+  /** Red pulsing vignette while the stack rides in the danger zone. */
+  private drawDangerVignette(time: number): void {
+    const ctx = this.ctx;
+    const pulse = 0.18 + 0.12 * Math.sin(time * 0.008);
+    ctx.save();
+    ctx.strokeStyle = `rgba(255,43,74,${pulse + 0.25})`;
+    ctx.lineWidth = 5;
+    ctx.shadowColor = '#ff2b4a';
+    ctx.shadowBlur = 18;
+    ctx.strokeRect(this.boardX - 3, this.boardY - 3, BOARD_PX_W + 6, BOARD_PX_H + 6);
+    ctx.restore();
+  }
+
+  /** Telegraph overlay for a pending boss attack. Garbage highlights the rows
+   *  about to be hit; other attacks pulse the board border. */
+  private drawAttackWarning(warning: PendingAttack, time: number): void {
+    const ctx = this.ctx;
+    const blink = 0.25 + 0.2 * Math.sin(time * 0.02);
+    ctx.save();
+    if (warning.kind === 'garbage' && warning.rows > 0) {
+      const rowsH = Math.min(warning.rows, ROWS) * CELL;
+      ctx.fillStyle = `rgba(255,43,74,${blink})`;
+      ctx.fillRect(this.boardX, this.boardY + BOARD_PX_H - rowsH, BOARD_PX_W, rowsH);
+      ctx.fillStyle = '#ffdfe5';
+      ctx.font = 'bold 11px Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(
+        `▼ ${warning.rows} GARBAGE INBOUND ▼`,
+        this.boardX + BOARD_PX_W / 2,
+        this.boardY + BOARD_PX_H - rowsH - 6,
+      );
+    } else {
+      ctx.strokeStyle = `rgba(255,230,0,${blink + 0.2})`;
+      ctx.lineWidth = 4;
+      ctx.shadowColor = '#ffe600';
+      ctx.shadowBlur = 14;
+      ctx.strokeRect(this.boardX - 2, this.boardY - 2, BOARD_PX_W + 4, BOARD_PX_H + 4);
+    }
+    ctx.restore();
+    ctx.textAlign = 'start';
+  }
+
+  /** Per-run stats panel under the game-over / victory banner. */
+  private drawRunSummary(stats: RunStats): void {
+    const ctx = this.ctx;
+    const cx = this.boardX + BOARD_PX_W / 2;
+    const cy = this.boardY + BOARD_PX_H / 2;
+    const top = cy + 78;
+    const mins = Math.floor(stats.timeMs / 60000);
+    const secs = Math.floor((stats.timeMs % 60000) / 1000);
+    const lpm = stats.timeMs > 0 ? (stats.lines / (stats.timeMs / 60000)).toFixed(1) : '0.0';
+    const rows: [string, string][] = [
+      ['TIME', `${mins}:${String(secs).padStart(2, '0')}`],
+      ['PIECES', String(stats.pieces)],
+      ['LINES', `${stats.lines}  (${lpm}/MIN)`],
+      ['MAX COMBO', `×${stats.maxCombo}`],
+      ['T-SPINS', String(stats.tspins)],
+      ['BOSSES DOWN', String(stats.bosses)],
+    ];
+    ctx.save();
+    ctx.fillStyle = 'rgba(5,1,15,0.85)';
+    const panelH = rows.length * 20 + 34;
+    ctx.fillRect(cx - 130, top, 260, panelH);
+    ctx.strokeStyle = 'rgba(0,240,255,0.3)';
+    ctx.strokeRect(cx - 129.5, top + 0.5, 259, panelH - 1);
+    ctx.font = 'bold 11px Consolas, monospace';
+    ctx.fillStyle = COLORS.hudDim;
+    ctx.textAlign = 'center';
+    ctx.fillText('— RUN TELEMETRY —', cx, top + 20);
+    ctx.font = '11px Consolas, monospace';
+    rows.forEach(([label, value], i) => {
+      const y = top + 42 + i * 20;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = COLORS.hudDim;
+      ctx.fillText(label, cx - 112, y);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = COLORS.hudText;
+      ctx.fillText(value, cx + 112, y);
+    });
+    ctx.restore();
+    ctx.textAlign = 'start';
+  }
+
+  /** First-run control hint toast at the bottom of the board. */
+  private drawHint(hint: string): void {
+    const ctx = this.ctx;
+    const cx = this.boardX + BOARD_PX_W / 2;
+    const y = this.boardY + BOARD_PX_H - 14;
+    ctx.save();
+    ctx.font = 'bold 12px Consolas, monospace';
+    ctx.textAlign = 'center';
+    const w = ctx.measureText(hint).width + 28;
+    ctx.fillStyle = 'rgba(5,1,15,0.78)';
+    ctx.fillRect(cx - w / 2, y - 16, w, 24);
+    ctx.strokeStyle = 'rgba(0,240,255,0.35)';
+    ctx.strokeRect(cx - w / 2 + 0.5, y - 16 + 0.5, w - 1, 23);
+    ctx.fillStyle = COLORS.cyan;
+    ctx.shadowColor = COLORS.cyan;
+    ctx.shadowBlur = 8;
+    ctx.fillText(hint, cx, y);
+    ctx.restore();
     ctx.textAlign = 'start';
     ctx.shadowBlur = 0;
   }
