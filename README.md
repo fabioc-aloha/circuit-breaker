@@ -103,6 +103,8 @@ cleanly from Tetr.io / Jstris:
 - **7-bag randomizer**, one-swap-per-drop hold, ghost preview, and next-three queue
 - **T-spins** (3-corner rule; last action must be a rotation), **back-to-back ×1.5**
   on tetrises and T-spins, and **perfect-clear** bonuses
+- **Lock delay capped at 15 resets** — no infinite stalling on the stack; the
+  piece commits once the cap is hit
 - **AMPERAGE ×N** combo tracker, **VOLTAGE TIER** that rises every ten line clears *and* on each boss defeat (whichever comes first) with a live *NEXT TIER IN N* progress bar under the LINES stat, gravity curve tied to tier, and a local high score
 - Line clears freeze the row visibly-but-briefly while a neon Pacman streaks across the empty space, then the stack drops — the animation and the mutation happen together instead of the clear finishing before the effect starts
 
@@ -120,6 +122,9 @@ the spawn point:
   drift matters, and you learn to read his facing direction
 - He goes silent and still when you pause (**P**) so you can screenshot the
   throw mid-flight
+- If his throw would collide with the stack, the piece **nudges to the nearest
+  free column** instead of ending the run — only a genuinely full spawn zone
+  tops you out
 - When the run ends (top-out or victory) he breaks into a **five-pose
   360° victory spin** on the girder — front pose → side-profile spin →
   back pose → side → alt-front → side → alt-back → side, bouncing on each
@@ -137,6 +142,15 @@ plus gravity curve:
 3. **SHORTFUSE** -- dumps garbage lines when you dawdle
 4. **FEEDBACK LOOP** -- scrambles columns
 5. **THE MAINFRAME** -- every attack, twice as fast
+
+Every attack is **telegraphed a full second ahead** — garbage previews the
+exact rows about to be hit, so it never feels instant. Boss HP is paced per
+tier (18 / 25 / 35 / 45 / 70) with +10% damage per voltage tier, and intro
+cutscenes are skippable.
+
+A red **danger vignette** pulses while the stack rides within five rows of the
+top, and every run ends with a **telemetry summary** — time, pieces, lines per
+minute, max combo, T-spins, bosses down.
 
 ### Audio (100% procedural, no assets)
 
@@ -162,6 +176,10 @@ sync with the game clock:
 - Indicative quotes for an AI-focused basket alternate with arcade phrases in the ticker crawl
 - The cabinet's `INSERT COIN` slot links to *Loop Engineering* on Amazon
 - Responsive arcade cabinet chrome with animated marquee, occasional blinking lights, scrolling ticker, bezel reflection, and corner screws
+- Hot-path glows (particles, pellet trails, active-piece halos) stamp
+  pre-baked radial sprites instead of per-frame `shadowBlur`, and the marquee
+  ticker scrolls at a constant speed on its own compositor layer — bursts stay
+  at full frame rate
 
 ### Ticker and privacy
 
@@ -180,7 +198,7 @@ Built with an unfashionably small stack for a game that leans this hard on
 visual and audio effects:
 
 - **TypeScript** (strict) + **HTML5 Canvas 2D** + **Web Audio API**
-- **Vite** for dev / build (about 49 KB JavaScript, about 15 KB gzipped)
+- **Vite** for dev / build (about 75 KB JavaScript, about 23 KB gzipped)
 - **Zero runtime dependencies**
 - Deployed on **Azure Static Web Apps** (Standard tier, custom domain w/ managed TLS)
 
