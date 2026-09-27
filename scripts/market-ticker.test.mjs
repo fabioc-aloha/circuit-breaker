@@ -19,7 +19,16 @@ function loadTypeScriptModule(filePath) {
   return module.exports;
 }
 
-const { buildTickerLoops, buildTickerSegments, QUOTE_FETCH_OPTIONS } = loadTypeScriptModule(path.join(root, 'src', 'market-ticker.ts'));
+const { buildTickerLoops, buildTickerSegments, QUOTE_FETCH_OPTIONS, tickerDurationForWidth, TICKER_PX_PER_SEC } = loadTypeScriptModule(path.join(root, 'src', 'market-ticker.ts'));
+
+test('keeps a constant crawl speed regardless of content width', () => {
+  // One full -50% loop of a 1400px-wide track at 70px/s takes 10 seconds.
+  assert.equal(TICKER_PX_PER_SEC, 70);
+  assert.equal(tickerDurationForWidth(1400), 10);
+  assert.equal(tickerDurationForWidth(700), 5);
+  // Degenerate widths still get a sane minimum duration.
+  assert.equal(tickerDurationForWidth(100), 4);
+});
 
 test('allows browser caching for delayed quote responses', () => {
   assert.deepEqual(QUOTE_FETCH_OPTIONS, { cache: 'default' });

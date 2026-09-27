@@ -7,7 +7,7 @@ export const BOSSES: BossDef[] = [
   {
     id: 'surge',
     name: 'SURGE.exe',
-    hp: 25,
+    hp: 18,
     attackKinds: ['spike'],
     attackIntervalMs: 10000,
     color: '#ffe600',
@@ -17,7 +17,7 @@ export const BOSSES: BossDef[] = [
   {
     id: 'blackout',
     name: 'BLACKOUT',
-    hp: 35,
+    hp: 25,
     attackKinds: ['blackout'],
     attackIntervalMs: 11000,
     color: '#a970ff',
@@ -27,7 +27,7 @@ export const BOSSES: BossDef[] = [
   {
     id: 'shortfuse',
     name: 'SHORTFUSE',
-    hp: 50,
+    hp: 35,
     attackKinds: ['garbage'],
     attackIntervalMs: 9000,
     color: '#ff9a1f',
@@ -37,7 +37,7 @@ export const BOSSES: BossDef[] = [
   {
     id: 'feedback',
     name: 'FEEDBACK LOOP',
-    hp: 65,
+    hp: 45,
     attackKinds: ['scramble', 'garbage'],
     attackIntervalMs: 8500,
     color: '#00f0ff',
@@ -47,7 +47,7 @@ export const BOSSES: BossDef[] = [
   {
     id: 'mainframe',
     name: 'THE MAINFRAME',
-    hp: 100,
+    hp: 70,
     attackKinds: ['garbage', 'spike', 'blackout', 'scramble'],
     attackIntervalMs: 7000,
     color: '#ff2bd6',

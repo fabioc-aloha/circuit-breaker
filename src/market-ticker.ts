@@ -15,6 +15,33 @@ export interface TickerSegment {
 
 export const QUOTE_FETCH_OPTIONS = { cache: 'default' } as const;
 
+// Constant crawl speed (px/sec) so the ticker reads the same whether it's
+// showing the 10-phrase fallback or a full board of live quotes. The CSS
+// keeps a 32s fallback duration for first paint / no-JS; once the track is
+// measured we override animation-duration inline.
+export const TICKER_PX_PER_SEC = 70;
+
+/** Seconds for one full -50% loop of a track `trackWidthPx` wide. */
+export function tickerDurationForWidth(trackWidthPx: number): number {
+  return Math.max(4, trackWidthPx / 2 / TICKER_PX_PER_SEC);
+}
+
+/**
+ * Pin the CSS animation duration to the measured content width and restart
+ * the animation so the -50% loop seam stays aligned with the fresh content.
+ * Without the restart, replacing children mid-flight moves the seam and the
+ * crawl visibly pops when quotes arrive.
+ */
+function syncTickerSpeed(track: HTMLElement): void {
+  const half = track.scrollWidth / 2;
+  if (!(half > 0)) return;
+  track.style.animationDuration = `${tickerDurationForWidth(track.scrollWidth)}s`;
+  track.style.animationName = 'none';
+  // Force reflow so the animation-name toggle takes effect.
+  void track.offsetWidth;
+  track.style.animationName = '';
+}
+
 const ARCADE_PHRASES = [
   'INSERT COIN TO CONTINUE',
   'VIBE CODE DEPLOYED',
@@ -88,6 +115,7 @@ function renderTicker(track: HTMLElement, segments: TickerSegment[]): void {
     }
     track.append(loop);
   }
+  syncTickerSpeed(track);
 }
 
 export async function initializeMarketTicker(): Promise<void> {
@@ -95,6 +123,11 @@ export async function initializeMarketTicker(): Promise<void> {
   if (!track) return;
 
   renderTicker(track, buildTickerSegments([]));
+  // Webfont arrival changes the measured width — re-pin the speed once fonts
+  // settle so the crawl stays at exactly TICKER_PX_PER_SEC.
+  if (typeof document !== 'undefined' && document.fonts?.ready) {
+    void document.fonts.ready.then(() => syncTickerSpeed(track));
+  }
   try {
     const response = await fetch('/api/quotes', QUOTE_FETCH_OPTIONS);
     if (!response.ok) return;

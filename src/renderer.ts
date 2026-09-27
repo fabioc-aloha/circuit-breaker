@@ -20,7 +20,14 @@ import {
 import { gameOverWraithPosition, type EffectsManager } from './effects';
 import type { Kong } from './kong';
 import { cellsOf, SHAPES } from './piece';
-import type { ActiveBoss, ActivePiece, CellValue, PieceKind } from './types';
+import type {
+  ActiveBoss,
+  ActivePiece,
+  CellValue,
+  PendingAttack,
+  PieceKind,
+  RunStats,
+} from './types';
 
 export interface RenderState {
   board: Board;
@@ -44,6 +51,49 @@ export interface RenderState {
   muted: boolean;
   kong: Kong;
   time: number; // performance.now()
+  danger: boolean;
+  attackWarning: PendingAttack | null;
+  stats: RunStats | null;
+  hint: string | null;
+}
+
+// ---- pre-rendered glow sprites ----
+// shadowBlur is the single most expensive canvas 2D operation; stamping it
+// per particle / per pellet every frame tanks the frame rate during bursts.
+// Instead we bake one radial-gradient halo per color once and stamp it with
+// drawImage (GPU-cheap), scaling the stamp to the particle size.
+const GLOW_SPRITE_PX = 64;
+const glowSpriteCache = new Map<string, HTMLCanvasElement>();
+
+/** Normalize #rgb / #rrggbb to [r,g,b]; falls back to white for named colors. */
+function hexToRgb(color: string): [number, number, number] {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color.trim());
+  if (!m) return [255, 255, 255];
+  let hex = m[1];
+  if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('');
+  const n = parseInt(hex, 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+function glowSprite(color: string): HTMLCanvasElement {
+  let sprite = glowSpriteCache.get(color);
+  if (sprite) return sprite;
+  const [r, g, b] = hexToRgb(color);
+  sprite = document.createElement('canvas');
+  sprite.width = GLOW_SPRITE_PX;
+  sprite.height = GLOW_SPRITE_PX;
+  const g2d = sprite.getContext('2d');
+  if (g2d) {
+    const half = GLOW_SPRITE_PX / 2;
+    const grad = g2d.createRadialGradient(half, half, 0, half, half, half);
+    grad.addColorStop(0, `rgba(${r},${g},${b},0.9)`);
+    grad.addColorStop(0.35, `rgba(${r},${g},${b},0.45)`);
+    grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    g2d.fillStyle = grad;
+    g2d.fillRect(0, 0, GLOW_SPRITE_PX, GLOW_SPRITE_PX);
+  }
+  glowSpriteCache.set(color, sprite);
+  return sprite;
 }
 
 export class Renderer {
@@ -105,7 +155,11 @@ export class Renderer {
     // any UI chrome covering the action. Press P again to resume.
     if (s.gameOver) this.drawCenterBanner('⚡ CIRCUIT BROKEN ⚡', 'PRESS R TO REBOOT', 0.58);
     if (s.victory) this.drawCenterBanner('▲ GRID CLEARED ▲', 'PRESS R FOR NEW RUN');
+    if ((s.gameOver || s.victory) && s.stats) this.drawRunSummary(s.stats);
     if (s.cutsceneText) this.drawCutscene(s.cutsceneText);
+    if (s.attackWarning) this.drawAttackWarning(s.attackWarning, s.time);
+    if (s.danger && !s.gameOver && !s.victory) this.drawDangerVignette(s.time);
+    if (s.hint) this.drawHint(s.hint);
     if (s.muted) this.drawMuteBadge();
     if (s.gameOver) this.drawGameOverWraith(s.time);
   }
@@ -217,14 +271,18 @@ export class Renderer {
     const ctx = this.ctx;
     const x = this.boardX + bx * CELL;
     const y = this.boardY + by * CELL;
-    ctx.save();
     if (glow) {
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 14;
+      // Fake the neon halo with two translucent underlays — same glow read
+      // as the old per-cell shadowBlur, none of the per-frame blur cost.
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.14;
+      ctx.fillRect(x - 4, y - 4, CELL + 8, CELL + 8);
+      ctx.globalAlpha = 0.26;
+      ctx.fillRect(x - 1, y - 1, CELL + 2, CELL + 2);
+      ctx.globalAlpha = 1;
     }
     ctx.fillStyle = color;
     ctx.fillRect(x + 2, y + 2, CELL - 4, CELL - 4);
-    ctx.restore();
     // Inner highlight
     ctx.strokeStyle = 'rgba(255,255,255,0.25)';
     ctx.lineWidth = 1;
@@ -574,18 +632,16 @@ export class Renderer {
   private drawPacmen(timeMs: number): void {
     const ctx = this.ctx;
     for (const pm of this.effects.pacmen) {
-      // Pellet trail
+      // Pellet trail — stamped glow sprites instead of shadowBlur arcs.
+      const sprite = glowSprite(pm.color);
       for (const pel of pm.pellets) {
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, pel.life) * 0.9;
-        ctx.shadowColor = pm.color;
-        ctx.shadowBlur = 10;
-        ctx.fillStyle = pm.color;
-        ctx.beginPath();
-        ctx.arc(pel.x, pel.y, pel.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        const alpha = Math.max(0, pel.life);
+        if (alpha <= 0) continue;
+        const d = pel.size * 6;
+        ctx.globalAlpha = alpha * 0.9;
+        ctx.drawImage(sprite, pel.x - d / 2, pel.y - d / 2, d, d);
       }
+      ctx.globalAlpha = 1;
       if (pm.life <= 0) continue;
 
       if (pm.variant === 'breaker') {
@@ -609,11 +665,13 @@ export class Renderer {
       const mouthAngle = chomp * maxMouth;
       const facing = pm.reverse ? Math.PI : 0; // face left when reversed
 
-      const drawBody = (offsetX: number, offsetY: number, tint: string, alpha: number): void => {
+      const drawBody = (offsetX: number, offsetY: number, tint: string, alpha: number, glow: number): void => {
         ctx.save();
         ctx.globalAlpha = alpha;
-        ctx.shadowColor = tint;
-        ctx.shadowBlur = pm.variant === 'breaker' ? 28 : 18;
+        if (glow > 0) {
+          ctx.shadowColor = tint;
+          ctx.shadowBlur = glow;
+        }
         ctx.fillStyle = tint;
         ctx.beginPath();
         ctx.moveTo(pm.x + offsetX, pm.y + offsetY);
@@ -629,11 +687,14 @@ export class Renderer {
         ctx.restore();
       };
 
-      // RGB split — cyan and magenta ghost copies for chromatic aberration
-      drawBody(-2, 0, '#00f0ff', 0.4);
-      drawBody(2, 0, '#ff00e5', 0.4);
+      // RGB split — cyan and magenta ghost copies for chromatic aberration.
+      // The ghosts skip shadowBlur (invisible at 0.4 alpha anyway), which
+      // cuts the pacman's shadow cost by two thirds; only the main body glows.
+      const mainGlow = pm.variant === 'breaker' ? 28 : 18;
+      drawBody(-2, 0, '#00f0ff', 0.4, 0);
+      drawBody(2, 0, '#ff00e5', 0.4, 0);
       // Main neon body
-      drawBody(0, 0, pm.color, Math.max(0, pm.life));
+      drawBody(0, 0, pm.color, Math.max(0, pm.life), mainGlow);
 
       // Digital scan strip across the body — cyberpunk data-corruption vibe
       ctx.save();
@@ -669,14 +730,18 @@ export class Renderer {
   private drawParticles(): void {
     const ctx = this.ctx;
     for (const p of this.effects.particles) {
-      ctx.save();
-      ctx.globalAlpha = Math.max(0, p.life);
-      ctx.shadowColor = p.color;
-      ctx.shadowBlur = 8;
+      const alpha = Math.max(0, p.life);
+      if (alpha <= 0) continue;
+      // Soft halo stamped from the cached glow sprite, then a hot core —
+      // same neon read as the old per-particle shadowBlur, none of the cost.
+      const halo = p.size * 7;
+      ctx.globalAlpha = alpha * 0.85;
+      ctx.drawImage(glowSprite(p.color), p.x - halo / 2, p.y - halo / 2, halo, halo);
+      ctx.globalAlpha = alpha;
       ctx.fillStyle = p.color;
       ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
-      ctx.restore();
     }
+    ctx.globalAlpha = 1;
   }
 
   private drawScanlines(): void {
@@ -848,6 +913,112 @@ export class Renderer {
       ctx.fillText(line, cx, y);
       y += 26;
     }
+    ctx.textAlign = 'start';
+    ctx.shadowBlur = 0;
+  }
+
+  /** Red pulsing vignette while the stack rides in the danger zone. */
+  private drawDangerVignette(time: number): void {
+    const ctx = this.ctx;
+    const pulse = 0.18 + 0.12 * Math.sin(time * 0.008);
+    ctx.save();
+    ctx.strokeStyle = `rgba(255,43,74,${pulse + 0.25})`;
+    ctx.lineWidth = 5;
+    ctx.shadowColor = '#ff2b4a';
+    ctx.shadowBlur = 18;
+    ctx.strokeRect(this.boardX - 3, this.boardY - 3, BOARD_PX_W + 6, BOARD_PX_H + 6);
+    ctx.restore();
+  }
+
+  /** Telegraph overlay for a pending boss attack. Garbage highlights the rows
+   *  about to be hit; other attacks pulse the board border. */
+  private drawAttackWarning(warning: PendingAttack, time: number): void {
+    const ctx = this.ctx;
+    const blink = 0.25 + 0.2 * Math.sin(time * 0.02);
+    ctx.save();
+    if (warning.kind === 'garbage' && warning.rows > 0) {
+      const rowsH = Math.min(warning.rows, ROWS) * CELL;
+      ctx.fillStyle = `rgba(255,43,74,${blink})`;
+      ctx.fillRect(this.boardX, this.boardY + BOARD_PX_H - rowsH, BOARD_PX_W, rowsH);
+      ctx.fillStyle = '#ffdfe5';
+      ctx.font = 'bold 11px Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(
+        `▼ ${warning.rows} GARBAGE INBOUND ▼`,
+        this.boardX + BOARD_PX_W / 2,
+        this.boardY + BOARD_PX_H - rowsH - 6,
+      );
+    } else {
+      ctx.strokeStyle = `rgba(255,230,0,${blink + 0.2})`;
+      ctx.lineWidth = 4;
+      ctx.shadowColor = '#ffe600';
+      ctx.shadowBlur = 14;
+      ctx.strokeRect(this.boardX - 2, this.boardY - 2, BOARD_PX_W + 4, BOARD_PX_H + 4);
+    }
+    ctx.restore();
+    ctx.textAlign = 'start';
+  }
+
+  /** Per-run stats panel under the game-over / victory banner. */
+  private drawRunSummary(stats: RunStats): void {
+    const ctx = this.ctx;
+    const cx = this.boardX + BOARD_PX_W / 2;
+    const cy = this.boardY + BOARD_PX_H / 2;
+    const top = cy + 78;
+    const mins = Math.floor(stats.timeMs / 60000);
+    const secs = Math.floor((stats.timeMs % 60000) / 1000);
+    const lpm = stats.timeMs > 0 ? (stats.lines / (stats.timeMs / 60000)).toFixed(1) : '0.0';
+    const rows: [string, string][] = [
+      ['TIME', `${mins}:${String(secs).padStart(2, '0')}`],
+      ['PIECES', String(stats.pieces)],
+      ['LINES', `${stats.lines}  (${lpm}/MIN)`],
+      ['MAX COMBO', `×${stats.maxCombo}`],
+      ['T-SPINS', String(stats.tspins)],
+      ['BOSSES DOWN', String(stats.bosses)],
+    ];
+    ctx.save();
+    ctx.fillStyle = 'rgba(5,1,15,0.85)';
+    const panelH = rows.length * 20 + 34;
+    ctx.fillRect(cx - 130, top, 260, panelH);
+    ctx.strokeStyle = 'rgba(0,240,255,0.3)';
+    ctx.strokeRect(cx - 129.5, top + 0.5, 259, panelH - 1);
+    ctx.font = 'bold 11px Consolas, monospace';
+    ctx.fillStyle = COLORS.hudDim;
+    ctx.textAlign = 'center';
+    ctx.fillText('— RUN TELEMETRY —', cx, top + 20);
+    ctx.font = '11px Consolas, monospace';
+    rows.forEach(([label, value], i) => {
+      const y = top + 42 + i * 20;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = COLORS.hudDim;
+      ctx.fillText(label, cx - 112, y);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = COLORS.hudText;
+      ctx.fillText(value, cx + 112, y);
+    });
+    ctx.restore();
+    ctx.textAlign = 'start';
+  }
+
+  /** First-run control hint toast in the strip BELOW the board — never inside
+   *  the playfield, so stacked blocks can't cover it. */
+  private drawHint(hint: string): void {
+    const ctx = this.ctx;
+    const cx = this.boardX + BOARD_PX_W / 2;
+    const y = this.boardY + BOARD_PX_H + 36;
+    ctx.save();
+    ctx.font = 'bold 12px Consolas, monospace';
+    ctx.textAlign = 'center';
+    const w = ctx.measureText(hint).width + 28;
+    ctx.fillStyle = 'rgba(5,1,15,0.78)';
+    ctx.fillRect(cx - w / 2, y - 16, w, 24);
+    ctx.strokeStyle = 'rgba(0,240,255,0.35)';
+    ctx.strokeRect(cx - w / 2 + 0.5, y - 16 + 0.5, w - 1, 23);
+    ctx.fillStyle = COLORS.cyan;
+    ctx.shadowColor = COLORS.cyan;
+    ctx.shadowBlur = 8;
+    ctx.fillText(hint, cx, y);
+    ctx.restore();
     ctx.textAlign = 'start';
     ctx.shadowBlur = 0;
   }

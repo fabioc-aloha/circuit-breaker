@@ -261,4 +261,11 @@ export class SFX {
     tone(o.ctx, o.dest, 'square', 660, 0.003, 0.05, 0.14);
     tone(o.ctx, o.dest, 'sine', 1320, 0.002, 0.04, 0.06);
   }
+
+  /** Short high warning blip while the stack rides in the danger zone.
+   *  The game throttles this so it can't spam. */
+  dangerTick(): void {
+    const o = this.out(); if (!o) return;
+    tone(o.ctx, o.dest, 'square', 1560, 0.003, 0.05, 0.1, 1180);
+  }
 }

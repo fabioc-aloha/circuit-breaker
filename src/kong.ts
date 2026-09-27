@@ -508,9 +508,11 @@ export class Kong {
     }
     // Scale by the row's canonical height so different-width frames within a
     // row render at consistent size. Anchor at feet (dest y=0 after translate).
+    // Dest size is rounded to whole pixels — fractional drawImage sizes shimmer
+    // as the squash/tilt transforms interpolate between frames.
     const scale = KONG_HEIGHT / frameToDraw.rowH;
-    const destW = frameToDraw.sw * scale;
-    const destH = frameToDraw.sh * scale;
+    const destW = Math.round(frameToDraw.sw * scale);
+    const destH = Math.round(frameToDraw.sh * scale);
     ctx.drawImage(
       sprite,
       frameToDraw.sx,

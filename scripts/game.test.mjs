@@ -35,12 +35,18 @@ const { EffectsManager, gameOverWraithPosition } = loadTypeScriptModule(path.joi
 const { BOSSES, bossSilhouetteFor } = loadTypeScriptModule(path.join(root, 'src', 'bosses.ts'));
 const { volumeFromPercent } = loadTypeScriptModule(path.join(root, 'src', 'audio', 'audio.ts'));
 const { frameDelta } = loadTypeScriptModule(path.join(root, 'src', 'frame-timing.ts'));
+const {
+  ATTACK_WARNING_MS,
+  DANGER_ROWS_FROM_TOP,
+  HIDDEN_ROWS,
+  LOCK_RESET_LIMIT,
+} = loadTypeScriptModule(path.join(root, 'src', 'constants.ts'));
 
-function createGame() {
-  return createGameWithEffects().game;
+function createGame(opts) {
+  return createGameWithEffects(opts).game;
 }
 
-function createGameWithEffects() {
+function createGameWithEffects(opts) {
   const effects = {
     breakerRuns: 0,
     breakerY: null,
@@ -63,6 +69,7 @@ function createGameWithEffects() {
   };
   const sfx = {
     alarm() {},
+    dangerTick() {},
     fanfare() {},
     gameOver() {},
     hardDrop() {},
@@ -76,7 +83,7 @@ function createGameWithEffects() {
     uiBlip() {},
   };
   const music = { setMode() {} };
-  return { game: new Game(effects, sfx, music, () => {}), effects };
+  return { game: new Game(effects, sfx, music, () => {}, opts), effects };
 }
 
 test('creates and expires a transient lightning bolt', () => {
@@ -365,4 +372,260 @@ test('keeps final-boss victory when the locking board is topped out', () => {
   game.lockAndAdvance();
 
   assert.equal(game.phase, 'victory');
+});
+
+test('caps lock-delay resets per piece', () => {
+  const game = createGame();
+  game.beginRun();
+  // O piece resting on the floor — landed, so resets apply.
+  game.active = { kind: 'O', rotation: 0, x: 4, y: 20 };
+
+  for (let i = 0; i < LOCK_RESET_LIMIT + 10; i++) {
+    game.lockTimer = 400;
+    game.resetLockIfLanded();
+  }
+
+  assert.equal(game.lockResets, LOCK_RESET_LIMIT);
+  // Past the cap the timer is no longer zeroed — the piece must lock.
+  game.lockTimer = 400;
+  game.resetLockIfLanded();
+  assert.equal(game.lockTimer, 400);
+});
+
+test('awards a T-spin single via the 3-corner rule', () => {
+  const game = createGame();
+  game.beginRun();
+  // Pocket: row 20 has a 3-wide slot; row 21 keeps walls at cols 4 and 6;
+  // overhangs at row 19 fill the other two diagonal corners around the T
+  // center, so only row 20 completes (single-line clear).
+  game.board.grid[21] = ['J', 'J', 'J', 'J', 'J', 0, 'J', 'J', 'J', 'J'];
+  game.board.grid[20] = ['J', 'J', 'J', 'J', 0, 0, 0, 'J', 'J', 'J'];
+  game.board.grid[19][4] = 'J';
+  game.board.grid[19][6] = 'J';
+  game.active = { kind: 'T', rotation: 0, x: 4, y: 19 };
+  game.lastActionWasRotate = true;
+
+  game.lockAndAdvance();
+
+  assert.equal(game.tspins, 1);
+  // T-spin single: 800 x level 1 x combo 1 = 800.
+  assert.equal(game.score, 800);
+  assert.equal(game.lines, 1);
+});
+
+test('does not count a T-slot lock without a final rotation', () => {
+  const game = createGame();
+  game.beginRun();
+  game.board.grid[21] = ['J', 'J', 'J', 'J', 'J', 0, 'J', 'J', 'J', 'J'];
+  game.board.grid[20] = ['J', 'J', 'J', 'J', 0, 0, 0, 'J', 'J', 'J'];
+  game.board.grid[19][4] = 'J';
+  game.board.grid[19][6] = 'J';
+  game.active = { kind: 'T', rotation: 0, x: 4, y: 19 };
+  game.lastActionWasRotate = false; // slid in, never rotated
+
+  game.lockAndAdvance();
+
+  assert.equal(game.tspins, 0);
+  // Plain single: 100 x level 1 = 100.
+  assert.equal(game.score, 100);
+});
+
+test('applies the back-to-back x1.5 multiplier on consecutive tetrises', () => {
+  const game = createGame();
+  game.beginRun();
+  const setupTetris = () => {
+    game.active = { kind: 'I', rotation: 1, x: 3, y: 18 };
+    for (let row = 18; row <= 21; row++) {
+      game.board.grid[row].fill('J');
+      game.board.grid[row][5] = 0;
+    }
+  };
+
+  setupTetris();
+  game.lockAndAdvance();
+  assert.equal(game.backToBack, true);
+  assert.equal(game.score, 800); // 800 x L1 x combo1, no B2B yet
+
+  // Resolve the deferred clear so the second setup starts from an empty well.
+  game.board.removeRows(game.pendingLineClear.rows);
+  game.pendingLineClear = null;
+  setupTetris();
+  game.lockAndAdvance();
+  // 800 x L1 x combo2 x B2B1.5 = 2400; total 3200.
+  assert.equal(game.score, 3200);
+
+  // A lesser clear breaks the chain.
+  game.board.removeRows(game.pendingLineClear.rows);
+  game.pendingLineClear = null;
+  game.active = { kind: 'O', rotation: 0, x: 7, y: 20 };
+  game.board.grid[21] = ['J', 'J', 'J', 'J', 'J', 'J', 'J', 'J', 0, 0];
+  game.lockAndAdvance();
+  assert.equal(game.backToBack, false);
+});
+
+test('nudges a colliding Kong throw to the nearest free column', () => {
+  const game = createGame();
+  game.beginRun();
+  // Spawn zone (rows 0-1) blocked except columns 0-2.
+  for (let y = 0; y < 2; y++) {
+    for (let x = 3; x < 10; x++) game.board.grid[y][x] = 'J';
+  }
+
+  const piece = game.resolveSpawn('T', 5);
+
+  assert.ok(piece);
+  assert.equal(game.board.collides(piece), false);
+  assert.ok(Math.abs(piece.x - 5) > 0); // moved away from the blocked column
+});
+
+test('only game-overs on spawn when the spawn zone is truly full', () => {
+  const game = createGame();
+  game.beginRun();
+  for (let y = 0; y < 4; y++) game.board.grid[y].fill('J');
+
+  assert.equal(game.resolveSpawn('O', 4), null);
+  assert.equal(game.resolveSpawn('T', 4), null);
+});
+
+test('telegraphs a boss attack before executing it', () => {
+  const game = createGame();
+  game.beginRun();
+  game.active = { kind: 'T', rotation: 0, x: 3, y: 10 };
+  game.boss.attackTimer = 1;
+
+  game.update(5);
+
+  // Warning is live, attack has not landed yet.
+  assert.ok(game.pendingAttack);
+  assert.equal(game.pendingAttack.remainingMs, ATTACK_WARNING_MS - 5);
+  assert.equal(game.isSpike(), false);
+
+  game.update(ATTACK_WARNING_MS);
+
+  assert.equal(game.pendingAttack, null);
+  assert.equal(game.isSpike(), true); // SURGE.exe's spike went off
+});
+
+test('holds garbage rows back until the telegraph window expires', () => {
+  const game = createGame();
+  game.beginRun();
+  game.active = { kind: 'T', rotation: 0, x: 3, y: 10 };
+  game.pendingAttack = { kind: 'garbage', rows: 2, remainingMs: 500 };
+
+  game.update(499);
+
+  assert.ok(game.pendingAttack);
+  assert.equal(game.board.grid[21].every((v) => v === 0), true);
+
+  game.update(1);
+
+  assert.equal(game.pendingAttack, null);
+  assert.equal(game.board.grid[21].filter((v) => v === 'G').length, 9);
+});
+
+test('flags danger when the stack nears the visible top', () => {
+  const game = createGame();
+  game.beginRun();
+
+  assert.equal(game.danger, false);
+  game.board.grid[HIDDEN_ROWS + DANGER_ROWS_FROM_TOP][0] = 'J';
+  assert.equal(game.danger, false);
+  game.board.grid[HIDDEN_ROWS + DANGER_ROWS_FROM_TOP - 1][0] = 'J';
+  assert.equal(game.danger, true);
+});
+
+test('awards a perfect-clear bonus when the well is emptied', () => {
+  const game = createGame();
+  game.beginRun();
+  game.board.grid[21] = [0, 0, 0, 0, 'J', 'J', 'J', 'J', 'J', 'J'];
+  game.active = { kind: 'I', rotation: 0, x: 0, y: 20 };
+
+  game.lockAndAdvance();
+  assert.ok(game.pendingLineClear);
+
+  game.update(300); // resolve the deferred clear -> perfect clear
+
+  // Single (100) + perfect clear (2000 x level 1).
+  assert.equal(game.score, 2100);
+  assert.equal(game.pendingLineClear, null);
+});
+
+test('rotates 180 degrees and counts it for T-spin detection', () => {
+  const game = createGame();
+  game.beginRun();
+  game.active = { kind: 'T', rotation: 0, x: 3, y: 5 };
+
+  game.rotate180();
+
+  assert.equal(game.active.rotation, 2);
+  assert.equal(game.lastActionWasRotate, true);
+});
+
+test('skipCutscene dismisses the inter-boss cutscene early', () => {
+  const game = createGame();
+  game.beginRun();
+  game.boss.hp = 1;
+  game.active = { kind: 'I', rotation: 1, x: 3, y: 18 };
+  for (let row = 18; row <= 21; row++) {
+    game.board.grid[row].fill('J');
+    game.board.grid[row][5] = 0;
+  }
+
+  game.lockAndAdvance();
+  assert.equal(game.phase, 'cutscene');
+
+  game.skipCutscene();
+  assert.equal(game.phase, 'playing');
+  assert.equal(game.cutscene, null);
+});
+
+test('free-stack mode runs with no boss and tiers up by lines only', () => {
+  const game = createGame({ mode: 'free-stack' });
+  game.beginRun();
+
+  assert.equal(game.boss, null);
+  game.lines = 9;
+  game.active = { kind: 'I', rotation: 0, x: 3, y: 20 };
+  game.board.grid[21] = ['J', 'J', 'J', 0, 0, 0, 0, 'J', 'J', 'J'];
+
+  game.lockAndAdvance();
+  assert.equal(game.lines, 10);
+  assert.equal(game.level, 2);
+
+  game.update(30_000);
+  assert.equal(game.pendingAttack, null);
+  assert.equal(game.boss, null);
+});
+
+test('pause toggles between playing and paused', async () => {
+  const game = createGame();
+  game.beginRun();
+  assert.equal(game.phase, 'playing');
+
+  game.pause();
+  assert.equal(game.phase, 'paused');
+
+  // The debounce window must expire before the toggle is accepted again.
+  await new Promise((r) => setTimeout(r, 250));
+  game.pause();
+  assert.equal(game.phase, 'playing');
+});
+
+test('pause swallows duplicate toggles inside the debounce window', () => {
+  const game = createGame();
+  game.beginRun();
+
+  game.pause();
+  assert.equal(game.phase, 'paused');
+  // A duplicate keydown arriving ~instantly (flaky driver/BIOS) must not
+  // toggle straight back to playing.
+  game.pause();
+  assert.equal(game.phase, 'paused');
+});
+
+test('pause is a no-op outside playing/paused phases', () => {
+  const game = createGame();
+  assert.equal(game.phase, 'ready');
+  game.pause();
+  assert.equal(game.phase, 'ready');
 });

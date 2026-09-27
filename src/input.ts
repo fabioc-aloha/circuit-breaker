@@ -8,15 +8,20 @@ export interface InputActions {
   hardDrop(): void;
   rotateCW(): void;
   rotateCCW(): void;
+  rotate180(): void;
   holdPiece(): void;
   pause(): void;
   restart(): void;
   toggleMute(): void;
   start(): void; // any-key start / boot dismiss
+  menuKey(key: string, ev: KeyboardEvent): void; // boot-menu navigation (no-op in game)
+  skipCutscene(): void; // dismiss inter-boss cutscene early
 }
 
 export class InputController {
   private actions: InputActions;
+  private dasMs: number = DAS_MS;
+  private arrMs: number = ARR_MS;
   private leftDown = false;
   private rightDown = false;
   private downDown = false;
@@ -34,6 +39,33 @@ export class InputController {
     window.addEventListener('pointerdown', this.onPointerDown, { once: false });
   }
 
+  /** Tune auto-shift / auto-repeat (persisted; adjustable on the boot screen). */
+  setTimings(dasMs: number, arrMs: number): void {
+    this.dasMs = dasMs;
+    this.arrMs = arrMs;
+  }
+
+  /** Touch-button hooks — share the keyboard DAS/ARR state machine. */
+  setLeftHeld(down: boolean): void {
+    if (down && !this.leftDown) {
+      this.leftHeldMs = 0;
+      this.leftRepeatMs = 0;
+      this.actions.moveLeft();
+    }
+    this.leftDown = down;
+  }
+  setRightHeld(down: boolean): void {
+    if (down && !this.rightDown) {
+      this.rightHeldMs = 0;
+      this.rightRepeatMs = 0;
+      this.actions.moveRight();
+    }
+    this.rightDown = down;
+  }
+  setSoftDropHeld(down: boolean): void {
+    this.downDown = down;
+  }
+
   destroy(): void {
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
@@ -48,21 +80,21 @@ export class InputController {
 
     if (this.leftDown) {
       this.leftHeldMs += dt;
-      if (this.leftHeldMs >= DAS_MS) {
+      if (this.leftHeldMs >= this.dasMs) {
         this.leftRepeatMs += dt;
-        while (this.leftRepeatMs >= ARR_MS) {
+        while (this.leftRepeatMs >= this.arrMs) {
           this.actions.moveLeft();
-          this.leftRepeatMs -= ARR_MS;
+          this.leftRepeatMs -= this.arrMs;
         }
       }
     }
     if (this.rightDown) {
       this.rightHeldMs += dt;
-      if (this.rightHeldMs >= DAS_MS) {
+      if (this.rightHeldMs >= this.dasMs) {
         this.rightRepeatMs += dt;
-        while (this.rightRepeatMs >= ARR_MS) {
+        while (this.rightRepeatMs >= this.arrMs) {
           this.actions.moveRight();
-          this.rightRepeatMs -= ARR_MS;
+          this.rightRepeatMs -= this.arrMs;
         }
       }
     }
@@ -71,13 +103,16 @@ export class InputController {
 
   private onPointerDown = (): void => {
     this.actions.start();
+    this.actions.skipCutscene();
   };
 
   private onKeyDown = (e: KeyboardEvent): void => {
     // Prevent scrolling with space/arrows.
     if ([' ', 'ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp'].includes(e.key)) e.preventDefault();
     if (e.repeat) return;
+    this.actions.menuKey(e.key, e);
     this.actions.start();
+    this.actions.skipCutscene();
     switch (e.key) {
       case 'ArrowLeft':
         if (!this.leftDown) {
@@ -110,6 +145,10 @@ export class InputController {
       case 'Z':
         this.actions.rotateCCW();
         break;
+      case 'a':
+      case 'A':
+        this.actions.rotate180();
+        break;
       case 'Shift':
       case 'c':
       case 'C':
@@ -117,6 +156,10 @@ export class InputController {
         break;
       case 'p':
       case 'P':
+        this.actions.pause();
+        break;
+      case 'Escape':
+        // Second way out of (and into) pause — same toggle as P.
         this.actions.pause();
         break;
       case 'r':
