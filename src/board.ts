@@ -78,6 +78,28 @@ export class Board {
     return false;
   }
 
+  /** Try a 180° rotation. Implemented as two CW kick attempts on a clone so
+   *  a failed second kick leaves the original piece untouched. */
+  tryRotate180(piece: ActivePiece): boolean {
+    const clone: ActivePiece = { ...piece };
+    if (!this.tryRotate(clone, 1)) return false;
+    if (!this.tryRotate(clone, 1)) return false;
+    piece.x = clone.x;
+    piece.y = clone.y;
+    piece.rotation = clone.rotation;
+    return true;
+  }
+
+  /** True when no cell on the board is filled (perfect-clear check). */
+  isBoardEmpty(): boolean {
+    for (let y = 0; y < TOTAL_ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        if (this.grid[y][x] !== 0) return false;
+      }
+    }
+    return true;
+  }
+
   /** Drop by 1 row. Returns false if it locked (couldn't move). */
   softDrop(piece: ActivePiece): boolean {
     return this.tryMove(piece, 0, 1);

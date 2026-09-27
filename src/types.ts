@@ -60,3 +60,22 @@ export interface CutsceneState {
   text: string[];
   timer: number; // ms remaining
 }
+
+export type GameMode = 'boss-rush' | 'free-stack';
+export type DifficultyId = 'chill' | 'normal' | 'overdrive';
+
+export interface PendingAttack {
+  kind: BossAttackKind;
+  rows: number; // garbage rows (0 for non-garbage attacks)
+  remainingMs: number;
+}
+
+/** Per-run stats shown on the game-over / victory summary. */
+export interface RunStats {
+  pieces: number;
+  maxCombo: number;
+  timeMs: number;
+  tspins: number;
+  bosses: number;
+  lines: number;
+}
