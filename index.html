@@ -48,8 +48,51 @@
           <canvas id="game" width="800" height="720"></canvas>
           <div id="boot" class="boot-overlay">
             <pre id="boot-text"></pre>
+            <div id="boot-menu" class="boot-menu" hidden>
+              <div class="boot-menu-row">
+                <span class="boot-menu-label">MODE</span>
+                <button type="button" class="boot-opt" data-mode="boss-rush">[1] BOSS RUSH</button>
+                <button type="button" class="boot-opt" data-mode="free-stack">[2] FREE STACK</button>
+              </div>
+              <div class="boot-menu-row">
+                <span class="boot-menu-label">DIFFICULTY</span>
+                <button type="button" class="boot-opt" data-diff="chill">[3] CHILL</button>
+                <button type="button" class="boot-opt" data-diff="normal">[4] NORMAL</button>
+                <button type="button" class="boot-opt" data-diff="overdrive">[5] OVERDRIVE</button>
+              </div>
+              <div class="boot-menu-row">
+                <span class="boot-menu-label">DAS <span id="das-val" class="boot-val"></span></span>
+                <button type="button" class="boot-opt" id="das-down" title="DAS -10ms">[ − ]</button>
+                <button type="button" class="boot-opt" id="das-up" title="DAS +10ms">[ + ]</button>
+                <span class="boot-menu-label">ARR <span id="arr-val" class="boot-val"></span></span>
+                <button type="button" class="boot-opt" id="arr-down" title="ARR -5ms">[ − ]</button>
+                <button type="button" class="boot-opt" id="arr-up" title="ARR +5ms">[ + ]</button>
+              </div>
+              <table class="boot-controls" aria-label="Controls">
+                <tr><td>← →</td><td>MOVE</td><td>↓</td><td>SOFT DROP</td></tr>
+                <tr><td>SPACE</td><td>HARD DROP</td><td>↑ / X · Z</td><td>ROTATE ↻ · ↺</td></tr>
+                <tr><td>A</td><td>180° SPIN</td><td>SHIFT / C</td><td>HOLD</td></tr>
+                <tr><td>P</td><td>PAUSE</td><td>R · M</td><td>RESTART · MUTE</td></tr>
+              </table>
+              <button type="button" id="boot-start" class="boot-start">▶ INITIALIZE&nbsp;&nbsp;(ENTER)</button>
+            </div>
           </div>
           <div id="hint">CLICK / PRESS ANY KEY TO INITIALIZE</div>
+          <div id="touch-controls" hidden>
+            <div class="touch-cluster">
+              <button type="button" data-t="left" aria-label="Move left">◀</button>
+              <button type="button" data-t="right" aria-label="Move right">▶</button>
+              <button type="button" data-t="down" aria-label="Soft drop">▼</button>
+            </div>
+            <div class="touch-cluster">
+              <button type="button" data-t="ccw" aria-label="Rotate counter-clockwise">⟲</button>
+              <button type="button" data-t="cw" aria-label="Rotate clockwise">⟳</button>
+              <button type="button" data-t="r180" aria-label="Rotate 180">180</button>
+              <button type="button" data-t="hold" aria-label="Hold piece">HOLD</button>
+              <button type="button" data-t="drop" aria-label="Hard drop">⤓</button>
+              <button type="button" data-t="pause" aria-label="Pause">⏸</button>
+            </div>
+          </div>
         </div>
         <aside id="coin-slot" aria-labelledby="coin-slot-title">
           <div class="coin-slot-bezel" aria-hidden="true"></div>

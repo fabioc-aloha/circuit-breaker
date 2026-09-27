@@ -678,3 +678,135 @@ body {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
 }
+
+/* -------- BOOT MENU -------- */
+.boot-menu {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
+  max-width: 640px;
+}
+
+.boot-menu-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.boot-menu-label {
+  color: var(--yellow);
+  font-size: 12px;
+  letter-spacing: 2px;
+  margin-right: 4px;
+}
+
+.boot-val {
+  color: var(--cyan);
+}
+
+.boot-opt {
+  background: rgba(0, 240, 255, 0.06);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  color: var(--cyan);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 1px;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 3px;
+  text-shadow: 0 0 6px var(--cyan);
+}
+
+.boot-opt:hover {
+  background: rgba(0, 240, 255, 0.16);
+}
+
+.boot-opt.selected {
+  background: rgba(0, 240, 255, 0.25);
+  border-color: var(--cyan);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+}
+
+.boot-controls {
+  border-collapse: collapse;
+  font-size: 11px;
+  color: var(--fg);
+  opacity: 0.85;
+}
+
+.boot-controls td {
+  padding: 3px 10px;
+  border: 1px solid rgba(0, 240, 255, 0.15);
+}
+
+.boot-controls td:nth-child(odd) {
+  color: var(--yellow);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.boot-start {
+  margin-top: 4px;
+  background: rgba(255, 230, 0, 0.1);
+  border: 1px solid var(--yellow);
+  color: var(--yellow);
+  font: inherit;
+  font-size: 15px;
+  letter-spacing: 2px;
+  padding: 10px 26px;
+  cursor: pointer;
+  border-radius: 4px;
+  text-shadow: 0 0 8px var(--yellow);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.boot-start:hover {
+  background: rgba(255, 230, 0, 0.25);
+}
+
+/* -------- TOUCH CONTROLS -------- */
+#touch-controls {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  z-index: 20;
+  pointer-events: none;
+}
+
+#touch-controls[hidden] {
+  display: none;
+}
+
+.touch-cluster {
+  display: flex;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.touch-cluster button {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 240, 255, 0.5);
+  background: rgba(5, 1, 15, 0.72);
+  color: var(--cyan);
+  font-size: 20px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  text-shadow: 0 0 8px var(--cyan);
+}
+
+.touch-cluster button:active {
+  background: rgba(0, 240, 255, 0.3);
+}
