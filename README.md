@@ -71,17 +71,22 @@ npm run preview
 
 ## 🎮 Controls
 
-| Key           | Action          |
-|---------------|-----------------|
-| ← / →         | Move            |
-| ↓             | Soft drop       |
-| Space         | Hard drop       |
-| ↑ / X         | Rotate CW       |
-| Z             | Rotate CCW      |
-| Shift / C     | Hold piece      |
-| P             | Pause / resume  |
-| M             | Mute audio      |
-| R             | Restart run     |
+| Key           | Action                    |
+|---------------|---------------------------|
+| ← / →         | Move                      |
+| ↓             | Soft drop                 |
+| Space         | Hard drop                 |
+| ↑ / X         | Rotate CW                 |
+| Z             | Rotate CCW                |
+| A             | Rotate 180°               |
+| Shift / C     | Hold piece                |
+| P             | Pause / resume            |
+| M             | Mute audio                |
+| R             | Restart run               |
+
+Boot menu: `1`/`2` select mode (Boss Rush / Free Stack), `3`/`4`/`5` select
+difficulty (Chill / Normal / Overdrive), `[`/`]` tune DAS, `;`/`'` tune ARR,
+`Enter` initializes. Touch controls appear automatically on touch devices.
 
 Click or press any key to boot the cabinet. The browser requires a user gesture
 before it can start the audio graph.
@@ -96,6 +101,8 @@ cleanly from Tetr.io / Jstris:
 
 - Seven tetrominoes with full **SRS rotation + wall-kick tables** for JLSTZ and I
 - **7-bag randomizer**, one-swap-per-drop hold, ghost preview, and next-three queue
+- **T-spins** (3-corner rule; last action must be a rotation), **back-to-back ×1.5**
+  on tetrises and T-spins, and **perfect-clear** bonuses
 - **AMPERAGE ×N** combo tracker, **VOLTAGE TIER** that rises every ten line clears *and* on each boss defeat (whichever comes first) with a live *NEXT TIER IN N* progress bar under the LINES stat, gravity curve tied to tier, and a local high score
 - Line clears freeze the row visibly-but-briefly while a neon Pacman streaks across the empty space, then the stack drops — the animation and the mutation happen together instead of the clear finishing before the effect starts
 

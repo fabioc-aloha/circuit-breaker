@@ -314,9 +314,6 @@ export class Game implements InputActions {
       this.softDropTimer = 0;
     }
 
-    // Boss attacks — telegraphed: the warning fires first, the attack lands
-    // ATTACK_WARNING_MS later so garbage/scramble never feel instant.
-    // (Handled above, before the no-active-piece early return.)
     // Danger warning tick (throttled) while the stack rides high.
     if (this.active && this.danger) {
       const now = performance.now();
