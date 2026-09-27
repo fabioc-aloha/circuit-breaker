@@ -46,6 +46,16 @@
           <span class="screen-screw screen-screw-bottom-left" aria-hidden="true"></span>
           <span class="screen-screw screen-screw-bottom-right" aria-hidden="true"></span>
           <canvas id="game" width="800" height="720"></canvas>
+          <div id="pause-overlay" class="pause-overlay" hidden>
+            <div class="pause-panel" role="dialog" aria-label="Game paused">
+              <div class="pause-title">⏸ PAUSED</div>
+              <div class="pause-sub">P / ESC — RESUME&nbsp;&nbsp;·&nbsp;&nbsp;R — RESTART</div>
+              <div class="pause-actions">
+                <button type="button" id="pause-resume" class="pause-btn">▶ RESUME</button>
+                <button type="button" id="pause-restart" class="pause-btn pause-btn-warn">↻ RESTART</button>
+              </div>
+            </div>
+          </div>
           <div id="boot" class="boot-overlay">
             <pre id="boot-text"></pre>
             <div id="boot-menu" class="boot-menu" hidden>
@@ -62,11 +72,11 @@
               </div>
               <div class="boot-menu-row">
                 <span class="boot-menu-label">DAS <span id="das-val" class="boot-val"></span></span>
-                <button type="button" class="boot-opt" id="das-down" title="DAS -10ms">[ − ]</button>
-                <button type="button" class="boot-opt" id="das-up" title="DAS +10ms">[ + ]</button>
+                <button type="button" class="boot-opt boot-step" id="das-down" title="DAS -10ms" aria-label="Decrease DAS">−</button>
+                <button type="button" class="boot-opt boot-step" id="das-up" title="DAS +10ms" aria-label="Increase DAS">+</button>
                 <span class="boot-menu-label">ARR <span id="arr-val" class="boot-val"></span></span>
-                <button type="button" class="boot-opt" id="arr-down" title="ARR -5ms">[ − ]</button>
-                <button type="button" class="boot-opt" id="arr-up" title="ARR +5ms">[ + ]</button>
+                <button type="button" class="boot-opt boot-step" id="arr-down" title="ARR -5ms" aria-label="Decrease ARR">−</button>
+                <button type="button" class="boot-opt boot-step" id="arr-up" title="ARR +5ms" aria-label="Increase ARR">+</button>
               </div>
               <table class="boot-controls" aria-label="Controls">
                 <tr><td>← →</td><td>MOVE</td><td>↓</td><td>SOFT DROP</td></tr>

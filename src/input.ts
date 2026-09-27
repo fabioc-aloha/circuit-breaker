@@ -14,7 +14,7 @@ export interface InputActions {
   restart(): void;
   toggleMute(): void;
   start(): void; // any-key start / boot dismiss
-  menuKey(key: string): void; // boot-menu navigation (no-op in game)
+  menuKey(key: string, ev: KeyboardEvent): void; // boot-menu navigation (no-op in game)
   skipCutscene(): void; // dismiss inter-boss cutscene early
 }
 
@@ -110,7 +110,7 @@ export class InputController {
     // Prevent scrolling with space/arrows.
     if ([' ', 'ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp'].includes(e.key)) e.preventDefault();
     if (e.repeat) return;
-    this.actions.menuKey(e.key);
+    this.actions.menuKey(e.key, e);
     this.actions.start();
     this.actions.skipCutscene();
     switch (e.key) {
@@ -156,6 +156,10 @@ export class InputController {
         break;
       case 'p':
       case 'P':
+        this.actions.pause();
+        break;
+      case 'Escape':
+        // Second way out of (and into) pause — same toggle as P.
         this.actions.pause();
         break;
       case 'r':

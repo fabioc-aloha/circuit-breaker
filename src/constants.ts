@@ -22,6 +22,10 @@ export const CANVAS_H = BOARD_PX_H + HUD_PADDING * 2 + 60 + KONG_LEDGE_H; // ext
 
 // Timings (ms)
 export const LOCK_DELAY_MS = 500;
+// Min gap between accepted pause toggles: swallows duplicate non-repeat
+// keydown events from flaky keyboards/drivers without blocking deliberate
+// human double-presses.
+export const PAUSE_DEBOUNCE_MS = 200;
 // Guideline-style cap on lock-delay resets per piece: wiggling a landed piece
 // can only buy ~15 extra half-seconds, never an infinite stall.
 export const LOCK_RESET_LIMIT = 15;

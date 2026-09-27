@@ -33,6 +33,25 @@ const BIOS_LINES = [
   '',
   '> READY.',
 ];
+const AUDIO_OFFLINE_LINE = '> AUDIO BUS: OFFLINE  (press any key)';
+const AUDIO_ONLINE_LINE = '> AUDIO BUS: ONLINE';
+
+/** Flip the stale "AUDIO BUS: OFFLINE" boot line once the audio bus unlocks —
+ *  both for lines still to be typed and for the line already on screen. */
+function markAudioOnline(): void {
+  const idx = BIOS_LINES.indexOf(AUDIO_OFFLINE_LINE);
+  if (idx >= 0) BIOS_LINES[idx] = AUDIO_ONLINE_LINE;
+  if (bootText.textContent?.includes(AUDIO_OFFLINE_LINE)) {
+    bootText.textContent = bootText.textContent.replace(AUDIO_OFFLINE_LINE, AUDIO_ONLINE_LINE);
+  }
+}
+
+/** Unlock the WebAudio bus (must run inside a user gesture) and refresh the
+ *  boot log so it no longer claims the bus is offline. */
+function unlockAudio(): void {
+  audio.ensure();
+  markAudioOnline();
+}
 
 let bootIdx = 0;
 function typeBoot(): void {
@@ -134,9 +153,19 @@ function finishTyping(): void {
   syncBootMenu();
 }
 
-function handleMenuKey(key: string): void {
+function handleMenuKey(key: string, ev: KeyboardEvent): void {
   if (bootPhase !== 'menu') return;
-  audio.ensure(); // keydown is a user gesture — unlock audio for menu blips
+  // Enter/Space always initialize from the menu, no matter which control has
+  // focus — and the focused control's default activation is suppressed so a
+  // focused stepper/mute button doesn't ALSO fire (e.g. toggling mute or
+  // stepping DAS as the run starts). Arrow keys are untouched so slider
+  // keyboard adjustments keep working.
+  if (key === 'Enter' || key === ' ') {
+    ev.preventDefault();
+    dismissBoot();
+    return;
+  }
+  unlockAudio(); // keydown is a user gesture — unlock audio for menu blips
   switch (key) {
     case '1': selMode = 'boss-rush'; break;
     case '2': selMode = 'free-stack'; break;
@@ -147,10 +176,6 @@ function handleMenuKey(key: string): void {
     case ']': setDas(dasMs + 10); return;
     case ';': setArr(arrMs - 5); return;
     case "'": setArr(arrMs + 5); return;
-    case 'Enter':
-    case ' ':
-      dismissBoot();
-      return;
     default: return;
   }
   sfx.uiBlip();
@@ -160,9 +185,12 @@ function handleMenuKey(key: string): void {
 function dismissBoot(): void {
   if (bootPhase === 'done') return;
   bootPhase = 'done';
-  audio.ensure();
+  unlockAudio();
   game.mode = selMode;
   game.difficulty = selDiff;
+  // Hide the menu immediately — the overlay fades for another 600ms, and
+  // without this the loadout buttons stay clickable mid-run.
+  bootMenu.hidden = true;
   effects.spawnLightning(canvas.width * 0.15, 0, canvas.width * 0.65, canvas.height * 0.8, '#ffffff', 2.5);
   effects.flash(0.9, 180);
   effects.shake(6, 240);
@@ -202,7 +230,7 @@ const input = new InputController({
     // handled by menuKey / the on-screen buttons — don't dismiss early.
     if (bootPhase === 'typing') finishTyping();
   },
-  menuKey: (key) => handleMenuKey(key),
+  menuKey: (key, ev) => handleMenuKey(key, ev),
   skipCutscene: () => game.skipCutscene(),
 });
 input.setTimings(dasMs, arrMs);
@@ -211,7 +239,7 @@ input.setTimings(dasMs, arrMs);
 bootMenu.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((b) => {
   b.addEventListener('click', () => {
     selMode = b.dataset.mode as GameMode;
-    audio.ensure();
+    unlockAudio();
     sfx.uiBlip();
     syncBootMenu();
   });
@@ -219,7 +247,7 @@ bootMenu.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((b) => {
 bootMenu.querySelectorAll<HTMLButtonElement>('[data-diff]').forEach((b) => {
   b.addEventListener('click', () => {
     selDiff = b.dataset.diff as DifficultyId;
-    audio.ensure();
+    unlockAudio();
     sfx.uiBlip();
     syncBootMenu();
   });
@@ -235,11 +263,13 @@ document.getElementById('boot-start')!.addEventListener('click', () => dismissBo
 const touchControls = document.getElementById('touch-controls')!;
 if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
   touchControls.hidden = false;
+  // Lifts the cabinet so the fixed button bar never covers the canvas.
+  document.body.classList.add('has-touch');
   touchControls.querySelectorAll<HTMLButtonElement>('button').forEach((btn) => {
     const kind = btn.dataset.t ?? '';
     btn.addEventListener('pointerdown', (e) => {
       e.preventDefault();
-      audio.ensure();
+      unlockAudio();
       switch (kind) {
         case 'left': input.setLeftHeld(true); break;
         case 'right': input.setRightHeld(true); break;
@@ -264,6 +294,23 @@ if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
   });
 }
 
+// Pause overlay — DOM buttons so pausing never depends on keyboard focus.
+const pauseOverlay = document.getElementById('pause-overlay')!;
+document.getElementById('pause-resume')!.addEventListener('click', () => {
+  if (game.phase === 'paused') game.pause();
+});
+document.getElementById('pause-restart')!.addEventListener('click', () => {
+  game.restart();
+});
+let pauseOverlayShown = false;
+function syncPauseOverlay(): void {
+  const show = game.phase === 'paused';
+  if (show !== pauseOverlayShown) {
+    pauseOverlayShown = show;
+    pauseOverlay.hidden = !show;
+  }
+}
+
 let last = performance.now();
 // Resetting on tab reactivation prevents rAF from delivering a giant catch-up
 // dt after a long hidden-tab pause. The listener lives for the page lifetime;
@@ -279,6 +326,7 @@ function loop(now: number): void {
   input.update();
   game.update(dt);
   effects.update(dt, canvas.width, canvas.height);
+  syncPauseOverlay();
   const ghost = game.active ? game.board.ghostFor(game.active) : null;
   renderer.render({
     board: game.board,

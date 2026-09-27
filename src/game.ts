@@ -26,6 +26,7 @@ import {
     LOCK_DELAY_MS,
     LOCK_RESET_LIMIT,
     LOW_HP_THRESHOLD,
+    PAUSE_DEBOUNCE_MS,
     PERFECT_CLEAR_BASE,
     PERFECT_CLEAR_BOSS_DAMAGE,
     PIECE_COLORS,
@@ -118,6 +119,8 @@ export class Game implements InputActions {
   runStartMs = 0;
   private dangerTickAt = 0;
   private runsCompleted: number;
+  // Guards the pause toggle against duplicate keydown events (see pause()).
+  private lastPauseToggleMs = 0;
 
   // Kong paces the girder above the board and throws each new piece down
   // from his current column. Constructed here so tests can inspect state.
@@ -737,6 +740,12 @@ export class Game implements InputActions {
     this.sfx.hold();
   }
   pause(): void {
+    // Debounce: some keyboards/drivers deliver duplicate non-repeat keydown
+    // events for a single press, which would toggle pause twice (net no-op)
+    // and read as a "flaky" pause key. Human double-presses are slower.
+    const now = performance.now();
+    if (now - this.lastPauseToggleMs < PAUSE_DEBOUNCE_MS) return;
+    this.lastPauseToggleMs = now;
     if (this.phase === 'playing') {
       this.phase = 'paused';
       this.music.setMode('silent');
@@ -757,7 +766,7 @@ export class Game implements InputActions {
   start(): void {
     // Used to dismiss boot overlay; handled in main.ts
   }
-  menuKey(): void {
+  menuKey(_key: string, _ev: KeyboardEvent): void {
     // Boot-menu key handling; wired in main.ts. No-op on the game itself.
   }
 

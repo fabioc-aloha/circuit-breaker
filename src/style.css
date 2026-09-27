@@ -30,7 +30,11 @@ body {
   position: fixed;
   inset: 0;
   display: grid;
-  place-items: center;
+  /* `safe center` keeps the top of the cabinet reachable when the viewport
+     is shorter than the cabinet — plain `center` would clip the top AND the
+     bottom with no way to scroll to either. */
+  place-items: safe center;
+  overflow-y: auto;
   padding: 12px;
   background:
     radial-gradient(ellipse at center, rgba(0, 240, 255, 0.06) 0%, transparent 60%),
@@ -154,6 +158,10 @@ body {
   border-radius: 4px;
   position: relative;
   box-shadow: inset 0 0 12px rgba(255, 230, 0, 0.1);
+  /* Fade the edges so quote segments dissolve instead of clipping hard
+     against the marquee frame. */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
 }
 .ticker-track {
   display: flex;
@@ -244,7 +252,10 @@ body {
 #game {
   display: block;
   max-width: 100%;
-  max-height: calc(100vh - 200px);
+  /* Reserve room for the real chrome (marquee + coin slot + audio console +
+     gaps + padding ≈ 360px) so the cabinet fits the viewport without the
+     page needing to scroll at common desktop heights. */
+  max-height: calc(100vh - 360px);
   height: auto;
   image-rendering: pixelated;
   border-radius: 6px;
@@ -447,7 +458,11 @@ body {
 .boot-overlay {
   position: absolute;
   inset: 14px;
-  background: rgba(5, 1, 15, 0.92);
+  /* Near-opaque + slight blur: the glowing boss silhouette on the canvas
+     used to bleed through and wreck the cyan boot text legibility. */
+  background: rgba(5, 1, 15, 0.97);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   display: grid;
   place-items: center;
   color: var(--cyan);
@@ -710,64 +725,147 @@ body {
 }
 
 .boot-opt {
-  background: rgba(0, 240, 255, 0.06);
-  border: 1px solid rgba(0, 240, 255, 0.35);
+  background: linear-gradient(180deg, rgba(0, 240, 255, 0.12), rgba(0, 240, 255, 0.04));
+  border: 2px solid rgba(0, 240, 255, 0.45);
   color: var(--cyan);
   font: inherit;
-  font-size: 12px;
-  letter-spacing: 1px;
-  padding: 6px 10px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 10px 18px;
   cursor: pointer;
-  border-radius: 3px;
-  text-shadow: 0 0 6px var(--cyan);
+  border-radius: 6px;
+  text-shadow: 0 0 8px var(--cyan);
+  box-shadow:
+    0 0 10px rgba(0, 240, 255, 0.18),
+    inset 0 0 12px rgba(0, 240, 255, 0.06);
+  transition: transform 100ms ease, box-shadow 120ms ease, background 120ms ease;
 }
 
 .boot-opt:hover {
-  background: rgba(0, 240, 255, 0.16);
+  background: linear-gradient(180deg, rgba(0, 240, 255, 0.24), rgba(0, 240, 255, 0.1));
+  border-color: var(--cyan);
+  box-shadow:
+    0 0 18px rgba(0, 240, 255, 0.5),
+    inset 0 0 14px rgba(0, 240, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.boot-opt:active {
+  transform: translateY(1px);
+}
+
+.boot-opt:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 2px;
 }
 
 .boot-opt.selected {
-  background: rgba(0, 240, 255, 0.25);
-  border-color: var(--cyan);
+  background: linear-gradient(180deg, rgba(0, 240, 255, 0.5), rgba(0, 240, 255, 0.28));
+  border-color: #e8fdff;
   color: #fff;
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+  text-shadow: 0 0 10px #fff, 0 0 20px var(--cyan);
+  box-shadow:
+    0 0 24px rgba(0, 240, 255, 0.8),
+    inset 0 0 16px rgba(255, 255, 255, 0.14);
+}
+
+/* DAS/ARR steppers — chunky square buttons with real affordance. */
+.boot-step {
+  min-width: 48px;
+  padding: 8px 12px;
+  font-size: 20px;
+  line-height: 1;
+  border-radius: 8px;
 }
 
 .boot-controls {
-  border-collapse: collapse;
-  font-size: 11px;
+  border-collapse: separate;
+  border-spacing: 4px;
+  font-size: 12px;
   color: var(--fg);
-  opacity: 0.85;
+  background: rgba(0, 240, 255, 0.04);
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: inset 0 0 18px rgba(0, 240, 255, 0.05);
 }
 
 .boot-controls td {
-  padding: 3px 10px;
-  border: 1px solid rgba(0, 240, 255, 0.15);
+  padding: 5px 10px;
+  border: none;
 }
 
+/* Key chips — neon keycaps instead of bare table text. */
 .boot-controls td:nth-child(odd) {
-  color: var(--yellow);
-  text-align: right;
+  background: linear-gradient(180deg, #a5fcff, #00d5e8);
+  color: #062a30;
+  border-radius: 5px;
+  font-weight: 700;
+  text-align: center;
   white-space: nowrap;
+  text-shadow: none;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.boot-controls td:nth-child(even) {
+  color: var(--fg);
+  letter-spacing: 1px;
+  opacity: 0.9;
+  padding-left: 12px;
 }
 
 .boot-start {
-  margin-top: 4px;
-  background: rgba(255, 230, 0, 0.1);
-  border: 1px solid var(--yellow);
-  color: var(--yellow);
+  margin-top: 6px;
+  background: linear-gradient(180deg, #fff3a0 0%, #ffe600 45%, #ff9d00 100%);
+  border: 2px solid #fff6c2;
+  color: #2a1500;
   font: inherit;
-  font-size: 15px;
-  letter-spacing: 2px;
-  padding: 10px 26px;
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  padding: 14px 34px;
   cursor: pointer;
-  border-radius: 4px;
-  text-shadow: 0 0 8px var(--yellow);
-  animation: pulse 1.5s ease-in-out infinite;
+  border-radius: 8px;
+  text-shadow: none;
+  box-shadow:
+    0 0 24px rgba(255, 230, 0, 0.65),
+    0 0 60px rgba(255, 157, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  animation: hero-pulse 1.6s ease-in-out infinite;
+  transition: transform 100ms ease, box-shadow 120ms ease;
 }
 
 .boot-start:hover {
-  background: rgba(255, 230, 0, 0.25);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 0 36px rgba(255, 230, 0, 0.95),
+    0 0 90px rgba(255, 157, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.boot-start:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.boot-start:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+@keyframes hero-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 24px rgba(255, 230, 0, 0.65),
+      0 0 60px rgba(255, 157, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+  50% {
+    box-shadow:
+      0 0 38px rgba(255, 230, 0, 0.95),
+      0 0 95px rgba(255, 157, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
 }
 
 /* -------- TOUCH CONTROLS -------- */
@@ -778,6 +876,8 @@ body {
   bottom: 0;
   display: flex;
   justify-content: space-between;
+  align-items: flex-end;
+  gap: 10px;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   z-index: 20;
   pointer-events: none;
@@ -788,25 +888,181 @@ body {
 }
 
 .touch-cluster {
-  display: flex;
+  display: grid;
+  /* Fixed 3-column grid keeps the six-button right cluster to two tidy rows
+     on narrow phones instead of overflowing into a ragged single row. */
+  grid-template-columns: repeat(3, 64px);
   gap: 10px;
+  justify-content: start;
   pointer-events: auto;
 }
 
+.touch-cluster:last-child {
+  justify-content: end;
+}
+
 .touch-cluster button {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 240, 255, 0.5);
-  background: rgba(5, 1, 15, 0.72);
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  border: 2px solid rgba(0, 240, 255, 0.65);
+  background: linear-gradient(180deg, rgba(12, 24, 40, 0.92), rgba(5, 1, 15, 0.92));
   color: var(--cyan);
-  font-size: 20px;
+  font-size: 22px;
+  font-weight: 700;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-  text-shadow: 0 0 8px var(--cyan);
+  text-shadow: 0 0 10px var(--cyan);
+  box-shadow:
+    0 0 14px rgba(0, 240, 255, 0.35),
+    inset 0 0 10px rgba(0, 240, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .touch-cluster button:active {
-  background: rgba(0, 240, 255, 0.3);
+  background: rgba(0, 240, 255, 0.35);
+  color: #fff;
+  box-shadow: 0 0 24px rgba(0, 240, 255, 0.75);
+  transform: scale(0.96);
+}
+
+/* Action color-coding: drop = yellow, pause = red, text buttons smaller type. */
+.touch-cluster button[data-t='drop'] {
+  border-color: rgba(255, 230, 0, 0.7);
+  color: var(--yellow);
+  text-shadow: 0 0 10px var(--yellow);
+  box-shadow:
+    0 0 14px rgba(255, 230, 0, 0.35),
+    inset 0 0 10px rgba(255, 230, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.touch-cluster button[data-t='drop']:active {
+  background: rgba(255, 230, 0, 0.35);
+  box-shadow: 0 0 24px rgba(255, 230, 0, 0.75);
+}
+
+.touch-cluster button[data-t='pause'] {
+  border-color: rgba(255, 43, 74, 0.7);
+  color: var(--red);
+  text-shadow: 0 0 10px var(--red);
+  box-shadow:
+    0 0 14px rgba(255, 43, 74, 0.35),
+    inset 0 0 10px rgba(255, 43, 74, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.touch-cluster button[data-t='pause']:active {
+  background: rgba(255, 43, 74, 0.35);
+  box-shadow: 0 0 24px rgba(255, 43, 74, 0.75);
+}
+
+.touch-cluster button[data-t='hold'] {
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.touch-cluster button[data-t='r180'] {
+  font-size: 15px;
+}
+
+/* When touch controls are present, lift the cabinet so the fixed button bar
+   never covers the canvas. Applied via JS on touch-capable devices. */
+.has-touch #app {
+  padding-bottom: 104px;
+}
+
+/* -------- PAUSE OVERLAY -------- */
+.pause-overlay {
+  position: absolute;
+  inset: 14px;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  background: rgba(5, 1, 15, 0.72);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  border-radius: 6px;
+}
+
+.pause-overlay[hidden] {
+  display: none;
+}
+
+.pause-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 44px;
+  border: 2px solid rgba(0, 240, 255, 0.5);
+  border-radius: 10px;
+  background: rgba(5, 1, 15, 0.92);
+  box-shadow:
+    0 0 30px rgba(0, 240, 255, 0.35),
+    inset 0 0 24px rgba(0, 240, 255, 0.06);
+}
+
+.pause-title {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: var(--cyan);
+  text-shadow: 0 0 12px var(--cyan), 0 0 34px var(--cyan);
+}
+
+.pause-sub {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--fg);
+  opacity: 0.75;
+}
+
+.pause-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pause-btn {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 12px 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #062a30;
+  background: linear-gradient(180deg, #a5fcff, #00d5e8);
+  border: 2px solid #d8fdff;
+  text-shadow: none;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.55);
+  transition: transform 100ms ease, box-shadow 120ms ease;
+}
+
+.pause-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 28px rgba(0, 240, 255, 0.85);
+}
+
+.pause-btn:active {
+  transform: translateY(1px);
+}
+
+.pause-btn:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.pause-btn-warn {
+  color: #3a0a12;
+  background: linear-gradient(180deg, #ffb3c0, #ff2b4a);
+  border-color: #ffd3da;
+  box-shadow: 0 0 18px rgba(255, 43, 74, 0.55);
+}
+
+.pause-btn-warn:hover {
+  box-shadow: 0 0 28px rgba(255, 43, 74, 0.85);
 }

@@ -596,3 +596,36 @@ test('free-stack mode runs with no boss and tiers up by lines only', () => {
   assert.equal(game.pendingAttack, null);
   assert.equal(game.boss, null);
 });
+
+test('pause toggles between playing and paused', async () => {
+  const game = createGame();
+  game.beginRun();
+  assert.equal(game.phase, 'playing');
+
+  game.pause();
+  assert.equal(game.phase, 'paused');
+
+  // The debounce window must expire before the toggle is accepted again.
+  await new Promise((r) => setTimeout(r, 250));
+  game.pause();
+  assert.equal(game.phase, 'playing');
+});
+
+test('pause swallows duplicate toggles inside the debounce window', () => {
+  const game = createGame();
+  game.beginRun();
+
+  game.pause();
+  assert.equal(game.phase, 'paused');
+  // A duplicate keydown arriving ~instantly (flaky driver/BIOS) must not
+  // toggle straight back to playing.
+  game.pause();
+  assert.equal(game.phase, 'paused');
+});
+
+test('pause is a no-op outside playing/paused phases', () => {
+  const game = createGame();
+  assert.equal(game.phase, 'ready');
+  game.pause();
+  assert.equal(game.phase, 'ready');
+});

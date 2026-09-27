@@ -950,11 +950,12 @@ export class Renderer {
     ctx.textAlign = 'start';
   }
 
-  /** First-run control hint toast at the bottom of the board. */
+  /** First-run control hint toast in the strip BELOW the board — never inside
+   *  the playfield, so stacked blocks can't cover it. */
   private drawHint(hint: string): void {
     const ctx = this.ctx;
     const cx = this.boardX + BOARD_PX_W / 2;
-    const y = this.boardY + BOARD_PX_H - 14;
+    const y = this.boardY + BOARD_PX_H + 36;
     ctx.save();
     ctx.font = 'bold 12px Consolas, monospace';
     ctx.textAlign = 'center';
