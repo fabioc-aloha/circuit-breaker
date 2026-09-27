@@ -2,11 +2,13 @@
 
 ## Delivery record
 
-**Last assessed:** 2026-07-22
+**Last assessed:** 2026-09-27
 
 | Status | Area | Evidence or next action |
 | --- | --- | --- |
 | Complete | Core block-stacker | Seven-bag, SRS, collision, hold, ghost, scoring, gravity, pause, restart, and local high score are implemented. |
+| Complete | Competitive scoring | T-spins (3-corner rule), back-to-back ×1.5, perfect-clear bonuses, lock-delay cap of 15 resets, and 180° rotation are implemented, with regression tests. |
+| Complete | Boss fairness | Every attack telegraphed 1000 ms ahead (garbage previews exact rows); boss HP paced per tier (18/25/35/45/70) with +10% damage per voltage tier; colliding spawns nudge to the nearest free column; cutscenes skippable. |
 | Complete | Boss Rush | Five bosses, dual-source voltage tiers (whichever is higher of `1 + floor(lines / LINES_PER_LEVEL)` and `bossIndex + 1`, with `NEXT TIER IN N` progress bar and tier-up announcement), distinct HUD silhouettes, integrity, damage, attacks, cutscenes, victory, and terminal-state regression coverage are implemented. |
 | Complete | Line-clear animation | Cleared rows hold visible-but-empty for 260 ms while the neon Pacman crosses; grid mutation is deferred so the effect and the drop land together. |
 | Complete | Audio baseline | Procedural SFX/BGM, mute persistence, boss-low mode, and autoplay-safe boot are implemented. |
@@ -15,6 +17,9 @@
 | Complete | Audio controls | Master, SFX, and BGM sliders persist through `AudioManager.setVolumes()`; the mute control stays synchronized with the `M` shortcut. |
 | Complete | Tetris feedback | Four-line clears trigger the visible `MAIN BREAKER TRIPPED` / `FOUR-LINE OVERLOAD` announcement, giant breaker Pacman, flash, shake, and boom. |
 | Complete | Garbage tuning | Garbage attacks now use the planned 1-4 row range, with maximum-displacement regression coverage. |
+| Complete | Run structure | Free Stack mode alongside Boss Rush; difficulty tiers (Chill/Normal/Overdrive); tunable DAS/ARR persisted to local storage; touch controls with holdable buttons; danger vignette within 5 rows of the top; end-of-run telemetry summary. |
+| Complete | UI hardening | Neon boot menu with chunky mode/difficulty/DAS/ARR controls, DOM pause overlay (Resume/Restart), 64px touch targets, safe-area layout, ticker edge fades, INITIALIZE label legibility fix. |
+| Complete | Render performance | Ticker pinned to constant 70 px/s on a compositor layer with seamless rebuilds; particles/pellets/active-cell glows use pre-baked radial sprites instead of per-frame shadowBlur; pacman RGB ghosts skip shadowBlur; button glow animates opacity only. |
 | Decided | Tooling | ESLint and Prettier are excluded: strict TypeScript, focused Node tests, and the built-site validator provide the current quality gate without extra dependencies. |
 
 **Current state:** the implementation plan is complete. Revisit the accepted

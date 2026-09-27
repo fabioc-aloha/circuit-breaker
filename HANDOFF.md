@@ -1,6 +1,38 @@
 # Session Handoff
 
-Last updated: 2026-08-08 (instrumentation health audit; prior handoff follows)
+Last updated: 2026-09-27 (gameplay pass + smoothness pass merged to main; prior handoff follows)
+
+## 2026-09-27 - Gameplay pass, UAT hardening, smoothness pass → main
+
+PR #6 (`alex/gameplay-pass`) merged to `main` (merge commit `9552605`) and
+deployed to production — `cb.correax.com` verified serving the new bundle.
+Docs updated same day: README (bundle size, lock cap, spawn nudge, telegraphs,
+danger vignette, run summary, render-perf note), PLAN.md delivery record.
+
+Shipped on the branch, in order:
+
+- **Gameplay pass (13 items):** lock-reset cap (15), boss attack telegraphs
+  (1000 ms, garbage previews exact rows), spawn-column nudge to nearest free
+  column, danger vignette within 5 rows of top, T-spins (3-corner rule),
+  back-to-back ×1.5, skippable cutscenes, boss HP pacing (18/25/35/45/70,
+  +10% damage per voltage tier), Free Stack mode, controls/onboarding hints,
+  run telemetry summary, touch controls, difficulty tiers + tunable DAS/ARR,
+  perfect clears, 180° rotation, scaled hard-drop shake.
+- **UAT repair:** neon boot menu with chunky controls, DOM pause overlay with
+  Resume/Restart, 64px touch targets, safe-area layout, INITIALIZE label
+  legibility (hint moved in-flow, pointer-events none), ticker edge fades via
+  real DOM elements (mask-image and ::before/::after both failed in prod
+  Chromium — do not retry those approaches).
+- **Smoothness pass:** ticker pinned to constant 70 px/s from measured width
+  with `will-change: transform` and seamless rebuilds; INITIALIZE pulse
+  reworked to opacity-only `::after` glow (box-shadow keyframes repaint every
+  frame); renderer pre-bakes one radial glow sprite per color and stamps
+  `drawImage` for particles/pellets instead of per-particle `shadowBlur`;
+  pacman RGB ghosts skip shadowBlur; active-cell glow via layered alpha rects;
+  Kong sprite dest rounded to whole pixels.
+
+78/78 tests green (`npm run check`), production deploy successful.
+Merge via API is `PUT /repos/{owner}/{repo}/pulls/{n}/merge` — POST 404s.
 
 ## 2026-08-08 - Circuit Breaker instrumentation health
 
