@@ -122,23 +122,27 @@
           </div>
         </aside>
         <section id="audio-console" aria-label="Audio mixer">
-          <div class="audio-console-title">AUDIO MIX</div>
-          <label class="audio-control" for="volume-master">
-            <span>MASTER</span>
-            <input id="volume-master" type="range" min="0" max="100" step="1" />
-            <output id="volume-master-value" for="volume-master"></output>
-          </label>
-          <label class="audio-control" for="volume-sfx">
-            <span>SFX</span>
-            <input id="volume-sfx" type="range" min="0" max="100" step="1" />
-            <output id="volume-sfx-value" for="volume-sfx"></output>
-          </label>
-          <label class="audio-control" for="volume-bgm">
-            <span>BGM</span>
-            <input id="volume-bgm" type="range" min="0" max="100" step="1" />
-            <output id="volume-bgm-value" for="volume-bgm"></output>
-          </label>
-          <button id="audio-mute" type="button" title="Mute audio (M)"></button>
+          <button id="audio-console-toggle" type="button" class="audio-console-title" aria-expanded="true" aria-controls="audio-console-body">
+            <span>AUDIO MIX</span><span class="audio-console-chevron" aria-hidden="true">▾</span>
+          </button>
+          <div id="audio-console-body" class="audio-console-body">
+            <label class="audio-control" for="volume-master">
+              <span>MASTER</span>
+              <input id="volume-master" type="range" min="0" max="100" step="1" />
+              <output id="volume-master-value" for="volume-master"></output>
+            </label>
+            <label class="audio-control" for="volume-sfx">
+              <span>SFX</span>
+              <input id="volume-sfx" type="range" min="0" max="100" step="1" />
+              <output id="volume-sfx-value" for="volume-sfx"></output>
+            </label>
+            <label class="audio-control" for="volume-bgm">
+              <span>BGM</span>
+              <input id="volume-bgm" type="range" min="0" max="100" step="1" />
+              <output id="volume-bgm-value" for="volume-bgm"></output>
+            </label>
+            <button id="audio-mute" type="button" title="Mute audio (M)"></button>
+          </div>
         </section>
       </div>
     </div>

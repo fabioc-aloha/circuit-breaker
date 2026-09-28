@@ -419,6 +419,40 @@ body {
   text-shadow: 0 0 8px var(--cyan);
 }
 
+/* The title doubles as the collapse toggle (button reset keeps the HUD look). */
+#audio-console-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+}
+
+.audio-console-chevron {
+  display: inline-block;
+  font-size: 12px;
+  transition: transform 160ms ease;
+}
+
+/* Body participates in the console grid via display:contents; hiding it
+   collapses the whole mixer to the single toggle row. */
+.audio-console-body {
+  display: contents;
+}
+
+#audio-console.collapsed .audio-console-body {
+  display: none;
+}
+
+#audio-console.collapsed .audio-console-chevron {
+  transform: rotate(-90deg);
+}
+
 .audio-control {
   display: grid;
   grid-template-columns: auto minmax(48px, 1fr) 32px;

@@ -21,6 +21,12 @@ const bootMenu = document.getElementById('boot-menu')!;
 const hint = document.getElementById('hint')!;
 const muteButton = document.getElementById('audio-mute') as HTMLButtonElement;
 
+// Primary-input detection shared by the touch controls and the audio console
+// collapse. (pointer: coarse) is true when touch is the *primary* input —
+// unlike maxTouchPoints, it doesn't fire on touchscreen laptops, so desktop
+// stays desktop.
+const coarsePointer = window.matchMedia('(pointer: coarse)');
+
 void initializeMarketTicker();
 
 const BIOS_LINES = [
@@ -110,6 +116,21 @@ for (const control of mixerControls) {
 }
 syncMuteButton();
 
+// Audio console collapse. On touch-first devices the mixer auto-collapses when
+// a run starts so it doesn't eat vertical space mid-game; the toggle is always
+// available and a manual toggle wins over the auto-collapse.
+const audioConsole = document.getElementById('audio-console')!;
+const audioConsoleToggle = document.getElementById('audio-console-toggle') as HTMLButtonElement;
+let audioConsoleManual = false;
+function setAudioConsoleCollapsed(collapsed: boolean): void {
+  audioConsole.classList.toggle('collapsed', collapsed);
+  audioConsoleToggle.setAttribute('aria-expanded', String(!collapsed));
+}
+audioConsoleToggle.addEventListener('click', () => {
+  audioConsoleManual = true;
+  setAudioConsoleCollapsed(!audioConsole.classList.contains('collapsed'));
+});
+
 type BootPhase = 'typing' | 'menu' | 'done';
 let bootPhase: BootPhase = 'typing';
 let selMode: GameMode = 'boss-rush';
@@ -195,6 +216,7 @@ function dismissBoot(): void {
   effects.flash(0.9, 180);
   effects.shake(6, 240);
   game.beginRun();
+  if (!audioConsoleManual && coarsePointer.matches) setAudioConsoleCollapsed(true);
   bootOverlay.classList.add('done');
   hint.classList.add('hidden');
   setTimeout(() => bootOverlay.remove(), 600);
@@ -258,41 +280,48 @@ document.getElementById('arr-down')!.addEventListener('click', () => setArr(arrM
 document.getElementById('arr-up')!.addEventListener('click', () => setArr(arrMs + 5));
 document.getElementById('boot-start')!.addEventListener('click', () => dismissBoot());
 
-// Touch controls — shown only on touch-capable devices. Holdable buttons
-// (move/soft-drop) share the keyboard DAS/ARR state machine.
+// Touch controls — shown only when touch is the primary input, so they never
+// appear on desktop (including touchscreen laptops).
 const touchControls = document.getElementById('touch-controls')!;
-if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-  touchControls.hidden = false;
+function syncTouchControls(): void {
+  const touchFirst = coarsePointer.matches;
+  touchControls.hidden = !touchFirst;
   // Lifts the cabinet so the fixed button bar never covers the canvas.
-  document.body.classList.add('has-touch');
-  touchControls.querySelectorAll<HTMLButtonElement>('button').forEach((btn) => {
-    const kind = btn.dataset.t ?? '';
-    btn.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      unlockAudio();
-      switch (kind) {
-        case 'left': input.setLeftHeld(true); break;
-        case 'right': input.setRightHeld(true); break;
-        case 'down': input.setSoftDropHeld(true); break;
-        case 'cw': game.rotateCW(); break;
-        case 'ccw': game.rotateCCW(); break;
-        case 'r180': game.rotate180(); break;
-        case 'hold': game.holdPiece(); break;
-        case 'drop': game.hardDrop(); break;
-        case 'pause': game.pause(); break;
-      }
-    });
-    const release = (e: PointerEvent): void => {
-      e.preventDefault();
-      if (kind === 'left') input.setLeftHeld(false);
-      else if (kind === 'right') input.setRightHeld(false);
-      else if (kind === 'down') input.setSoftDropHeld(false);
-    };
-    btn.addEventListener('pointerup', release);
-    btn.addEventListener('pointercancel', release);
-    btn.addEventListener('pointerleave', release);
-  });
+  document.body.classList.toggle('has-touch', touchFirst);
 }
+if (typeof coarsePointer.addEventListener === 'function') {
+  coarsePointer.addEventListener('change', syncTouchControls);
+}
+syncTouchControls();
+
+// Holdable buttons (move/soft-drop) share the keyboard DAS/ARR state machine.
+touchControls.querySelectorAll<HTMLButtonElement>('button').forEach((btn) => {
+  const kind = btn.dataset.t ?? '';
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    unlockAudio();
+    switch (kind) {
+      case 'left': input.setLeftHeld(true); break;
+      case 'right': input.setRightHeld(true); break;
+      case 'down': input.setSoftDropHeld(true); break;
+      case 'cw': game.rotateCW(); break;
+      case 'ccw': game.rotateCCW(); break;
+      case 'r180': game.rotate180(); break;
+      case 'hold': game.holdPiece(); break;
+      case 'drop': game.hardDrop(); break;
+      case 'pause': game.pause(); break;
+    }
+  });
+  const release = (e: PointerEvent): void => {
+    e.preventDefault();
+    if (kind === 'left') input.setLeftHeld(false);
+    else if (kind === 'right') input.setRightHeld(false);
+    else if (kind === 'down') input.setSoftDropHeld(false);
+  };
+  btn.addEventListener('pointerup', release);
+  btn.addEventListener('pointercancel', release);
+  btn.addEventListener('pointerleave', release);
+});
 
 // Pause overlay — DOM buttons so pausing never depends on keyboard focus.
 const pauseOverlay = document.getElementById('pause-overlay')!;
