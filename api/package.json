@@ -8,6 +8,6 @@
     "node": ">=22 <25"
   },
   "dependencies": {
-    "@azure/functions": "^4.7.0"
+    "@azure/functions": "^4.16.5"
   }
 }
