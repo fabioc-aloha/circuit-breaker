@@ -1,13 +1,16 @@
 interface SetupActions {
   start(): void;
   close(): void;
+  resume(): void;
   shortcut(key: string, event: KeyboardEvent): void;
 }
+
+type SetupContext = 'startup' | 'paused-settings' | 'main-menu';
 
 export class SetupPanel {
   private tabs: HTMLButtonElement[];
   private panels: HTMLElement[];
-  private paused = false;
+  private context: SetupContext = 'startup';
 
   constructor(private dialog: HTMLDialogElement, private actions: SetupActions) {
     this.tabs = Array.from(dialog.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
@@ -39,12 +42,16 @@ export class SetupPanel {
     });
     dialog.addEventListener('cancel', (event) => {
       event.preventDefault();
-      if (this.paused) this.returnToPause();
+      if (this.context === 'main-menu') this.returnToGame();
+      else if (this.context === 'paused-settings') this.returnToPause();
       else this.select('play');
     });
     dialog.querySelector<HTMLButtonElement>('#boot-start')!.addEventListener('click', () => {
-      if (this.paused) this.returnToPause();
+      if (this.context === 'paused-settings') this.returnToPause();
       else this.actions.start();
+    });
+    dialog.querySelector<HTMLButtonElement>('#setup-back')!.addEventListener('click', () => {
+      if (this.context === 'main-menu') this.returnToGame();
     });
   }
 
@@ -58,15 +65,22 @@ export class SetupPanel {
     for (const panel of this.panels) panel.hidden = panel.id !== selected.getAttribute('aria-controls');
   }
 
-  open(paused: boolean): void {
-    this.paused = paused;
+  open(context: SetupContext): void {
+    this.context = context;
+    const paused = context === 'paused-settings';
+    const mainMenu = context === 'main-menu';
     this.tabs[0].hidden = paused;
     this.dialog.querySelector<HTMLInputElement>('#run-seed')!.disabled = paused;
     this.dialog.querySelector('#setup-title')!.textContent = paused ? 'Settings' : 'Make it your game';
     this.dialog.querySelector('#setup-description')!.textContent = paused
       ? 'Adjust sound, effects, and handling. Your run stays paused.'
-      : 'Choose your challenge. Fine-tune the rest in Settings.';
-    this.dialog.querySelector('#boot-start')!.textContent = paused ? 'BACK TO PAUSE' : 'START GAME';
+      : mainMenu
+        ? 'Your run stays paused. Start a new game to apply mode and difficulty changes.'
+        : 'Choose your challenge. Fine-tune the rest in Settings.';
+    this.dialog.querySelector('#boot-start')!.textContent = paused
+      ? 'BACK TO PAUSE'
+      : mainMenu ? 'START NEW GAME' : 'START GAME';
+    this.dialog.querySelector<HTMLButtonElement>('#setup-back')!.hidden = !mainMenu;
     this.select(paused ? 'settings' : 'play');
     if (!this.dialog.open) this.dialog.showModal();
   }
@@ -78,5 +92,10 @@ export class SetupPanel {
   private returnToPause(): void {
     this.close();
     this.actions.close();
+  }
+
+  private returnToGame(): void {
+    this.close();
+    this.actions.resume();
   }
 }

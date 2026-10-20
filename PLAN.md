@@ -20,7 +20,7 @@ The original design is preserved under [Historical material](#historical-materia
 | Timing and input | Elapsed-time gravity and soft drop, bounded input catch-up, focus-loss suspension, and explicit resume. |
 | Reproducible runs | Separate seeded streams for pieces, boss attacks, and Kong; retry preserves the run seed. Matching a run also requires matching inputs and timing. |
 | Local records | Best scores by mode and difficulty, fastest successful Boss Rush times, and a separate legacy high score. |
-| Setup and pause | Shared Play, Settings, and Controls dialog; paused settings lock run configuration and return to pause without resuming. |
+| Setup and pause | Shared Play, Settings, and Controls dialog; paused settings lock run configuration and return to pause without resuming. Main Menu keeps the current run paused while configuring a new one; Back to Game discards draft run choices and resumes. |
 | Responsive layout | Height-constrained, aspect-preserving canvas; touch controls reserve their actual bar height, fit narrow phones, and use one row in short landscape windows. |
 | Preferences | Persistent audio mix, mute, reduced effects, and DAS/ARR; invalid restored audio values fall back to valid defaults. |
 | Effects and audio | Canvas gameplay effects, CSS cabinet presentation, credited Kong sprites, and procedural Web Audio music and effects. |
@@ -29,9 +29,11 @@ The original design is preserved under [Historical material](#historical-materia
 | Delivery | TypeScript, Node tests, preview/production artifact checks, and Azure Static Web Apps deployment of the client and quote API. |
 | Instrumentation | Production-only homepage page views with the privacy and consent boundaries in [INSTRUMENTATION.md](INSTRUMENTATION.md). |
 
-This release includes the start-screen-only book link, documentation refresh,
-responsive-layout fixes, ticker-motion changes, and animation pacing adjustments.
-Production deployment evidence is linked from the handoff, not duplicated here.
+The UI and animation improvements shipped in
+[`8bb9021`](https://github.com/fabioc-aloha/circuit-breaker/commit/8bb902157a9eaac1b111417f4500f69a9017166f).
+This release includes the Main Menu follow-up, documentation refresh, and
+sitemap modification-date correction. [HANDOFF.md](HANDOFF.md) links production
+deployment evidence; source completion alone does not establish deployment.
 
 ## Design decisions
 
@@ -61,7 +63,7 @@ set before building; see [the release instructions](README.md#-deploy).
   Vite rewrites the icon URL to a relative path.
   [Artifact regressions](scripts/validate-site.test.mjs) accept that output while
   still rejecting a missing declaration or asset.
-- The book box belongs inside the startup Play panel, so existing dialog and
+- The book box belongs inside the setup Play panel, so existing dialog and
   tab visibility controls it without another visibility flag.
   [Placement coverage](scripts/book-link.test.mjs) prevents a duplicate or an
   exterior gameplay box.
@@ -69,10 +71,27 @@ set before building; see [the release instructions](README.md#-deploy).
   when quotes, fonts, or viewport dimensions change. Unchanged geometry does not
   restart the animation, and each fallback loop covers the viewport.
   [Ticker regressions](scripts/market-ticker.test.mjs) cover velocity and phase.
+- Setup has distinct startup, paused-settings, and main-menu contexts. The
+  original startup-only flow had no return path for changing the next run's
+  rules. Main Menu now keeps those choices separate from the paused run;
+  returning discards the draft mode, difficulty, and seed.
+  [Setup regressions](scripts/setup-panel.test.mjs) cover the contexts, primary
+  actions, Back to Game, and Escape.
+- Resume buttons call the idempotent `Game.resume()` action, while keyboard
+  pause remains a debounced toggle. Reusing the toggle for a resume command
+  could ignore an immediate return inside the debounce window.
+  [Gameplay regressions](scripts/game.test.mjs) cover immediate and repeated
+  resume, preservation of cutscenes, and no-op resume outside pause.
+- The input controller ignores clicks inside `[data-game-ui]` instead of
+  invoking the window's start/skip-cutscene actions. Otherwise a Back to Game
+  click can resume a cutscene and immediately skip it as the event bubbles.
+  [Input regressions](scripts/game.test.mjs) distinguish UI clicks from game
+  clicks; browser checks also exercised a real resumed cutscene.
 
 ## UI and animation follow-up
 
-This release addresses the responsive defects found in the initial 2026-10-20 UAT:
+The deployed UI release addressed the responsive defects found in the initial
+2026-10-20 UAT:
 
 - **Canvas fit:** the cabinet allocates its remaining height to the screen,
   rather than letting the short-window breakpoint force a full-width canvas
@@ -98,13 +117,38 @@ Follow-up checks also covered setup scrolling, reduced effects, seed rejection,
 startup-only book visibility, pause/settings/resume, retry, and actual hold/drop
 input. Chromium emulation is not physical iOS Safari.
 
+## Main Menu follow-up
+
+The user chose to preserve the current run while browsing setup rather than
+end it immediately. Pause now offers Main Menu with editable mode, difficulty,
+and seed. Start New Game replaces the run; Back to Game or Escape resumes it
+without applying draft run choices. Audio, effects, and handling preferences
+still apply immediately and persist. Paused Settings remains a separate,
+run-configuration-locked path back to the pause screen.
+
+The local implementation passed `npm run check` and the tracking-enabled
+production build and artifact validator. Browser checks covered preservation
+of a scored board and seed, discarding draft selections, starting a new ruleset,
+keyboard seed entry, invalid seed rejection, and returning to a paused cutscene.
+The actions remained reachable at 1366x768, 320x480, and 844x390.
+
+The missed return path is a UAT lesson: testing startup and pause independently
+did not establish that a player could navigate back and configure another run.
+The existing browser-smoke proposal below now includes that round trip.
+These regression notes describe this implementation; they introduce no new
+skills, prompts, instructions, or memory entries.
+
 ## Open work and decisions
 
 - Proposed, not approved: add an isolated browser smoke flow for keyboard
-  startup, opening gestures, settings, reduced effects, play, and pause. It would
+  startup, opening gestures, settings, reduced effects, play, pause, Main Menu,
+  Back to Game, and starting a replacement run. It would
   complement the current Node tests with actual DOM event ordering and visibility.
   Confirm CI browser support and package-policy compatibility before adding
   dependencies or automation.
+- Physical iPhone gameplay controls and perceived ticker smoothness still await
+  device feedback. Chromium touch emulation and the confirmed iOS Home Screen
+  icon do not establish Safari gameplay behavior.
 - The README has described the code as MIT, but no standalone license file is
   tracked. Adding one requires the owner's licensing decision.
 - Third-party sprite permissions remain subject to [CREDITS.md](CREDITS.md).

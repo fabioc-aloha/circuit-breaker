@@ -627,6 +627,39 @@ test('pause toggles between playing and paused', async () => {
   assert.equal(game.phase, 'playing');
 });
 
+test('explicit resume returns to the same run even immediately after pausing', () => {
+  const game = createGame({ seed: 42 });
+  game.beginRun();
+  const board = game.board;
+  game.pause();
+  game.resume();
+  assert.equal(game.phase, 'playing');
+  assert.equal(game.seed, 42);
+  assert.equal(game.board, board);
+  game.resume();
+  assert.equal(game.phase, 'playing', 'repeated resume must not toggle back to pause');
+});
+
+test('explicit resume preserves a paused cutscene', () => {
+  const game = createGame();
+  game.beginRun();
+  game.phase = 'cutscene';
+  game.cutscene = { text: 'NEXT BOSS', timer: 700 };
+  game.suspend();
+  game.resume();
+  assert.equal(game.phase, 'cutscene');
+  assert.equal(game.cutscene.timer, 700);
+});
+
+test('explicit resume does not start a ready or ended run', () => {
+  const game = createGame();
+  for (const phase of ['ready', 'gameover', 'victory']) {
+    game.phase = phase;
+    game.resume();
+    assert.equal(game.phase, phase);
+  }
+});
+
 test('pause swallows duplicate toggles inside the debounce window', () => {
   const game = createGame();
   game.beginRun();
@@ -712,9 +745,11 @@ test('resuming a suspended cutscene preserves its remaining duration', () => {
 
 const { InputController } = loadTypeScriptModule(path.join(root, 'src', 'input.ts'));
 
-function withInput(run) {
+function withInput(run, actions = {}) {
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
+  const previousHTMLElement = globalThis.HTMLElement;
+  globalThis.HTMLElement ??= class {};
   globalThis.window = new EventTarget();
   globalThis.document = new EventTarget();
   globalThis.document.hidden = false;
@@ -726,6 +761,7 @@ function withInput(run) {
     moveRight: () => { moves++; },
     softDrop: (held) => { dropping = held; },
     suspend: () => { suspended++; },
+    ...actions,
   });
   try {
     run(input, () => ({ moves, suspended, dropping }));
@@ -733,8 +769,35 @@ function withInput(run) {
     input.destroy();
     globalThis.window = previousWindow;
     globalThis.document = previousDocument;
+    globalThis.HTMLElement = previousHTMLElement;
   }
 }
+
+test('setup and pause clicks do not skip a just-resumed cutscene', () => {
+  const previousHTMLElement = globalThis.HTMLElement;
+  globalThis.HTMLElement = class {
+    constructor(ui) { this.ui = ui; }
+    closest(selector) { return selector === '[data-game-ui]' && this.ui ? this : null; }
+  };
+  let starts = 0;
+  let skips = 0;
+  try {
+    withInput(() => {
+      for (const ui of [true, false]) {
+        const event = new Event('click');
+        Object.defineProperty(event, 'target', { value: new HTMLElement(ui) });
+        window.dispatchEvent(event);
+        assert.equal(starts, ui ? 0 : 1);
+        assert.equal(skips, ui ? 0 : 1);
+      }
+    }, {
+      start: () => { starts++; },
+      skipCutscene: () => { skips++; },
+    });
+  } finally {
+    globalThis.HTMLElement = previousHTMLElement;
+  }
+});
 
 test('input reset releases movement and soft drop', () => withInput((input, state) => {
   input.setLeftHeld(true);

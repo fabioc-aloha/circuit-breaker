@@ -801,10 +801,14 @@ export class Game implements InputActions {
       this.suspend();
       this.sfx.uiBlip();
     } else if (this.phase === 'paused') {
-      this.phase = this.resumePhase;
-      this.music.setMode(this.resumePhase === 'playing' ? this.musicForPlay() : 'silent');
-      this.sfx.uiBlip();
+      this.resume();
     }
+  }
+  resume(): void {
+    if (this.phase !== 'paused') return;
+    this.phase = this.resumePhase;
+    this.music.setMode(this.resumePhase === 'playing' ? this.musicForPlay() : 'silent');
+    this.sfx.uiBlip();
   }
   suspend(): void {
     if (this.phase !== 'playing' && this.phase !== 'cutscene') return;

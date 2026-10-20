@@ -14,6 +14,7 @@
 - Best scores are stored by mode and difficulty, with fastest successful Boss Rush times and a separate legacy high score.
 - A run seed reproduces gameplay random streams. Retrying uses the same seed; matching a complete run also requires the same inputs and timing.
 - The start screen has Play, Settings, and Controls tabs. Settings is also available while paused without changing the active run's mode, difficulty, or seed.
+- From pause, Main Menu opens setup for a replacement run. Back to Game or Escape resumes the existing run without applying draft mode, difficulty, or seed changes; Start New Game replaces it using the selected configuration.
 - A four-line clear triggers a `MAIN BREAKER TRIPPED` banner and a giant cyberpunk breaker Pacman.
 - Music and sound effects are synthesized in the browser with the Web Audio API. Master, SFX, and BGM levels persist locally, as does mute state.
 - Full effects are the default. Reduced effects hides the ticker and suppresses decorative effects while preserving essential gameplay cues. Effects and input-timing preferences persist locally.

@@ -137,6 +137,14 @@ Audio, effects, and input timing remain adjustable; mode, difficulty, and seed
 stay locked for the current run. Back to Pause or Esc returns to the pause screen
 without resuming.
 
+To change mode or difficulty, pause with `P` or `Esc` and choose Main Menu.
+Your current run stays paused while you browse. Back to Game or `Esc` resumes
+that run without applying mode, difficulty, or seed changes. Start New Game
+replaces it using your selections.
+Main Menu opens with your current mode, difficulty, and seed. Clear the seed
+for a random run. Audio, effects, and input-timing changes still apply
+immediately and remain saved.
+
 The Reduced effects checkbox in Settings hides the stock ticker and disables
 shake, flashes, foreground flourishes, and animated cabinet decorations. Attack
 warnings, Kong's aim marker, and the ghost piece stay visible. Full effects are on
@@ -232,7 +240,8 @@ CSS. Kong uses the credited PNG sprite sheets:
 - Circuit-trace animated background, CRT scanlines, screen shake, chromatic flash
 - **Neon Pacman line clear** -- one chomping cyberpunk Pacman per cleared row, alternating direction, RGB split, and glowing pellet trail; a Tetris summons a giant breaker Pacman with foreground lightning arcs
 - `MAIN BREAKER TRIPPED` four-line-clear banner, circuit lightning, particles, screen shake, and chromatic flash
-- A large top-layer Grid Wraith roams the board briefly when a run ends, then dissolves into the cabinet glow
+- The Grid Wraith appears over the board for four seconds when a run ends,
+  hovering and fading out.
 - Each ticker cycle starts with "Circuit Breaker AI Portfolio", followed by the full AI-focused stock list
 - The start screen's Play tab includes the `INSERT COIN` / `BUY THE BOOK` link to
   *Loop Engineering* on Amazon. It is absent during gameplay and paused settings.

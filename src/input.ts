@@ -125,6 +125,7 @@ export class InputController {
   }
 
   private onClick = (event: MouseEvent): void => {
+    if (event.target instanceof HTMLElement && event.target.closest('[data-game-ui]')) return;
     this.actions.start(event);
     this.actions.skipCutscene();
   };

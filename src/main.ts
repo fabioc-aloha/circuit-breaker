@@ -168,6 +168,18 @@ function setArr(v: number): void {
 const setupPanel = new SetupPanel(document.getElementById('setup-dialog') as HTMLDialogElement, {
   start: () => dismissBoot(),
   close: () => input.reset(),
+  resume: () => {
+    bootPhase = 'done';
+    selMode = game.mode;
+    selDiff = game.difficulty;
+    seedInput.value = String(game.seed);
+    seedInput.setCustomValidity('');
+    syncBootMenu();
+    input.reset();
+    game.resume();
+    syncPauseOverlay();
+    canvas.focus({ preventScroll: true });
+  },
   shortcut: (key, event) => handleMenuKey(key, event),
 });
 
@@ -179,7 +191,7 @@ function finishTyping(): void {
   bootPhase = 'menu';
   bootOverlay.hidden = true;
   syncBootMenu();
-  setupPanel.open(false);
+  setupPanel.open('startup');
 }
 
 function handleMenuKey(key: string, ev: KeyboardEvent): void {
@@ -223,6 +235,7 @@ function dismissBoot(): void {
     return;
   }
   bootPhase = 'done';
+  input.reset();
   unlockAudio();
   game.mode = selMode;
   game.difficulty = selDiff;
@@ -232,6 +245,7 @@ function dismissBoot(): void {
   effects.flash(0.9, 180);
   effects.shake(6, 240);
   game.beginRun(seed ?? undefined);
+  syncPauseOverlay();
   seedInput.value = String(game.seed);
   canvas.focus({ preventScroll: true });
 }
@@ -354,7 +368,7 @@ touchControls.querySelectorAll<HTMLButtonElement>('button').forEach((btn) => {
 const pauseOverlay = document.getElementById('pause-overlay')!;
 document.getElementById('pause-resume')!.addEventListener('click', () => {
   input.reset();
-  if (game.phase === 'paused') game.pause();
+  game.resume();
   canvas.focus({ preventScroll: true });
 });
 document.getElementById('pause-restart')!.addEventListener('click', () => {
@@ -365,7 +379,18 @@ document.getElementById('pause-restart')!.addEventListener('click', () => {
 document.getElementById('pause-settings')!.addEventListener('click', () => {
   if (game.phase !== 'paused') return;
   input.reset();
-  setupPanel.open(true);
+  setupPanel.open('paused-settings');
+});
+document.getElementById('pause-menu')!.addEventListener('click', () => {
+  if (game.phase !== 'paused') return;
+  input.reset();
+  bootPhase = 'menu';
+  selMode = game.mode;
+  selDiff = game.difficulty;
+  seedInput.value = String(game.seed);
+  seedInput.setCustomValidity('');
+  syncBootMenu();
+  setupPanel.open('main-menu');
 });
 pauseOverlay.addEventListener('keydown', (event) => {
   if (event.repeat) return;
