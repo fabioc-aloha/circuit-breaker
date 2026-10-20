@@ -925,6 +925,93 @@ test('full effects are the default until a reduced-effects preference is saved',
   assert.equal(warnings.length, 1);
 }));
 
+test('fresh settings default to Boss Rush, Normal, random seed, full effects, and the standard mix and timings', () => withStorage(() => {
+  const game = createGame();
+  const { parseSeed } = loadTypeScriptModule(path.join(root, 'src', 'random.ts'));
+  assert.equal(game.mode, 'boss-rush');
+  assert.equal(game.difficulty, 'normal');
+  assert.equal(parseSeed(''), null);
+  assert.equal(storageModule.loadReducedEffects(), false);
+  assert.equal(storageModule.loadMuted(), false);
+  assert.deepEqual(storageModule.loadVolumes(), { master: 0.7, sfx: 0.7, bgm: 0.45 });
+  assert.equal(storageModule.loadDas(), 150);
+  assert.equal(storageModule.loadArr(), 40);
+}));
+
+test('saved preferences survive audio initialization without being replaced by defaults', () => withStorage((entries) => {
+  const { AudioManager } = loadTypeScriptModule(path.join(root, 'src', 'audio', 'audio.ts'));
+  storageModule.saveVolumes({ master: 0.25, sfx: 0, bgm: 1 });
+  storageModule.saveMuted(true);
+  storageModule.saveReducedEffects(true);
+  storageModule.saveDas(230);
+  storageModule.saveArr(15);
+  const before = new Map(entries);
+  const audio = new AudioManager();
+  assert.deepEqual(audio.volumes, { master: 0.25, sfx: 0, bgm: 1 });
+  assert.equal(audio.muted, true);
+  assert.equal(storageModule.loadReducedEffects(), true);
+  assert.equal(storageModule.loadDas(), 230);
+  assert.equal(storageModule.loadArr(), 15);
+  assert.deepEqual(entries, before);
+}));
+
+test('invalid saved audio channels fall back individually instead of producing invalid gain values', () => withStorage((entries, warnings) => {
+  for (const value of ['bad', true, {}, [], null]) {
+    entries.set('cb.volumes', JSON.stringify({ master: value, sfx: 0.2, bgm: 0.35 }));
+    assert.deepEqual(storageModule.loadVolumes(), { master: 0.7, sfx: 0.2, bgm: 0.35 });
+  }
+  entries.set('cb.volumes', '{"master":1e999,"sfx":0.2,"bgm":0.35}');
+  assert.deepEqual(storageModule.loadVolumes(), { master: 0.7, sfx: 0.2, bgm: 0.35 });
+  assert.equal(warnings.length, 6);
+}));
+
+test('malformed audio settings restore defaults with a warning', () => withStorage((entries, warnings) => {
+  for (const raw of ['null', '[]', '12', '"bad"', '{']) {
+    entries.set('cb.volumes', raw);
+    assert.deepEqual(storageModule.loadVolumes(), { master: 0.7, sfx: 0.7, bgm: 0.45 });
+  }
+  assert.equal(warnings.length, 5);
+}));
+
+test('partial audio settings preserve valid silence and clamp finite values', () => withStorage((entries, warnings) => {
+  entries.set('cb.volumes', '{"sfx":0}');
+  assert.deepEqual(storageModule.loadVolumes(), { master: 0.7, sfx: 0, bgm: 0.45 });
+  entries.set('cb.volumes', '{"master":-0.5,"sfx":1.5,"bgm":1}');
+  assert.deepEqual(storageModule.loadVolumes(), { master: 0, sfx: 1, bgm: 1 });
+  assert.equal(warnings.length, 0);
+}));
+
+test('audio channels drive their own gain nodes and mute preserves the mix', () => withStorage(() => {
+  const { AudioManager } = loadTypeScriptModule(path.join(root, 'src', 'audio', 'audio.ts'));
+  const audio = new AudioManager();
+  const gains = {};
+  for (const [node, channel] of [['master', 'master'], ['sfxBus', 'sfx'], ['bgmBus', 'bgm']]) {
+    audio[node] = { gain: { setTargetAtTime(value) { gains[channel] = value; } } };
+  }
+  audio.setVolumes({ master: 0.3, sfx: 0.6, bgm: 0.9 });
+  assert.deepEqual(gains, { master: 0.3, sfx: 0.6, bgm: 0.9 });
+  audio.toggleMute();
+  assert.deepEqual(gains, { master: 0, sfx: 0.6, bgm: 0.9 });
+  assert.equal(storageModule.loadMuted(), true);
+  audio.setVolumes({ master: 0.4 });
+  assert.equal(gains.master, 0);
+  audio.toggleMute();
+  assert.deepEqual(gains, { master: 0.4, sfx: 0.6, bgm: 0.9 });
+  assert.deepEqual(storageModule.loadVolumes(), audio.volumes);
+}));
+
+test('saved input timings honor their supported bounds', () => withStorage(() => {
+  for (const [save, load, min, max] of [
+    [storageModule.saveDas, storageModule.loadDas, 50, 300],
+    [storageModule.saveArr, storageModule.loadArr, 10, 100],
+  ]) {
+    save(-100);
+    assert.equal(load(), min);
+    save(9999);
+    assert.equal(load(), max);
+  }
+}));
+
 test('Kong aim preview uses the same collision adjustment as the actual spawn', () => {
   const game = createGame({ seed: 5 });
   game.beginRun();
@@ -1001,3 +1088,56 @@ test('boot and cabinet expose accessible seed and reduced-effects controls', () 
   assert.match(html, /id="reduced-effects"[^>]*type="checkbox"/);
   assert.match(html, /for="reduced-effects"/);
 });
+
+test('setup consolidates run, audio, effects, and controls in one tabbed dialog', () => {
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const dialog = html.match(/<dialog\b[^>]*id="setup-dialog"[^>]*>([\s\S]*?)<\/dialog>/)?.[1];
+  assert.ok(dialog, 'setup uses a modal dialog with native focus containment');
+  for (const id of ['boot-menu', 'run-seed', 'volume-master', 'volume-sfx', 'volume-bgm', 'audio-mute', 'reduced-effects', 'boot-start']) {
+    assert.match(dialog, new RegExp(`id="${id}"`));
+    assert.equal(html.split(`id="${id}"`).length - 1, 1, `${id} must not be duplicated`);
+  }
+  for (const tab of ['play', 'settings', 'controls']) {
+    assert.match(dialog, new RegExp(`id="tab-${tab}"[^>]*role="tab"`));
+    assert.match(dialog, new RegExp(`id="panel-${tab}"[^>]*role="tabpanel"`));
+  }
+  assert.match(html, /id="pause-settings"/);
+  assert.doesNotMatch(html, /id="audio-console-toggle"/);
+});
+
+test('settings controls retain native keyboard behavior without invoking gameplay', () => withInput((input) => {
+  const previousElement = globalThis.HTMLElement;
+  class Element {
+    closest(selector) { return selector.includes('[data-game-ui]') ? this : null; }
+  }
+  globalThis.HTMLElement = Element;
+  let actions = 0;
+  input.actions = new Proxy({}, { get: () => () => { actions++; } });
+  try {
+    for (const key of ['ArrowLeft', 'ArrowRight', ' ', 'Enter', 'r', 'p', 'm', 'Escape']) {
+      let prevented = false;
+      input.onKeyDown({
+        key, repeat: false, target: new Element(),
+        preventDefault() { prevented = true; },
+      });
+      assert.equal(actions, 0, `${key} must stay inside the settings UI`);
+      assert.equal(prevented, false, `${key} must retain its native control behavior`);
+    }
+  } finally {
+    globalThis.HTMLElement = previousElement;
+  }
+}));
+
+test('startup receives its triggering event so opening setup can consume Enter', () => withInput((input) => {
+  const previousElement = globalThis.HTMLElement;
+  globalThis.HTMLElement = class {};
+  let received;
+  const event = { key: 'Enter', target: null, repeat: false, preventDefault() {} };
+  input.actions = { ...input.actions, menuKey() {}, start(trigger) { received = trigger; }, skipCutscene() {} };
+  try {
+    input.onKeyDown(event);
+    assert.equal(received, event);
+  } finally {
+    globalThis.HTMLElement = previousElement;
+  }
+}));

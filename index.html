@@ -47,54 +47,102 @@
           <span class="screen-screw screen-screw-top-right" aria-hidden="true"></span>
           <span class="screen-screw screen-screw-bottom-left" aria-hidden="true"></span>
           <span class="screen-screw screen-screw-bottom-right" aria-hidden="true"></span>
-          <canvas id="game" width="800" height="720"></canvas>
-          <div id="pause-overlay" class="pause-overlay" hidden>
+          <canvas id="game" width="800" height="720" tabindex="-1" aria-label="Circuit Breaker game board"></canvas>
+          <div id="pause-overlay" class="pause-overlay" data-game-ui hidden>
             <div class="pause-panel" role="dialog" aria-label="Game paused">
               <div class="pause-title">⏸ PAUSED</div>
               <div class="pause-sub">P / ESC — RESUME&nbsp;&nbsp;·&nbsp;&nbsp;R — RETRY SEED</div>
               <div class="pause-actions">
                 <button type="button" id="pause-resume" class="pause-btn">▶ RESUME</button>
+                <button type="button" id="pause-settings" class="pause-btn">SETTINGS</button>
                 <button type="button" id="pause-restart" class="pause-btn pause-btn-warn">↻ RETRY SEED</button>
               </div>
             </div>
           </div>
           <div id="boot" class="boot-overlay">
             <pre id="boot-text"></pre>
-            <div id="boot-menu" class="boot-menu" hidden>
-              <div class="boot-menu-row">
-                <span class="boot-menu-label">MODE</span>
-                <button type="button" class="boot-opt" data-mode="boss-rush">[1] BOSS RUSH</button>
-                <button type="button" class="boot-opt" data-mode="free-stack">[2] FREE STACK</button>
-              </div>
-              <div class="boot-menu-row">
-                <span class="boot-menu-label">DIFFICULTY</span>
-                <button type="button" class="boot-opt" data-diff="chill">[3] CHILL</button>
-                <button type="button" class="boot-opt" data-diff="normal">[4] NORMAL</button>
-                <button type="button" class="boot-opt" data-diff="overdrive">[5] OVERDRIVE</button>
-              </div>
-              <div class="boot-menu-row">
-                <label class="boot-menu-label" for="run-seed">RUN SEED</label>
-                <input id="run-seed" class="seed-input" type="text" inputmode="numeric" maxlength="10" placeholder="RANDOM" aria-describedby="seed-help" />
-                <span id="seed-help" class="boot-menu-label">0–4294967295 · R RETRIES THIS SEED</span>
-              </div>
-              <div class="boot-menu-row">
-                <span class="boot-menu-label">DAS <span id="das-val" class="boot-val"></span></span>
-                <button type="button" class="boot-opt boot-step" id="das-down" title="DAS -10ms" aria-label="Decrease DAS">−</button>
-                <button type="button" class="boot-opt boot-step" id="das-up" title="DAS +10ms" aria-label="Increase DAS">+</button>
-                <span class="boot-menu-label">ARR <span id="arr-val" class="boot-val"></span></span>
-                <button type="button" class="boot-opt boot-step" id="arr-down" title="ARR -5ms" aria-label="Decrease ARR">−</button>
-                <button type="button" class="boot-opt boot-step" id="arr-up" title="ARR +5ms" aria-label="Increase ARR">+</button>
-              </div>
-              <table class="boot-controls" aria-label="Controls">
-                <tr><td>← →</td><td>MOVE</td><td>↓</td><td>SOFT DROP</td></tr>
-                <tr><td>SPACE</td><td>HARD DROP</td><td>↑ / X · Z</td><td>ROTATE ↻ · ↺</td></tr>
-                <tr><td>A</td><td>180° SPIN</td><td>SHIFT / C</td><td>HOLD</td></tr>
-                <tr><td>P</td><td>PAUSE</td><td>R · M</td><td>RETRY SEED · MUTE</td></tr>
-              </table>
-              <button type="button" id="boot-start" class="boot-start">▶ INITIALIZE&nbsp;&nbsp;(ENTER)</button>
-            </div>
             <div id="hint">CLICK / PRESS ANY KEY TO INITIALIZE</div>
           </div>
+          <dialog id="setup-dialog" class="setup-dialog" data-game-ui aria-labelledby="setup-title" aria-describedby="setup-description">
+            <div id="boot-menu" class="boot-menu">
+              <header class="setup-header">
+                <span class="setup-eyebrow">CIRCUIT BREAKER / RUN SETUP</span>
+                <h2 id="setup-title">Make it your game</h2>
+                <p id="setup-description">Choose your challenge. Fine-tune the rest in Settings.</p>
+              </header>
+              <div class="setup-tabs" role="tablist" aria-label="Game setup">
+                <button type="button" id="tab-play" role="tab" aria-controls="panel-play" aria-selected="true">Play</button>
+                <button type="button" id="tab-settings" role="tab" aria-controls="panel-settings" aria-selected="false" tabindex="-1">Settings</button>
+                <button type="button" id="tab-controls" role="tab" aria-controls="panel-controls" aria-selected="false" tabindex="-1">Controls</button>
+              </div>
+              <div class="setup-panels">
+                <section id="panel-play" role="tabpanel" aria-labelledby="tab-play" tabindex="0">
+                  <fieldset class="setup-group">
+                    <legend>Game mode</legend>
+                    <div class="setup-choices">
+                      <button type="button" class="boot-opt mode-card" data-mode="boss-rush" aria-pressed="true"><strong>Boss Rush</strong><span>Fight bosses. Survive their attacks.</span></button>
+                      <button type="button" class="boot-opt mode-card" data-mode="free-stack" aria-pressed="false"><strong>Free Stack</strong><span>Build your score without boss attacks.</span></button>
+                    </div>
+                  </fieldset>
+                  <fieldset class="setup-group">
+                    <legend>Difficulty</legend>
+                    <div class="setup-choices difficulty-choices">
+                      <button type="button" class="boot-opt" data-diff="chill" aria-pressed="false">Chill</button>
+                      <button type="button" class="boot-opt" data-diff="normal" aria-pressed="true">Normal</button>
+                      <button type="button" class="boot-opt" data-diff="overdrive" aria-pressed="false">Overdrive</button>
+                    </div>
+                  </fieldset>
+                </section>
+                <section id="panel-settings" role="tabpanel" aria-labelledby="tab-settings" tabindex="0" hidden>
+                  <section id="audio-console" class="setup-group" aria-labelledby="audio-title">
+                    <h3 id="audio-title">Audio mix</h3>
+                    <div class="audio-console-body">
+                      <label class="audio-control" for="volume-master"><span>Master</span><input id="volume-master" type="range" min="0" max="100" step="1" /><output id="volume-master-value" for="volume-master"></output></label>
+                      <label class="audio-control" for="volume-sfx"><span>Effects</span><input id="volume-sfx" type="range" min="0" max="100" step="1" /><output id="volume-sfx-value" for="volume-sfx"></output></label>
+                      <label class="audio-control" for="volume-bgm"><span>Music</span><input id="volume-bgm" type="range" min="0" max="100" step="1" /><output id="volume-bgm-value" for="volume-bgm"></output></label>
+                      <button id="audio-mute" type="button" title="Mute audio (M)"></button>
+                    </div>
+                  </section>
+                  <section class="setup-group" aria-labelledby="effects-title">
+                    <h3 id="effects-title">Visual effects</h3>
+                    <label class="effects-setting" for="reduced-effects">
+                      <input id="reduced-effects" type="checkbox" />
+                      <span><strong>Reduced effects</strong><small>Hide the ticker, shake, flashes, and flourishes.</small></span>
+                    </label>
+                  </section>
+                  <details id="advanced-settings" class="setup-group">
+                    <summary>Advanced: seed &amp; input timing</summary>
+                    <div class="advanced-body">
+                      <label class="boot-menu-label" for="run-seed">Run seed</label>
+                      <input id="run-seed" class="seed-input" type="text" inputmode="numeric" maxlength="10" placeholder="Random" aria-describedby="seed-help" />
+                      <p id="seed-help" class="setup-help">Blank = random. Use 0–4294967295 to repeat a run. Locked during play.</p>
+                      <div class="timing-control"><span>DAS <output id="das-val" class="boot-val" aria-live="polite"></output></span><button type="button" class="boot-opt boot-step" id="das-down" title="DAS -10ms" aria-label="Decrease DAS">−</button><button type="button" class="boot-opt boot-step" id="das-up" title="DAS +10ms" aria-label="Increase DAS">+</button></div>
+                      <p class="setup-help">Delay before a held direction starts repeating.</p>
+                      <div class="timing-control"><span>ARR <output id="arr-val" class="boot-val" aria-live="polite"></output></span><button type="button" class="boot-opt boot-step" id="arr-down" title="ARR -5ms" aria-label="Decrease ARR">−</button><button type="button" class="boot-opt boot-step" id="arr-up" title="ARR +5ms" aria-label="Increase ARR">+</button></div>
+                      <p class="setup-help">Time between repeated moves while holding a direction.</p>
+                    </div>
+                  </details>
+                </section>
+                <section id="panel-controls" role="tabpanel" aria-labelledby="tab-controls" tabindex="0" hidden>
+                  <h3>Keyboard controls</h3>
+                  <table class="boot-controls" aria-label="Keyboard controls">
+                    <tr><th scope="row">← →</th><td>Move</td></tr>
+                    <tr><th scope="row">↓ / Space</th><td>Soft / hard drop</td></tr>
+                    <tr><th scope="row">↑ / X · Z</th><td>Rotate clockwise · counterclockwise</td></tr>
+                    <tr><th scope="row">A</th><td>Rotate 180°</td></tr>
+                    <tr><th scope="row">Shift / C</th><td>Hold piece</td></tr>
+                    <tr><th scope="row">P / Esc</th><td>Pause / resume</td></tr>
+                    <tr><th scope="row">R / M</th><td>Retry seed / mute</td></tr>
+                  </table>
+                  <p class="setup-help">Touch controls appear on touch-first devices. Audio, effects, and input timing are saved automatically.</p>
+                </section>
+              </div>
+              <footer class="setup-footer">
+                <span id="run-summary" class="setup-help"></span>
+                <button type="button" id="boot-start" class="boot-start" autofocus>START GAME</button>
+              </footer>
+            </div>
+          </dialog>
           <div id="touch-controls" hidden>
             <div class="touch-cluster">
               <button type="button" data-t="left" aria-label="Move left">◀</button>
@@ -126,34 +174,6 @@
             >BUY THE BOOK</a>
           </div>
         </aside>
-        <section id="audio-console" aria-label="Audio mixer">
-          <button id="audio-console-toggle" type="button" class="audio-console-title" aria-expanded="true" aria-controls="audio-console-body">
-            <span>AUDIO MIX</span><span class="audio-console-chevron" aria-hidden="true">▾</span>
-          </button>
-          <div id="audio-console-body" class="audio-console-body">
-            <label class="audio-control" for="volume-master">
-              <span>MASTER</span>
-              <input id="volume-master" type="range" min="0" max="100" step="1" />
-              <output id="volume-master-value" for="volume-master"></output>
-            </label>
-            <label class="audio-control" for="volume-sfx">
-              <span>SFX</span>
-              <input id="volume-sfx" type="range" min="0" max="100" step="1" />
-              <output id="volume-sfx-value" for="volume-sfx"></output>
-            </label>
-            <label class="audio-control" for="volume-bgm">
-              <span>BGM</span>
-              <input id="volume-bgm" type="range" min="0" max="100" step="1" />
-              <output id="volume-bgm-value" for="volume-bgm"></output>
-            </label>
-            <button id="audio-mute" type="button" title="Mute audio (M)"></button>
-          </div>
-        </section>
-        <label class="effects-setting" for="reduced-effects">
-          <input id="reduced-effects" type="checkbox" />
-          REDUCED EFFECTS
-          <span>No shake, flashes, or foreground effects</span>
-        </label>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

@@ -84,9 +84,17 @@ npm run preview
 | M             | Mute audio                |
 | R             | Retry the same seed       |
 
-Boot menu: `1`/`2` select mode (Boss Rush / Free Stack), `3`/`4`/`5` select
-difficulty (Chill / Normal / Overdrive), `[`/`]` tune DAS, `;`/`'` tune ARR,
-`Enter` initializes. Touch controls appear automatically on touch devices.
+The start screen groups options into Play, Settings, and Controls tabs. Play
+selects mode and difficulty. Settings contains the audio mixer, reduced effects,
+and an expandable advanced section for the run seed and DAS/ARR timing.
+Controls lists the keyboard reference. Start Game stays visible on every tab,
+including on small screens where the content scrolls.
+
+Setup shortcuts: `1`/`2` select mode (Boss Rush / Free Stack), `3`/`4`/`5` select
+difficulty (Chill / Normal / Overdrive), `[`/`]` tune DAS, and `;`/`'` tune ARR.
+Enter or Space activates the focused button; arrow keys adjust sliders or
+switch tabs when the tab bar has focus. Touch controls appear automatically on
+touch-first devices.
 
 Leave RUN SEED blank for a random run, or enter a whole number from `0` to
 `4294967295`. The HUD shows your seed; `R` retries it with the same piece
@@ -97,7 +105,12 @@ Switching tabs or leaving the window pauses the game and releases held controls.
 Resume explicitly with `P`, `Esc`, or the RESUME button. Pauses and boss cutscenes
 do not count toward run time, and the final summary freezes when the run ends.
 
-The REDUCED EFFECTS checkbox below the mixer hides the stock ticker and disables
+The pause screen's Settings button reopens the same settings and controls.
+Audio, effects, and input timing remain adjustable; mode, difficulty, and seed
+stay locked for the current run. Back to Pause or Esc returns to the pause screen
+without resuming.
+
+The Reduced effects checkbox in Settings hides the stock ticker and disables
 shake, flashes, foreground flourishes, and animated cabinet decorations. Attack warnings, Kong's aim marker,
 and the ghost piece stay visible. Full effects are on by default; your choice is
 saved for future visits.

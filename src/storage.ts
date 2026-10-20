@@ -111,16 +111,22 @@ export interface Volumes {
 const DEFAULT_VOLUMES: Volumes = { master: 0.7, sfx: 0.7, bgm: 0.45 };
 
 export function loadVolumes(): Volumes {
+  if (typeof localStorage === 'undefined') return { ...DEFAULT_VOLUMES };
   try {
     const raw = localStorage.getItem(STORAGE_VOLUMES);
-    if (!raw) return { ...DEFAULT_VOLUMES };
-    const parsed = JSON.parse(raw) as Partial<Volumes>;
+    if (raw === null) return { ...DEFAULT_VOLUMES };
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      console.warn('[Storage] Invalid audio settings; using the default mix.');
+      return { ...DEFAULT_VOLUMES };
+    }
     return {
-      master: clamp01(parsed.master ?? DEFAULT_VOLUMES.master),
-      sfx: clamp01(parsed.sfx ?? DEFAULT_VOLUMES.sfx),
-      bgm: clamp01(parsed.bgm ?? DEFAULT_VOLUMES.bgm),
+      master: clamp01('master' in parsed ? parsed.master : undefined, DEFAULT_VOLUMES.master),
+      sfx: clamp01('sfx' in parsed ? parsed.sfx : undefined, DEFAULT_VOLUMES.sfx),
+      bgm: clamp01('bgm' in parsed ? parsed.bgm : undefined, DEFAULT_VOLUMES.bgm),
     };
-  } catch {
+  } catch (error) {
+    console.warn('[Storage] Could not read audio settings.', error instanceof Error ? error.name : 'Unknown error');
     return { ...DEFAULT_VOLUMES };
   }
 }
@@ -149,7 +155,12 @@ export function saveMuted(muted: boolean): void {
   }
 }
 
-function clamp01(n: number): number {
+function clamp01(n: unknown, fallback: number): number {
+  if (n === undefined) return fallback;
+  if (typeof n !== 'number' || !Number.isFinite(n)) {
+    console.warn('[Storage] Invalid saved volume; using its default.');
+    return fallback;
+  }
   return Math.max(0, Math.min(1, n));
 }
 

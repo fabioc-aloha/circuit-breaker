@@ -22,16 +22,15 @@
 .effects-setting {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  justify-content: center;
   gap: 8px;
-  padding: 4px 8px;
+  padding: 4px 0;
   color: var(--cyan);
   font-size: 12px;
   cursor: pointer;
 }
 
 .effects-setting input {
+  flex-shrink: 0;
   width: 20px;
   height: 20px;
   accent-color: var(--cyan);
@@ -39,7 +38,15 @@
 
 .effects-setting span {
   color: var(--fg);
-  font-size: 10px;
+  display: grid;
+  gap: 5px;
+  font-size: 13px;
+}
+
+.effects-setting small {
+  color: #a2b6c9;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 body.reduced-effects *,
@@ -318,10 +325,8 @@ body {
 #game {
   display: block;
   max-width: 100%;
-  /* Reserve room for the chrome, mixer, effects setting, gaps, and padding
-     so the cabinet fits the viewport without the
-     page needing to scroll at common desktop heights. */
-  max-height: calc(100vh - 400px);
+  /* Only the marquee, ticker, and coin slot remain outside the screen. */
+  max-height: calc(100vh - 280px);
   height: auto;
   image-rendering: pixelated;
   border-radius: 6px;
@@ -442,99 +447,49 @@ body {
 
 /* -------- AUDIO MIXER -------- */
 #audio-console {
-  width: min(820px, 96vw);
-  min-height: 48px;
-  display: grid;
-  grid-template-columns: 84px repeat(3, minmax(0, 1fr)) 42px;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 10px;
-  border: 1px solid rgba(0, 240, 255, 0.28);
-  border-radius: 6px;
-  background:
-    linear-gradient(90deg, rgba(0, 240, 255, 0.08), transparent 34%),
-    rgba(5, 1, 15, 0.9);
-  box-shadow:
-    inset 0 0 20px rgba(0, 240, 255, 0.05),
-    0 0 20px rgba(0, 240, 255, 0.08);
+  width: 100%;
 }
 
-.audio-console-title {
-  color: var(--cyan);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-shadow: 0 0 8px var(--cyan);
-}
-
-/* The title doubles as the collapse toggle (button reset keeps the HUD look). */
-#audio-console-toggle {
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  justify-self: start;
-}
-
-.audio-console-chevron {
-  display: inline-block;
-  font-size: 12px;
-  transition: transform 160ms ease;
-}
-
-/* Body participates in the console grid via display:contents; hiding it
-   collapses the whole mixer to the single toggle row. */
 .audio-console-body {
-  display: contents;
-}
-
-#audio-console.collapsed .audio-console-body {
-  display: none;
-}
-
-#audio-console.collapsed .audio-console-chevron {
-  transform: rotate(-90deg);
+  display: grid;
+  gap: 12px;
 }
 
 .audio-control {
   display: grid;
-  grid-template-columns: auto minmax(48px, 1fr) 32px;
+  grid-template-columns: 65px minmax(48px, 1fr) 42px;
   align-items: center;
   gap: 7px;
   min-width: 0;
-  color: var(--hud-dim, #7aa9b8);
-  font-size: 9px;
-  letter-spacing: 1px;
+  color: var(--fg);
+  font-size: 13px;
 }
 
 .audio-control input {
   width: 100%;
   min-width: 0;
-  height: 4px;
+  height: 24px;
   accent-color: var(--cyan);
   cursor: pointer;
 }
 
 .audio-control output {
   color: var(--fg);
-  font-size: 9px;
+  font-size: 12px;
   text-align: right;
 }
 
 #audio-mute {
-  width: 32px;
-  height: 30px;
+  justify-self: start;
+  min-height: 40px;
+  padding: 8px 16px;
   border: 1px solid rgba(255, 230, 0, 0.4);
   border-radius: 4px;
   background: rgba(255, 230, 0, 0.08);
   color: var(--yellow);
   cursor: pointer;
-  font-size: 15px;
+  font: inherit;
+  font-size: 12px;
   line-height: 1;
   text-shadow: 0 0 8px var(--yellow);
 }
@@ -580,35 +535,11 @@ body {
   max-width: 640px;
 }
 
-.boot-overlay.done {
-  opacity: 0;
-  transition: opacity 500ms ease-out;
-  pointer-events: none;
-}
-
-.boot-overlay.menu-open {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: safe center;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 16px 8px;
-  pointer-events: auto;
-}
-
-.boot-overlay.menu-open pre {
+.boot-overlay[hidden] {
   display: none;
 }
 
-.boot-overlay.menu-open .boot-menu,
-.boot-overlay.menu-open #hint {
-  flex-shrink: 0;
-}
-
 #hint {
-  /* In-flow under the boot menu: the old absolute positioning overlapped the
-     INITIALIZE button, ghosting its label and swallowing clicks. */
   margin: 20px auto 0;
   text-align: center;
   max-width: 100%;
@@ -619,8 +550,6 @@ body {
   animation: pulse 1.5s ease-in-out infinite;
   pointer-events: none;
 }
-
-#hint.hidden { display: none; }
 
 @media (max-width: 720px), (max-height: 820px) {
   html,
@@ -684,13 +613,6 @@ body {
     border-radius: 8px;
   }
 
-  #audio-console {
-    width: 100%;
-    grid-template-columns: 1fr 38px;
-    gap: 7px 10px;
-    padding: 8px;
-  }
-
   #coin-slot {
     width: 100%;
     grid-template-columns: 36px minmax(0, 1fr) auto;
@@ -722,21 +644,6 @@ body {
     font-size: 8px;
   }
 
-
-  .audio-console-title {
-    grid-column: 1 / -1;
-  }
-
-  .audio-control {
-    grid-column: 1;
-  }
-
-  #audio-mute {
-    grid-column: 2;
-    grid-row: 2 / span 3;
-    align-self: stretch;
-    height: auto;
-  }
 
   #game {
     width: 100%;
@@ -822,28 +729,15 @@ body {
 
 /* -------- BOOT MENU -------- */
 .boot-menu {
-  pointer-events: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  align-items: center;
-  margin-top: 8px;
-  max-width: 640px;
-}
-
-.boot-menu-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: center;
+  min-height: 0;
+  width: 100%;
 }
 
 .boot-menu-label {
   color: var(--yellow);
   font-size: 12px;
-  letter-spacing: 2px;
-  margin-right: 4px;
 }
 
 .boot-val {
@@ -855,10 +749,10 @@ body {
   border: 2px solid rgba(0, 240, 255, 0.45);
   color: var(--cyan);
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 1.5px;
-  padding: 10px 18px;
+  letter-spacing: 0.5px;
+  padding: 12px;
   cursor: pointer;
   border-radius: 6px;
   text-shadow: 0 0 8px var(--cyan);
@@ -887,13 +781,10 @@ body {
 }
 
 .boot-opt.selected {
-  background: linear-gradient(180deg, rgba(0, 240, 255, 0.5), rgba(0, 240, 255, 0.28));
-  border-color: #e8fdff;
+  background: linear-gradient(180deg, rgba(0, 240, 255, 0.2), rgba(0, 240, 255, 0.08));
+  border-color: var(--cyan);
   color: #fff;
-  text-shadow: 0 0 10px #fff, 0 0 20px var(--cyan);
-  box-shadow:
-    0 0 24px rgba(0, 240, 255, 0.8),
-    inset 0 0 16px rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 14px rgba(0, 240, 255, 0.08);
 }
 
 /* DAS/ARR steppers — chunky square buttons with real affordance. */
@@ -906,39 +797,28 @@ body {
 }
 
 .boot-controls {
-  border-collapse: separate;
-  border-spacing: 4px;
-  font-size: 12px;
+  width: 100%;
+  margin: 12px 0;
+  border-collapse: collapse;
+  font-size: 13px;
   color: var(--fg);
   background: rgba(0, 240, 255, 0.04);
   border: 1px solid rgba(0, 240, 255, 0.28);
-  border-radius: 8px;
-  padding: 10px 12px;
   box-shadow: inset 0 0 18px rgba(0, 240, 255, 0.05);
 }
 
-.boot-controls td {
-  padding: 5px 10px;
-  border: none;
+.boot-controls td,
+.boot-controls th {
+  padding: 10px;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.12);
+  text-align: left;
+  line-height: 1.5;
 }
 
-/* Key chips — neon keycaps instead of bare table text. */
-.boot-controls td:nth-child(odd) {
-  background: linear-gradient(180deg, #a5fcff, #00d5e8);
-  color: #062a30;
-  border-radius: 5px;
+.boot-controls th {
+  color: var(--cyan);
   font-weight: 700;
-  text-align: center;
   white-space: nowrap;
-  text-shadow: none;
-  box-shadow: 0 0 8px rgba(0, 240, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.55);
-}
-
-.boot-controls td:nth-child(even) {
-  color: var(--fg);
-  letter-spacing: 1px;
-  opacity: 0.9;
-  padding-left: 12px;
 }
 
 .boot-start {
@@ -997,6 +877,213 @@ body {
 @keyframes hero-glow {
   0%, 100% { opacity: 0.35; }
   50%      { opacity: 1; }
+}
+
+/* -------- UNIFIED SETUP -------- */
+.setup-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(560px, calc(100vw - 24px));
+  max-width: none;
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(0, 240, 255, 0.55);
+  border-radius: 16px;
+  background: linear-gradient(145deg, #101526, #080511 70%);
+  color: var(--fg);
+  font: inherit;
+  box-shadow: 0 0 60px rgba(0, 240, 255, 0.16), 0 24px 80px #000a;
+}
+
+.setup-dialog[open] {
+  display: flex;
+}
+
+.setup-dialog::backdrop {
+  background: rgba(2, 0, 9, 0.8);
+  backdrop-filter: blur(5px);
+}
+
+.setup-header {
+  padding: 24px 24px 18px;
+}
+
+.setup-eyebrow {
+  color: var(--cyan);
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+.setup-header h2 {
+  margin: 10px 0 8px;
+  font-size: clamp(22px, 5vw, 28px);
+  letter-spacing: -1px;
+}
+
+.setup-header p,
+.setup-help {
+  color: #a2b6c9;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.setup-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+}
+
+.setup-tabs button {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #a2b6c9;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.setup-tabs button[aria-selected='true'] {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+  background: rgba(0, 240, 255, 0.06);
+}
+
+.setup-tabs button[hidden],
+.setup-panels [hidden] {
+  display: none;
+}
+
+.setup-dialog :focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: -2px;
+}
+
+.setup-panels {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 24px;
+  scrollbar-color: #12616e #080511;
+}
+
+.setup-header,
+.setup-tabs,
+.setup-footer {
+  flex-shrink: 0;
+}
+
+.setup-group {
+  min-width: 0;
+  padding: 0;
+  margin: 0 0 22px;
+  border: 0;
+}
+
+.setup-group:last-child {
+  margin-bottom: 0;
+}
+
+.setup-group legend,
+.setup-group h3,
+#panel-controls h3 {
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.setup-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.difficulty-choices {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mode-card {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  text-shadow: none;
+}
+
+.mode-card strong {
+  font-size: 15px;
+}
+
+.mode-card span {
+  color: #a2b6c9;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
+.setup-group summary {
+  min-height: 44px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(0, 240, 255, 0.2);
+  color: var(--cyan);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.advanced-body {
+  display: grid;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.seed-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.timing-control {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.timing-control > span {
+  flex: 1;
+}
+
+.setup-footer {
+  display: grid;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid rgba(0, 240, 255, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.setup-footer .boot-start {
+  width: 100%;
+  margin: 0;
+  font-size: 15px;
+  padding: 14px;
+  letter-spacing: 2px;
+}
+
+@media (max-width: 420px), (max-height: 550px) {
+  .setup-header { padding: 16px 16px 12px; }
+  .setup-tabs { padding: 0 16px; }
+  .setup-panels { padding: 16px; }
+  .setup-footer { padding: 12px 16px 16px; gap: 6px; }
+  .setup-eyebrow { font-size: 9px; letter-spacing: 1px; }
+  .boot-opt { padding: 10px 8px; font-size: 12px; }
+  .boot-controls { font-size: 11px; }
+  .boot-controls td, .boot-controls th { padding: 8px; }
 }
 
 /* -------- TOUCH CONTROLS -------- */

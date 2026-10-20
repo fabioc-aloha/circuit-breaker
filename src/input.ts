@@ -15,7 +15,7 @@ export interface InputActions {
   suspend(): void;
   restart(): void;
   toggleMute(): void;
-  start(): void; // any-key start / boot dismiss
+  start(event: Event): void; // any-key start / boot dismiss
   menuKey(key: string, ev: KeyboardEvent): void; // boot-menu navigation (no-op in game)
   skipCutscene(): void; // dismiss inter-boss cutscene early
 }
@@ -124,18 +124,18 @@ export class InputController {
     this.actions.softDrop(this.downDown);
   }
 
-  private onPointerDown = (): void => {
-    this.actions.start();
+  private onPointerDown = (event: PointerEvent): void => {
+    this.actions.start(event);
     this.actions.skipCutscene();
   };
 
   private onKeyDown = (e: KeyboardEvent): void => {
-    if (e.target instanceof HTMLElement && e.target.closest('input, select, textarea, [contenteditable="true"]')) return;
+    if (e.target instanceof HTMLElement && e.target.closest('input, select, textarea, [contenteditable="true"], [data-game-ui]')) return;
     // Prevent scrolling with space/arrows.
     if ([' ', 'ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp'].includes(e.key)) e.preventDefault();
     if (e.repeat) return;
     this.actions.menuKey(e.key, e);
-    this.actions.start();
+    this.actions.start(e);
     this.actions.skipCutscene();
     switch (e.key) {
       case 'ArrowLeft':

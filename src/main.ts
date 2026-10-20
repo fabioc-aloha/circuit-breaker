@@ -8,6 +8,7 @@ import { Game } from './game';
 import { InputController } from './input';
 import { initializeMarketTicker, syncTickerSpeed } from './market-ticker';
 import { Renderer } from './renderer';
+import { SetupPanel } from './setup-panel';
 import type { Volumes } from './storage';
 import { loadArr, loadDas, loadReducedEffects, saveArr, saveDas, saveReducedEffects } from './storage';
 import { parseSeed } from './random';
@@ -19,7 +20,6 @@ const canvas = document.getElementById('game') as HTMLCanvasElement;
 const bootOverlay = document.getElementById('boot')!;
 const bootText = document.getElementById('boot-text')!;
 const bootMenu = document.getElementById('boot-menu')!;
-const hint = document.getElementById('hint')!;
 const muteButton = document.getElementById('audio-mute') as HTMLButtonElement;
 const seedInput = document.getElementById('run-seed') as HTMLInputElement;
 const reducedEffectsInput = document.getElementById('reduced-effects') as HTMLInputElement;
@@ -36,10 +36,7 @@ reducedEffectsInput.addEventListener('change', () => {
   syncReducedEffects();
 });
 
-// Primary-input detection shared by the touch controls and the audio console
-// collapse. (pointer: coarse) is true when touch is the *primary* input —
-// unlike maxTouchPoints, it doesn't fire on touchscreen laptops, so desktop
-// stays desktop.
+// Primary-input detection avoids showing touch controls on touchscreen laptops.
 const coarsePointer = window.matchMedia('(pointer: coarse)');
 
 void initializeMarketTicker();
@@ -118,33 +115,19 @@ function syncMuteButton(): void {
   muteButton.setAttribute('aria-label', label);
   muteButton.setAttribute('aria-pressed', String(audio.muted));
   muteButton.title = label;
-  muteButton.textContent = audio.muted ? '🔇' : '🔊';
+  muteButton.textContent = audio.muted ? 'Unmute' : 'Mute';
 }
 
 for (const control of mixerControls) {
   syncMixerControl(control.input, control.output, audio.volumes[control.channel]);
   control.input.addEventListener('input', () => {
+    unlockAudio();
     const volume = volumeFromPercent(control.input.value);
     audio.setVolumes({ [control.channel]: volume } as Partial<Volumes>);
     syncMixerControl(control.input, control.output, volume);
   });
 }
 syncMuteButton();
-
-// Audio console collapse. On touch-first devices the mixer auto-collapses when
-// a run starts so it doesn't eat vertical space mid-game; the toggle is always
-// available and a manual toggle wins over the auto-collapse.
-const audioConsole = document.getElementById('audio-console')!;
-const audioConsoleToggle = document.getElementById('audio-console-toggle') as HTMLButtonElement;
-let audioConsoleManual = false;
-function setAudioConsoleCollapsed(collapsed: boolean): void {
-  audioConsole.classList.toggle('collapsed', collapsed);
-  audioConsoleToggle.setAttribute('aria-expanded', String(!collapsed));
-}
-audioConsoleToggle.addEventListener('click', () => {
-  audioConsoleManual = true;
-  setAudioConsoleCollapsed(!audioConsole.classList.contains('collapsed'));
-});
 
 type BootPhase = 'typing' | 'menu' | 'done';
 let bootPhase: BootPhase = 'typing';
@@ -156,12 +139,16 @@ let arrMs = loadArr();
 function syncBootMenu(): void {
   bootMenu.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((b) => {
     b.classList.toggle('selected', b.dataset.mode === selMode);
+    b.setAttribute('aria-pressed', String(b.dataset.mode === selMode));
   });
   bootMenu.querySelectorAll<HTMLButtonElement>('[data-diff]').forEach((b) => {
     b.classList.toggle('selected', b.dataset.diff === selDiff);
+    b.setAttribute('aria-pressed', String(b.dataset.diff === selDiff));
   });
   document.getElementById('das-val')!.textContent = `${dasMs}ms`;
   document.getElementById('arr-val')!.textContent = `${arrMs}ms`;
+  document.getElementById('run-summary')!.textContent =
+    `${selMode === 'boss-rush' ? 'Boss Rush' : 'Free Stack'} / ${selDiff}`;
 }
 
 function setDas(v: number): void {
@@ -178,25 +165,27 @@ function setArr(v: number): void {
   syncBootMenu();
 }
 
+const setupPanel = new SetupPanel(document.getElementById('setup-dialog') as HTMLDialogElement, {
+  start: () => dismissBoot(),
+  close: () => input.reset(),
+  shortcut: (key, event) => handleMenuKey(key, event),
+});
+
 /** Finish the BIOS type-out instantly and show the loadout menu. */
 function finishTyping(): void {
   if (bootPhase !== 'typing') return;
   bootIdx = BIOS_LINES.length; // halt the typeBoot chain
   bootText.textContent = BIOS_LINES.join('\n') + '\n';
   bootPhase = 'menu';
-  bootOverlay.classList.add('menu-open');
-  bootMenu.hidden = false;
-  hint.textContent = 'SELECT LOADOUT — ENTER TO INITIALIZE';
+  bootOverlay.hidden = true;
   syncBootMenu();
+  setupPanel.open(false);
 }
 
 function handleMenuKey(key: string, ev: KeyboardEvent): void {
   if (bootPhase !== 'menu') return;
-  // Enter/Space always initialize from the menu, no matter which control has
-  // focus — and the focused control's default activation is suppressed so a
-  // focused stepper/mute button doesn't ALSO fire (e.g. toggling mute or
-  // stepping DAS as the run starts). Arrow keys are untouched so slider
-  // keyboard adjustments keep working.
+  // Focused controls keep their native activation; the setup panel only routes
+  // shortcuts from non-editable content here.
   if (key === 'Enter' || key === ' ') {
     ev.preventDefault();
     dismissBoot();
@@ -226,7 +215,10 @@ function dismissBoot(): void {
     seed = parseSeed(seedInput.value);
   } catch (error) {
     if (!(error instanceof RangeError)) throw error;
+    setupPanel.select('settings');
+    (document.getElementById('advanced-settings') as HTMLDetailsElement).open = true;
     seedInput.setCustomValidity(error.message);
+    seedInput.focus();
     seedInput.reportValidity();
     return;
   }
@@ -234,18 +226,14 @@ function dismissBoot(): void {
   unlockAudio();
   game.mode = selMode;
   game.difficulty = selDiff;
-  // Hide the menu immediately — the overlay fades for another 600ms, and
-  // without this the loadout buttons stay clickable mid-run.
-  bootMenu.hidden = true;
-  bootOverlay.classList.remove('menu-open');
+  setupPanel.close();
+  bootOverlay.remove();
   effects.spawnLightning(canvas.width * 0.15, 0, canvas.width * 0.65, canvas.height * 0.8, '#ffffff', 2.5);
   effects.flash(0.9, 180);
   effects.shake(6, 240);
   game.beginRun(seed ?? undefined);
-  if (!audioConsoleManual && coarsePointer.matches) setAudioConsoleCollapsed(true);
-  bootOverlay.classList.add('done');
-  hint.classList.add('hidden');
-  setTimeout(() => bootOverlay.remove(), 600);
+  seedInput.value = String(game.seed);
+  canvas.focus({ preventScroll: true });
 }
 
 const game = new Game(effects, sfx, music, () => {
@@ -259,7 +247,10 @@ const game = new Game(effects, sfx, music, () => {
   }
 });
 
-muteButton.addEventListener('click', () => game.toggleMute());
+muteButton.addEventListener('click', () => {
+  unlockAudio();
+  game.toggleMute();
+});
 
 const input = new InputController({
   moveLeft: () => game.moveLeft(),
@@ -274,10 +265,13 @@ const input = new InputController({
   suspend: () => { game.suspend(); syncPauseOverlay(); },
   restart: () => { input.reset(); game.restart(); },
   toggleMute: () => game.toggleMute(),
-  start: () => {
+  start: (event) => {
     // Typing phase: any key skips to the loadout menu. Menu phase: keys are
     // handled by menuKey / the on-screen buttons — don't dismiss early.
-    if (bootPhase === 'typing') finishTyping();
+    if (bootPhase === 'typing') {
+      event.preventDefault();
+      finishTyping();
+    }
   },
   menuKey: (key, ev) => handleMenuKey(key, ev),
   skipCutscene: () => game.skipCutscene(),
@@ -305,7 +299,6 @@ document.getElementById('das-down')!.addEventListener('click', () => setDas(dasM
 document.getElementById('das-up')!.addEventListener('click', () => setDas(dasMs + 10));
 document.getElementById('arr-down')!.addEventListener('click', () => setArr(arrMs - 5));
 document.getElementById('arr-up')!.addEventListener('click', () => setArr(arrMs + 5));
-document.getElementById('boot-start')!.addEventListener('click', () => dismissBoot());
 seedInput.addEventListener('input', () => seedInput.setCustomValidity(''));
 seedInput.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
@@ -362,10 +355,30 @@ const pauseOverlay = document.getElementById('pause-overlay')!;
 document.getElementById('pause-resume')!.addEventListener('click', () => {
   input.reset();
   if (game.phase === 'paused') game.pause();
+  canvas.focus({ preventScroll: true });
 });
 document.getElementById('pause-restart')!.addEventListener('click', () => {
   input.reset();
   game.restart();
+  canvas.focus({ preventScroll: true });
+});
+document.getElementById('pause-settings')!.addEventListener('click', () => {
+  if (game.phase !== 'paused') return;
+  input.reset();
+  setupPanel.open(true);
+});
+pauseOverlay.addEventListener('keydown', (event) => {
+  if (event.repeat) return;
+  if (['p', 'P', 'Escape'].includes(event.key)) {
+    event.preventDefault();
+    document.getElementById('pause-resume')!.click();
+  } else if (['r', 'R'].includes(event.key)) {
+    event.preventDefault();
+    document.getElementById('pause-restart')!.click();
+  } else if (['m', 'M'].includes(event.key)) {
+    event.preventDefault();
+    game.toggleMute();
+  }
 });
 let pauseOverlayShown = false;
 function syncPauseOverlay(): void {
@@ -373,6 +386,7 @@ function syncPauseOverlay(): void {
   if (show !== pauseOverlayShown) {
     pauseOverlayShown = show;
     pauseOverlay.hidden = !show;
+    if (show) document.getElementById('pause-resume')!.focus({ preventScroll: true });
   }
 }
 
