@@ -56,8 +56,8 @@ export const BOSSES: BossDef[] = [
   },
 ];
 
-export function makeActiveBoss(def: BossDef): ActiveBoss {
-  return { def, hp: def.hp, maxHp: def.hp, attackTimer: def.attackIntervalMs };
+export function makeActiveBoss(def: BossDef, attackIntervalScale = 1): ActiveBoss {
+  return { def, hp: def.hp, maxHp: def.hp, attackTimer: def.attackIntervalMs * attackIntervalScale };
 }
 
 export function bossSilhouetteFor(id: string): BossSilhouette {

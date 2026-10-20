@@ -63,8 +63,9 @@ set before building; see [the release instructions](README.md#-deploy).
   Vite rewrites the icon URL to a relative path.
   [Artifact regressions](scripts/validate-site.test.mjs) accept that output while
   still rejecting a missing declaration or asset.
-- The book box belongs inside the setup Play panel, so existing dialog and
-  tab visibility controls it without another visibility flag.
+- The book box belongs inside the setup Play panel, visible at startup and
+  from Main Menu but absent during gameplay and paused Settings. Existing
+  dialog and tab visibility controls it without another visibility flag.
   [Placement coverage](scripts/book-link.test.mjs) prevents a duplicate or an
   exterior gameplay box.
 - Ticker timing uses fractional geometry and preserves the current pixel offset
@@ -87,6 +88,17 @@ set before building; see [the release instructions](README.md#-deploy).
   click can resume a cutscene and immediately skip it as the event bubbles.
   [Input regressions](scripts/game.test.mjs) distinguish UI clicks from game
   clicks; browser checks also exercised a real resumed cutscene.
+- Winning line clears finalize scoring before saving the record, while row
+  removal still waits for the animation. Perfect-clear damage must also update
+  boss-driven voltage tiers without awarding the bonus twice.
+  [Gameplay regressions](scripts/game.test.mjs) cover winning and nonwinning
+  perfect clears, remaining blocks, saved scores, and final-summary stability.
+- Keyboard pause keys bypass cutscene skipping before dispatching the pause
+  action. [Input regressions](scripts/game.test.mjs) exercise `p`, `P`, and
+  `Escape` through the actual controller, plus an ordinary key that still skips.
+- Boss creation and attack rescheduling use the same difficulty multiplier.
+  [Timing regressions](scripts/game.test.mjs) cover the opening and subsequent
+  intervals across every boss and difficulty, including the warning boundary.
 
 ## UI and animation follow-up
 
@@ -113,9 +125,10 @@ The deployed UI release addressed the responsive defects found in the initial
 Browser rechecks covered desktop 1280x720, 1366x768, 1440x1000, and 1920x1080,
 plus touch 320x480, 390x844, and 844x390. Canvas bounds, aspect ratio, complete
 touch-button bounds, minimum target sizes, and button-center hit targets passed.
-Follow-up checks also covered setup scrolling, reduced effects, seed rejection,
-startup-only book visibility, pause/settings/resume, retry, and actual hold/drop
-input. Chromium emulation is not physical iOS Safari.
+Follow-up checks at that release covered setup scrolling, reduced effects,
+seed rejection, book visibility in startup's Play tab, pause/settings/resume,
+retry, and actual hold/drop input. The later Main Menu flow also exposes the
+Play tab and book link. Chromium emulation is not physical iOS Safari.
 
 ## Main Menu follow-up
 
@@ -152,9 +165,9 @@ skills, prompts, instructions, or memory entries.
 - The README has described the code as MIT, but no standalone license file is
   tracked. Adding one requires the owner's licensing decision.
 - Third-party sprite permissions remain subject to [CREDITS.md](CREDITS.md).
-- The old handoff proposed restoring editor-extension recommendations. No
-  `.vscode` configuration is currently tracked; confirm the desired editor
-  tooling before reviving that proposal.
+- Alex ACT ONE's project bootstrap was approved and applied locally, including
+  portable [workspace settings](.vscode/settings.json). The old handoff's
+  separate proposal for editor-extension recommendations remains unapproved.
 
 Running UAT and fixing its findings does not approve the separate proposal to
 add permanent browser-test automation.

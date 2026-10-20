@@ -390,6 +390,61 @@ test('keeps final-boss victory when the locking board is topped out', () => {
   assert.equal(game.phase, 'victory');
 });
 
+test('includes the winning perfect clear in the saved record before the animation finishes', () => {
+  const previousStorage = globalThis.localStorage;
+  const saved = new Map();
+  globalThis.localStorage = {
+    getItem: (key) => saved.get(key) ?? null,
+    setItem: (key, value) => saved.set(key, value),
+  };
+  try {
+    const game = createGame();
+    game.beginRun(1);
+    game.elapsedMs = 1000;
+    game.bossIndex = BOSSES.length - 1;
+    game.level = BOSSES.length;
+    game.boss.hp = 1;
+    game.board.grid[21] = [0, 0, 0, 0, 'J', 'J', 'J', 'J', 'J', 'J'];
+    game.active = { kind: 'I', rotation: 0, x: 0, y: 20 };
+
+    game.lockAndAdvance();
+
+    assert.equal(game.phase, 'victory');
+    assert.equal(game.score, 10500);
+    assert.equal(game.hiScore, 10500);
+    assert.deepEqual(JSON.parse(saved.get('cb.records.boss-rush.normal')), {
+      score: 10500, fastestWinMs: 1000,
+    });
+    assert.ok(game.pendingLineClear, 'keep the winning line-clear animation');
+    const stats = game.runStats;
+    game.update(game.pendingLineClear.remainingMs);
+    assert.equal(game.board.isBoardEmpty(), true);
+    assert.equal(game.board.clearingRows.size, 0);
+    assert.equal(game.pendingLineClear, null);
+    assert.equal(game.active, null);
+    assert.equal(game.score, 10500, 'do not award the bonus twice');
+    assert.deepEqual(game.runStats, stats);
+  } finally {
+    globalThis.localStorage = previousStorage;
+  }
+});
+
+test('does not award a winning perfect clear when blocks remain', () => {
+  const game = createGame();
+  game.beginRun(1);
+  game.bossIndex = BOSSES.length - 1;
+  game.boss.hp = 1;
+  game.board.grid[20][9] = 'J';
+  game.board.grid[21] = [0, 0, 0, 0, 'J', 'J', 'J', 'J', 'J', 'J'];
+  game.active = { kind: 'I', rotation: 0, x: 0, y: 20 };
+  game.lockAndAdvance();
+  assert.equal(game.phase, 'victory');
+  assert.ok(game.pendingLineClear);
+  game.update(game.pendingLineClear.remainingMs);
+  assert.equal(game.board.isBoardEmpty(), false);
+  assert.equal(game.score, 100);
+});
+
 test('caps lock-delay resets per piece', () => {
   const game = createGame();
   game.beginRun();
@@ -522,6 +577,25 @@ test('telegraphs a boss attack before executing it', () => {
   assert.equal(game.isSpike(), true); // SURGE.exe's spike went off
 });
 
+for (const [difficulty, scale] of [['chill', 1.5], ['normal', 1], ['overdrive', 0.7]]) {
+  test(`scales the opening and subsequent attack intervals for every boss on ${difficulty}`, () => {
+    const game = createGame({ difficulty });
+    game.beginRun(1);
+    for (const [index, boss] of BOSSES.entries()) {
+      assert.equal(game.boss.attackTimer, boss.attackIntervalMs * scale);
+      game.update(game.boss.attackTimer - 1);
+      assert.equal(game.pendingAttack, null);
+      game.update(1);
+      assert.ok(game.pendingAttack);
+      assert.equal(game.boss.attackTimer, boss.attackIntervalMs * scale);
+      if (index < BOSSES.length - 1) {
+        game.damageBoss(game.boss.hp);
+        game.skipCutscene();
+      }
+    }
+  });
+}
+
 test('holds garbage rows back until the telegraph window expires', () => {
   const game = createGame();
   game.beginRun();
@@ -564,6 +638,37 @@ test('awards a perfect-clear bonus when the well is emptied', () => {
   // Single (100) + perfect clear (2000 x level 1).
   assert.equal(game.score, 2100);
   assert.equal(game.pendingLineClear, null);
+});
+
+test('advances the voltage tier when perfect-clear damage defeats a boss', () => {
+  const game = createGame();
+  game.beginRun(1);
+  game.boss.hp = 2;
+  game.board.grid[21] = [0, 0, 0, 0, 'J', 'J', 'J', 'J', 'J', 'J'];
+  game.active = { kind: 'I', rotation: 0, x: 0, y: 20 };
+  game.lockAndAdvance();
+  game.update(game.pendingLineClear.remainingMs);
+  assert.equal(game.bossIndex, 1);
+  assert.equal(game.level, 2);
+  assert.equal(game.phase, 'cutscene');
+  assert.equal(game.score, 2100);
+});
+
+test('perfect-clear damage can finish the final boss without changing the saved score later', () => {
+  const game = createGame();
+  game.beginRun(1);
+  game.bossIndex = BOSSES.length - 1;
+  game.level = BOSSES.length;
+  game.boss.hp = 2;
+  game.board.grid[21] = [0, 0, 0, 0, 'J', 'J', 'J', 'J', 'J', 'J'];
+  game.active = { kind: 'I', rotation: 0, x: 0, y: 20 };
+  game.lockAndAdvance();
+  game.update(game.pendingLineClear.remainingMs);
+  assert.equal(game.phase, 'victory');
+  assert.equal(game.score, 10500);
+  assert.equal(game.hiScore, 10500);
+  game.update(1000);
+  assert.equal(game.score, 10500);
 });
 
 test('rotates 180 degrees and counts it for T-spin detection', () => {
@@ -797,6 +902,55 @@ test('setup and pause clicks do not skip a just-resumed cutscene', () => {
   } finally {
     globalThis.HTMLElement = previousHTMLElement;
   }
+});
+
+for (const key of ['p', 'P', 'Escape']) {
+  test(`${key} pauses and resumes the same cutscene through keyboard input`, () => {
+    const game = createGame();
+    game.beginRun(1);
+    game.phase = 'cutscene';
+    const cutscene = { text: ['NEXT BOSS'], timer: 700 };
+    game.cutscene = cutscene;
+    withInput(() => {
+      const press = () => {
+        const event = new Event('keydown');
+        Object.defineProperty(event, 'key', { value: key });
+        window.dispatchEvent(event);
+      };
+      press();
+      assert.equal(game.phase, 'paused');
+      assert.equal(game.cutscene, cutscene);
+      game.update(5000);
+      game.lastPauseToggleMs = -Infinity;
+      press();
+      assert.equal(game.phase, 'cutscene');
+      assert.equal(game.cutscene, cutscene);
+      assert.equal(game.cutscene.timer, 700);
+    }, {
+      menuKey() {},
+      start() {},
+      skipCutscene: () => game.skipCutscene(),
+      pause: () => game.pause(),
+    });
+  });
+}
+
+test('a non-pause key still skips a cutscene', () => {
+  const game = createGame();
+  game.beginRun(1);
+  game.phase = 'cutscene';
+  game.cutscene = { text: ['NEXT BOSS'], timer: 700 };
+  withInput(() => {
+    const event = new Event('keydown');
+    Object.defineProperty(event, 'key', { value: 'Enter' });
+    window.dispatchEvent(event);
+    assert.equal(game.phase, 'playing');
+    assert.equal(game.cutscene, null);
+  }, {
+    menuKey() {},
+    start() {},
+    skipCutscene: () => game.skipCutscene(),
+  });
 });
 
 test('input reset releases movement and soft drop', () => withInput((input, state) => {

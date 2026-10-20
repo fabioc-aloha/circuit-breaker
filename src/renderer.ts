@@ -163,9 +163,7 @@ export class Renderer {
 
     const announcement = this.effects.currentAnnouncement();
     if (announcement) this.drawAnnouncement(announcement);
-    // Pause is intentionally silent — no banner overlay — so screenshots
-    // can capture the game mid-frame (e.g. Kong throwing a piece) without
-    // any UI chrome covering the action. Press P again to resume.
+    // The DOM pause dialog owns pause actions; the canvas adds no pause banner.
     if (s.gameOver) this.drawCenterBanner('⚡ CIRCUIT BROKEN ⚡', 'PRESS R TO REBOOT', 0.58);
     if (s.victory) this.drawCenterBanner('▲ GRID CLEARED ▲', 'PRESS R TO RETRY SEED');
     if ((s.gameOver || s.victory) && s.stats) this.drawRunSummary(s.stats);

@@ -137,7 +137,7 @@ export class InputController {
     if (e.repeat) return;
     this.actions.menuKey(e.key, e);
     this.actions.start(e);
-    this.actions.skipCutscene();
+    if (!['p', 'P', 'Escape'].includes(e.key)) this.actions.skipCutscene();
     switch (e.key) {
       case 'ArrowLeft':
         if (!this.leftDown) {

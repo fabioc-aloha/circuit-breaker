@@ -131,6 +131,8 @@ also requires the same inputs and timing.
 Switching browser tabs or leaving the window pauses the game and releases held controls.
 Resume explicitly with `P`, `Esc`, or the RESUME button. Pauses and boss cutscenes
 do not count toward run time, and the final summary freezes when the run ends.
+`P` or `Esc` pauses a boss cutscene without skipping it. Resuming preserves its
+remaining duration; another key or a tap skips it.
 
 The pause screen's Settings button reopens the same settings and controls.
 Audio, effects, and input timing remain adjustable; mode, difficulty, and seed
@@ -165,12 +167,18 @@ cleanly from Tetr.io / Jstris:
 - **7-bag randomizer**, one-swap-per-drop hold, ghost preview, and next-three queue
 - **T-spins** (3-corner rule; last action must be a rotation), **back-to-back ×1.5**
   on tetrises and T-spins, and **perfect-clear** bonuses
-- **Lock delay capped at 15 resets** — no infinite stalling on the stack; the
-  piece commits once the cap is hit
+- **Lock delay capped at 15 resets**. After 15 resets, movement and rotation no
+  longer restart the 500 ms lock delay.
 - **AMPERAGE ×N** combo tracker, **VOLTAGE TIER** that rises every ten line clears *and* on each boss defeat (whichever comes first) with a live *NEXT TIER IN N* progress bar under the LINES stat and gravity curve tied to tier
 - Local best scores for each mode and difficulty, plus fastest Boss Rush wins
   for each difficulty. Your old shared high score stays visible as LEGACY BEST.
 - Line clears freeze the row visibly-but-briefly while a neon Pacman streaks across the empty space, then the stack drops — the animation and the mutation happen together instead of the clear finishing before the effect starts
+
+A winning perfect clear counts toward the final score and saved record. Its
+row-clear animation finishes without changing the recorded result.
+
+Difficulty scales every boss attack interval, including the first: Chill uses
+1.5× the base interval, Normal 1×, and Overdrive 0.7×.
 
 ### Kong on the girder
 
@@ -207,7 +215,7 @@ plus gravity curve:
 2. **BLACKOUT** -- hides your NEXT preview at random intervals
 3. **SHORTFUSE** -- dumps garbage lines when you dawdle
 4. **FEEDBACK LOOP** -- scrambles columns
-5. **THE MAINFRAME** -- every attack, twice as fast
+5. **THE MAINFRAME** -- combines all attack types at a faster pace
 
 Every attack is **telegraphed a full second ahead**. Garbage previews its exact
 hole positions, and scramble warnings mark the two columns that will swap.
@@ -358,8 +366,9 @@ responses at the canonical URL. Tracker-specific checks are in
 
 | Document | Purpose |
 | --- | --- |
-| [PLAN.md](PLAN.md) | Current delivery record and architecture decisions |
-| [HANDOFF.md](HANDOFF.md) | Restart state, open work, and the next action |
+| [CHANGELOG.md](CHANGELOG.md) | Evidence-backed change history, starting October 20, 2026 |
+| [PLAN.md](PLAN.md) | Current delivery record, architecture decisions, and open work |
+| [HANDOFF.md](HANDOFF.md) | Restart state, verification, and the next action |
 | [INSTRUMENTATION.md](INSTRUMENTATION.md) | Tracking boundaries, quote-data behavior, and production verification |
 | [CREDITS.md](CREDITS.md) | Third-party artwork provenance and licensing limits |
 | [public/llms.txt](public/llms.txt) | Concise published facts for automated consumers |

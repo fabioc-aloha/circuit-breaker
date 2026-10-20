@@ -16,7 +16,7 @@ test('exposes a secure Loop Engineering Amazon purchase command', () => {
   assert.doesNotMatch(html, /Amazon Associate|affiliate-disclosure|sponsored/);
 });
 
-test('keeps the book slot inside the startup-only Play panel', () => {
+test('keeps the book slot inside the shared setup Play panel', () => {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const play = html.match(/<section id="panel-play"[^>]*>([\s\S]*?)<\/section>/)?.[1];
 

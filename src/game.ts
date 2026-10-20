@@ -209,7 +209,8 @@ export class Game implements InputActions {
     this.backToBack = false;
     this.bossIndex = 0;
     // Free Stack mode: no boss, no attacks, tier advances by lines only.
-    this.boss = this.mode === 'boss-rush' ? makeActiveBoss(BOSSES[0]) : null;
+    this.boss = this.mode === 'boss-rush'
+      ? makeActiveBoss(BOSSES[0], DIFFICULTY[this.difficulty].attackIntervalScale) : null;
     this.cutscene = null;
     this.pendingAttack = null;
     this.gravityTimer = 0;
@@ -243,14 +244,14 @@ export class Game implements InputActions {
   update(dtMs: number): void {
     if (this.phase === 'paused') return;
     if (this.phase === 'playing') this.elapsedMs += dtMs;
-    // Tick the deferred line-clear regardless of phase so a boss-defeat
-    // cutscene doesn't strand the board with permanently-empty rows.
-    if (this.pendingLineClear && (this.phase === 'playing' || this.phase === 'cutscene')) {
+    // Finish row animations through boss transitions and victory. Winning
+    // perfect-clear points are already included in the frozen final score.
+    if (this.pendingLineClear && (this.phase === 'playing' || this.phase === 'cutscene' || this.phase === 'victory')) {
       this.pendingLineClear.remainingMs -= dtMs;
       if (this.pendingLineClear.remainingMs <= 0) {
         this.board.removeRows(this.pendingLineClear.rows);
         this.pendingLineClear = null;
-        this.checkPerfectClear();
+        if (this.phase !== 'victory') this.checkPerfectClear();
       }
     }
 
@@ -456,6 +457,8 @@ export class Game implements InputActions {
       } else {
         this.sfx.lineClear(rows);
       }
+      // Victory must see pending rows before it finalizes the score.
+      this.pendingLineClear = { rows: cleared, remainingMs: LINE_CLEAR_HOLD_MS };
       // Boss damage scales with combo, back-to-back, and voltage tier so the
       // late game accelerates toward the 10–12 minute victory target.
       if (this.boss) {
@@ -469,23 +472,7 @@ export class Game implements InputActions {
       }
       this.backToBack = difficult;
       if (this.phase === 'victory') return;
-      // Schedule the actual grid mutation so the pacman burst can finish
-      // crossing the empty rows before the stack drops.
-      this.pendingLineClear = { rows: cleared, remainingMs: LINE_CLEAR_HOLD_MS };
-      // Tier advances by lines OR boss stage, whichever is higher. Boss defeat
-      // bumps bossIndex inside damageBoss above, so the max() picks it up here.
-      const nextLevel = Math.max(
-        1 + Math.floor(this.lines / LINES_PER_LEVEL),
-        this.bossIndex + 1,
-      );
-      if (nextLevel > this.level) {
-        this.level = nextLevel;
-        this.effects.flash(0.35, 220);
-        this.sfx.uiBlip();
-        // On a tetris the MAIN BREAKER banner is already flashing; don't
-        // stomp it with the tier callout.
-        if (rows < 4) this.effects.showAnnouncement('VOLTAGE TIER UP', `TIER ${this.level} ONLINE`, 900);
-      }
+      this.updateLevel(rows < 4);
     } else {
       this.combo = 0;
     }
@@ -502,6 +489,18 @@ export class Game implements InputActions {
     this.lockResets = 0;
     this.lastActionWasRotate = false;
     this.gravityTimer = 0;
+  }
+
+  private updateLevel(showAnnouncement = true): void {
+    const nextLevel = Math.max(
+      1 + Math.floor(this.lines / LINES_PER_LEVEL),
+      this.bossIndex + 1,
+    );
+    if (nextLevel <= this.level) return;
+    this.level = nextLevel;
+    this.effects.flash(0.35, 220);
+    this.sfx.uiBlip();
+    if (showAnnouncement) this.effects.showAnnouncement('VOLTAGE TIER UP', `TIER ${this.level} ONLINE`, 900);
   }
 
   /** Resolve a spawn column near Kong's aim. Spirals outward to the nearest
@@ -546,9 +545,12 @@ export class Game implements InputActions {
     return filled >= 3;
   }
 
-  /** Perfect clear: the deferred line-clear emptied the entire well. */
-  private checkPerfectClear(): void {
-    if (!this.board.isBoardEmpty()) return;
+  /** Victory scores pending rows before saving, without cutting their animation short. */
+  private checkPerfectClear(clearingRows: readonly number[] = []): void {
+    const empty = clearingRows.length === 0
+      ? this.board.isBoardEmpty()
+      : this.board.grid.every((row, index) => clearingRows.includes(index) || row.every(cell => cell === 0));
+    if (!empty) return;
     const bonus = PERFECT_CLEAR_BASE * this.level;
     this.score += bonus;
     this.effects.showAnnouncement('PERFECT CLEAR', `+${bonus} — WELL PURGED`, 1200);
@@ -557,6 +559,7 @@ export class Game implements InputActions {
     if (this.boss) {
       const tierScale = 1 + BOSS_DAMAGE_TIER_SCALE * (this.level - 1);
       this.damageBoss(Math.round(PERFECT_CLEAR_BOSS_DAMAGE * tierScale));
+      if (this.phase !== 'victory') this.updateLevel(false);
     }
   }
 
@@ -582,7 +585,7 @@ export class Game implements InputActions {
         return;
       }
       const next = BOSSES[this.bossIndex];
-      this.boss = makeActiveBoss(next);
+      this.boss = makeActiveBoss(next, DIFFICULTY[this.difficulty].attackIntervalScale);
       this.cutscene = {
         text: [
           `${defeated.name}: ${defeated.defeatQuote}`,
@@ -596,7 +599,7 @@ export class Game implements InputActions {
     }
   }
 
-  /** Dismiss the inter-boss cutscene early (any key / tap). */
+  /** Dismiss the inter-boss cutscene early (non-pause key / tap). */
   skipCutscene(): void {
     if (this.phase === 'cutscene' && this.cutscene) {
       this.cutscene = null;
@@ -683,8 +686,10 @@ export class Game implements InputActions {
 
   private victory(): void {
     this.phase = 'victory';
-    this.finalStats = this.runStats;
     this.boss = null;
+    this.active = null;
+    if (this.pendingLineClear) this.checkPerfectClear(this.pendingLineClear.rows);
+    this.finalStats = this.runStats;
     this.sfx.fanfare();
     this.runsCompleted = incrementRunsCompleted();
     // Even on a win, Kong celebrates — he's the one who threw every piece
@@ -833,7 +838,7 @@ export class Game implements InputActions {
 
   private resetLockIfLanded(): void {
     // Capped: each successful move/rotation on a landed piece buys one more
-    // lock-delay window, up to LOCK_RESET_LIMIT — then the piece locks.
+    // lock-delay window, up to LOCK_RESET_LIMIT; after that, the timer runs out.
     if (this.pieceLanded() && this.lockResets < LOCK_RESET_LIMIT) {
       this.lockTimer = 0;
       this.lockResets += 1;
