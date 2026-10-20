@@ -15,6 +15,7 @@ function fixture({ trackingEnabled = false } = {}) {
   fs.mkdirSync(path.join(root, 'client'));
   fs.writeFileSync(path.join(root, 'assets', 'app.js'), 'console.log("game");');
   fs.writeFileSync(path.join(root, 'circuit-breaker-social.png'), 'png');
+  fs.writeFileSync(path.join(root, 'apple-touch-icon.png'), 'png');
   fs.writeFileSync(path.join(root, 'client', 'constellation-tracker.js'), 'tracker');
   fs.writeFileSync(path.join(root, 'client', 'tracker-bootstrap.js'), 'bootstrap');
   fs.writeFileSync(path.join(root, 'robots.txt'), [
@@ -49,6 +50,7 @@ function fixture({ trackingEnabled = false } = {}) {
     <title>Circuit Breaker</title>
     <meta name="description" content="Play a high-voltage block-stacker with Boss Rush mode." />
     <link rel="canonical" href="https://cb.correax.com/" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Circuit Breaker" />
     <meta property="og:description" content="Play a high-voltage block-stacker with Boss Rush mode." />
@@ -80,6 +82,47 @@ test('accepts a complete production build with tracker activation', (t) => {
   const root = fixture({ trackingEnabled: true });
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   assert.deepEqual(validateSite(root, { trackingEnabled: true }), { failures: [] });
+});
+
+test('homepage declares a real 180x180 PNG Apple touch icon', () => {
+  const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  assert.ok(/<link rel="apple-touch-icon" sizes="180x180" href="\/apple-touch-icon\.png"\s*\/?>/.test(html),
+    'homepage must declare the 180x180 PNG Apple touch icon');
+  const icon = fs.readFileSync(new URL('../public/apple-touch-icon.png', import.meta.url));
+  assert.deepEqual(icon.subarray(0, 8), Buffer.from('89504e470d0a1a0a', 'hex'));
+  assert.equal(icon.readUInt32BE(16), 180);
+  assert.equal(icon.readUInt32BE(20), 180);
+});
+
+test('reports a missing Apple touch icon declaration', (t) => {
+  const root = fixture();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const indexPath = path.join(root, 'index.html');
+  fs.writeFileSync(indexPath, fs.readFileSync(indexPath, 'utf8')
+    .replace('<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />', ''));
+
+  assert.ok(validateSite(root).failures.includes('index.html: missing 180x180 Apple touch icon'));
+});
+
+test('accepts the relative Apple touch icon URL emitted by Vite', (t) => {
+  const root = fixture();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const indexPath = path.join(root, 'index.html');
+  fs.writeFileSync(indexPath, fs.readFileSync(indexPath, 'utf8')
+    .replace('href="/apple-touch-icon.png"', 'href="./apple-touch-icon.png"'));
+
+  assert.deepEqual(validateSite(root), { failures: [] });
+});
+
+test('requires the Apple touch icon asset even when its declaration is removed', (t) => {
+  const root = fixture();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.rmSync(path.join(root, 'apple-touch-icon.png'));
+  const indexPath = path.join(root, 'index.html');
+  fs.writeFileSync(indexPath, fs.readFileSync(indexPath, 'utf8')
+    .replace('<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />', ''));
+
+  assert.ok(validateSite(root).failures.includes('missing required file: apple-touch-icon.png'));
 });
 
 test('reports missing crawl and deployment assets', (t) => {

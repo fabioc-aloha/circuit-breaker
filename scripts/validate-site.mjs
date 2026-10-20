@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url';
 
 const REQUIRED_FILES = [
   'index.html',
+  'apple-touch-icon.png',
   'robots.txt',
   'sitemap.xml',
   'llms.txt',
@@ -99,6 +100,12 @@ export function validateSite(root, { trackingEnabled = false } = {}) {
   if (!title) failures.push('index.html: missing title');
   if (!description) failures.push('index.html: missing description');
   if (!hasCanonical(html)) failures.push('index.html: missing canonical URL');
+  const hasAppleTouchIcon = [...html.matchAll(/<link\b[^>]*>/gi)].some(([tag]) =>
+    tagAttribute(tag, 'rel')?.toLowerCase() === 'apple-touch-icon' &&
+    tagAttribute(tag, 'sizes') === '180x180' &&
+    resolveLocalReference(absoluteRoot, tagAttribute(tag, 'href') ?? '') === path.join(absoluteRoot, 'apple-touch-icon.png')
+  );
+  if (!hasAppleTouchIcon) failures.push('index.html: missing 180x180 Apple touch icon');
   if (!/<h1\b[^>]*>[\s\S]*?\S[\s\S]*?<\/h1>/i.test(html)) failures.push('index.html: missing h1');
 
   const socialMetadata = [
