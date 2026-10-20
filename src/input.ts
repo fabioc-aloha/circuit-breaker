@@ -36,7 +36,7 @@ export class InputController {
     this.actions = actions;
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
-    window.addEventListener('pointerdown', this.onPointerDown, { once: false });
+    window.addEventListener('click', this.onClick);
     window.addEventListener('blur', this.onFocusLost);
     document.addEventListener('visibilitychange', this.onVisibilityChange);
   }
@@ -71,7 +71,7 @@ export class InputController {
   destroy(): void {
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
-    window.removeEventListener('pointerdown', this.onPointerDown);
+    window.removeEventListener('click', this.onClick);
     window.removeEventListener('blur', this.onFocusLost);
     document.removeEventListener('visibilitychange', this.onVisibilityChange);
     this.reset();
@@ -124,7 +124,7 @@ export class InputController {
     this.actions.softDrop(this.downDown);
   }
 
-  private onPointerDown = (event: PointerEvent): void => {
+  private onClick = (event: MouseEvent): void => {
     this.actions.start(event);
     this.actions.skipCutscene();
   };

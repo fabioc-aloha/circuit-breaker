@@ -1141,3 +1141,14 @@ test('startup receives its triggering event so opening setup can consume Enter',
     globalThis.HTMLElement = previousElement;
   }
 }));
+
+test('pointer startup waits for click so the opening gesture cannot activate new setup controls', () => withInput((input) => {
+  const starts = [];
+  input.actions.start = (event) => starts.push(event);
+  input.actions.skipCutscene = () => {};
+  window.dispatchEvent(new Event('pointerdown'));
+  assert.equal(starts.length, 0);
+  const click = new Event('click');
+  window.dispatchEvent(click);
+  assert.deepEqual(starts, [click]);
+}));
