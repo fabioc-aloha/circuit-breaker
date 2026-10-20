@@ -24,9 +24,12 @@ import type {
   ActiveBoss,
   ActivePiece,
   CellValue,
+  DifficultyId,
+  GameMode,
   PendingAttack,
   PieceKind,
   RunStats,
+  SpawnPreview,
 } from './types';
 
 export interface RenderState {
@@ -38,6 +41,13 @@ export interface RenderState {
   nextQueue: PieceKind[];
   score: number;
   hiScore: number;
+  legacyHiScore: number;
+  fastestWinMs: number | null;
+  seed: number;
+  mode: GameMode;
+  difficulty: DifficultyId;
+  reducedEffects: boolean;
+  spawnPreview: SpawnPreview | null;
   lines: number;
   level: number;
   combo: number;
@@ -119,20 +129,23 @@ export class Renderer {
 
   render(s: RenderState): void {
     const ctx = this.ctx;
-    const shake = this.effects.currentShake();
+    const shake = s.reducedEffects ? { x: 0, y: 0 } : this.effects.currentShake();
     ctx.save();
     ctx.translate(shake.x, shake.y);
 
     this.drawBackground(s);
-    this.drawLightning(false);
+    if (!s.reducedEffects) this.drawLightning(false);
     this.drawLeftPanel(s);
     this.drawBoard(s);
+    if (s.spawnPreview) this.drawSpawnPreview(s.spawnPreview);
     this.drawRightPanel(s);
     this.drawKongLedge(s.kong);
     s.kong.draw(ctx);
-    this.drawPacmen(s.time);
-    this.drawParticles();
-    this.drawLightning(true);
+    if (!s.reducedEffects) {
+      this.drawPacmen(s.time);
+      this.drawParticles();
+      this.drawLightning(true);
+    }
     this.drawScanlines();
     // Thrown tetromino renders LAST inside the shake transform so the
     // projectile always sits at top z-order — never hidden by particles,
@@ -142,7 +155,7 @@ export class Renderer {
     ctx.restore();
 
     // Flash overlay (not shaken)
-    const flash = this.effects.currentFlash();
+    const flash = s.reducedEffects ? 0 : this.effects.currentFlash();
     if (flash > 0) {
       ctx.fillStyle = `rgba(255,255,255,${Math.min(0.8, flash)})`;
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
@@ -154,14 +167,15 @@ export class Renderer {
     // can capture the game mid-frame (e.g. Kong throwing a piece) without
     // any UI chrome covering the action. Press P again to resume.
     if (s.gameOver) this.drawCenterBanner('⚡ CIRCUIT BROKEN ⚡', 'PRESS R TO REBOOT', 0.58);
-    if (s.victory) this.drawCenterBanner('▲ GRID CLEARED ▲', 'PRESS R FOR NEW RUN');
+    if (s.victory) this.drawCenterBanner('▲ GRID CLEARED ▲', 'PRESS R TO RETRY SEED');
     if ((s.gameOver || s.victory) && s.stats) this.drawRunSummary(s.stats);
     if (s.cutsceneText) this.drawCutscene(s.cutsceneText);
-    if (s.attackWarning) this.drawAttackWarning(s.attackWarning, s.time);
-    if (s.danger && !s.gameOver && !s.victory) this.drawDangerVignette(s.time);
+    const cueTime = s.reducedEffects ? 0 : s.time;
+    if (s.attackWarning) this.drawAttackWarning(s.attackWarning, cueTime);
+    if (s.danger && !s.gameOver && !s.victory) this.drawDangerVignette(cueTime);
     if (s.hint) this.drawHint(s.hint);
     if (s.muted) this.drawMuteBadge();
-    if (s.gameOver) this.drawGameOverWraith(s.time);
+    if (s.gameOver && !s.reducedEffects) this.drawGameOverWraith(s.time);
   }
 
   // ----- background -----
@@ -173,7 +187,7 @@ export class Renderer {
     // (previously begin/stroke per line = ~40 draw calls per frame).
     ctx.strokeStyle = COLORS.copperTrace;
     ctx.lineWidth = 1;
-    const t = s.time / 4000;
+    const t = s.reducedEffects ? 0 : s.time / 4000;
     ctx.beginPath();
     for (let x = 0; x < CANVAS_W; x += 40) {
       const off = ((t * 20 + x) % 40) - 20;
@@ -265,6 +279,27 @@ export class Renderer {
     if (v === 0) return COLORS.bg;
     if (v === 'G') return PIECE_COLORS.G;
     return PIECE_COLORS[v];
+  }
+
+  private drawSpawnPreview(preview: SpawnPreview): void {
+    const ctx = this.ctx;
+    const cells = cellsOf(preview.piece);
+    const minX = Math.min(...cells.map((cell) => cell.x));
+    const maxX = Math.max(...cells.map((cell) => cell.x));
+    const x = this.boardX + minX * CELL;
+    const width = (maxX - minX + 1) * CELL;
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,240,255,0.05)';
+    ctx.fillRect(x, this.boardY, width, BOARD_PX_H);
+    ctx.strokeStyle = COLORS.cyan;
+    ctx.setLineDash([4, 5]);
+    ctx.strokeRect(x + 0.5, this.boardY + 0.5, width - 1, BOARD_PX_H - 1);
+    ctx.setLineDash([]);
+    ctx.fillStyle = COLORS.cyan;
+    ctx.font = 'bold 10px Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(preview.adjusted ? 'AIM ADJUSTED' : 'KONG AIM', x + width / 2, this.boardY + 16);
+    ctx.restore();
   }
 
   private drawCell(bx: number, by: number, color: string, glow: boolean): void {
@@ -396,7 +431,7 @@ export class Renderer {
     const sy = y + 280;
     this.drawPanel(x, sy, SIDE_PANEL_W, 220);
     this.drawStat(x + 12, sy + 24, 'SCORE', s.score.toString());
-    this.drawStat(x + 12, sy + 60, 'HI-SCORE', s.hiScore.toString());
+    this.drawStat(x + 12, sy + 60, 'RULESET BEST', s.hiScore.toString());
     this.drawStat(x + 12, sy + 96, 'VOLTAGE TIER', s.level.toString());
     this.drawStat(x + 12, sy + 132, 'LINES', s.lines.toString());
     // Progress bar toward the next tier — lines-based advancement.
@@ -425,6 +460,16 @@ export class Renderer {
       ctx.font = 'bold 11px Consolas, monospace';
       ctx.fillText('⚡ VOLTAGE SPIKE', x + SIDE_PANEL_W - 12 - ctx.measureText('⚡ VOLTAGE SPIKE').width, sy + 200);
     }
+    const ry = sy + 234;
+    this.drawPanel(x, ry, SIDE_PANEL_W, 88);
+    ctx.fillStyle = COLORS.hudText;
+    ctx.font = '10px Consolas, monospace';
+    ctx.fillText(`${s.mode === 'boss-rush' ? 'BOSS RUSH' : 'FREE STACK'} / ${s.difficulty.toUpperCase()}`, x + 12, ry + 17);
+    ctx.fillStyle = COLORS.hudDim;
+    const fastest = s.fastestWinMs === null ? '--' : `${(s.fastestWinMs / 1000).toFixed(1)}s`;
+    ctx.fillText(`FASTEST WIN ${fastest}`, x + 12, ry + 36);
+    ctx.fillText(`SEED ${s.seed}`, x + 12, ry + 55);
+    ctx.fillText(`LEGACY BEST ${s.legacyHiScore}`, x + 12, ry + 74);
   }
 
   /**
@@ -930,23 +975,45 @@ export class Renderer {
     ctx.restore();
   }
 
-  /** Telegraph overlay for a pending boss attack. Garbage highlights the rows
-   *  about to be hit; other attacks pulse the board border. */
+  /** Payload coordinates match the post-attack board, including each hole. */
   private drawAttackWarning(warning: PendingAttack, time: number): void {
     const ctx = this.ctx;
     const blink = 0.25 + 0.2 * Math.sin(time * 0.02);
     ctx.save();
-    if (warning.kind === 'garbage' && warning.rows > 0) {
-      const rowsH = Math.min(warning.rows, ROWS) * CELL;
-      ctx.fillStyle = `rgba(255,43,74,${blink})`;
-      ctx.fillRect(this.boardX, this.boardY + BOARD_PX_H - rowsH, BOARD_PX_W, rowsH);
+    if (warning.kind === 'garbage' && warning.holes.length > 0) {
+      const rowsH = Math.min(warning.holes.length, ROWS) * CELL;
+      for (const [row, hole] of warning.holes.entries()) {
+        const y = this.boardY + BOARD_PX_H - rowsH + row * CELL;
+        ctx.fillStyle = `rgba(255,43,74,${blink})`;
+        for (let column = 0; column < COLS; column++) {
+          if (column !== hole) ctx.fillRect(this.boardX + column * CELL + 1, y + 1, CELL - 2, CELL - 2);
+        }
+        ctx.strokeStyle = COLORS.cyan;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(this.boardX + hole * CELL + 0.5, y + 0.5, CELL - 1, CELL - 1);
+      }
       ctx.fillStyle = '#ffdfe5';
-      ctx.font = 'bold 11px Consolas, monospace';
+      ctx.font = 'bold 10px Consolas, monospace';
       ctx.textAlign = 'center';
       ctx.fillText(
-        `▼ ${warning.rows} GARBAGE INBOUND ▼`,
+        `${warning.holes.length} ROWS - CLEAR LINES TO CANCEL (1:1)`,
         this.boardX + BOARD_PX_W / 2,
         this.boardY + BOARD_PX_H - rowsH - 6,
+      );
+    } else if (warning.kind === 'scramble') {
+      ctx.strokeStyle = COLORS.warn;
+      ctx.lineWidth = 2;
+      for (const column of warning.columns) {
+        ctx.fillStyle = `rgba(255,230,0,${blink * 0.35})`;
+        ctx.fillRect(this.boardX + column * CELL, this.boardY, CELL, BOARD_PX_H);
+        ctx.strokeRect(this.boardX + column * CELL + 0.5, this.boardY + 0.5, CELL - 1, BOARD_PX_H - 1);
+      }
+      ctx.fillStyle = COLORS.warn;
+      ctx.font = 'bold 10px Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(
+        warning.remainingMs <= 0 ? 'SCRAMBLE - WAITING FOR CLEARANCE' : 'THESE COLUMNS WILL SWAP',
+        this.boardX + BOARD_PX_W / 2, this.boardY + BOARD_PX_H - 10,
       );
     } else {
       ctx.strokeStyle = `rgba(255,230,0,${blink + 0.2})`;

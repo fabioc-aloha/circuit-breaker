@@ -6,10 +6,11 @@ import { EffectsManager } from './effects';
 import { frameDelta } from './frame-timing';
 import { Game } from './game';
 import { InputController } from './input';
-import { initializeMarketTicker } from './market-ticker';
+import { initializeMarketTicker, syncTickerSpeed } from './market-ticker';
 import { Renderer } from './renderer';
 import type { Volumes } from './storage';
-import { loadArr, loadDas, saveArr, saveDas } from './storage';
+import { loadArr, loadDas, loadReducedEffects, saveArr, saveDas, saveReducedEffects } from './storage';
+import { parseSeed } from './random';
 import { ARR_MAX_MS, ARR_MIN_MS, DAS_MAX_MS, DAS_MIN_MS } from './constants';
 import type { DifficultyId, GameMode } from './types';
 import './style.css';
@@ -20,6 +21,20 @@ const bootText = document.getElementById('boot-text')!;
 const bootMenu = document.getElementById('boot-menu')!;
 const hint = document.getElementById('hint')!;
 const muteButton = document.getElementById('audio-mute') as HTMLButtonElement;
+const seedInput = document.getElementById('run-seed') as HTMLInputElement;
+const reducedEffectsInput = document.getElementById('reduced-effects') as HTMLInputElement;
+let reducedEffects = loadReducedEffects();
+function syncReducedEffects(): void {
+  reducedEffectsInput.checked = reducedEffects;
+  document.body.classList.toggle('reduced-effects', reducedEffects);
+  if (!reducedEffects) syncTickerSpeed(document.getElementById('ticker-track')!);
+}
+syncReducedEffects();
+reducedEffectsInput.addEventListener('change', () => {
+  reducedEffects = reducedEffectsInput.checked;
+  saveReducedEffects(reducedEffects);
+  syncReducedEffects();
+});
 
 // Primary-input detection shared by the touch controls and the audio console
 // collapse. (pointer: coarse) is true when touch is the *primary* input —
@@ -169,6 +184,7 @@ function finishTyping(): void {
   bootIdx = BIOS_LINES.length; // halt the typeBoot chain
   bootText.textContent = BIOS_LINES.join('\n') + '\n';
   bootPhase = 'menu';
+  bootOverlay.classList.add('menu-open');
   bootMenu.hidden = false;
   hint.textContent = 'SELECT LOADOUT — ENTER TO INITIALIZE';
   syncBootMenu();
@@ -205,6 +221,15 @@ function handleMenuKey(key: string, ev: KeyboardEvent): void {
 
 function dismissBoot(): void {
   if (bootPhase === 'done') return;
+  let seed: number | null;
+  try {
+    seed = parseSeed(seedInput.value);
+  } catch (error) {
+    if (!(error instanceof RangeError)) throw error;
+    seedInput.setCustomValidity(error.message);
+    seedInput.reportValidity();
+    return;
+  }
   bootPhase = 'done';
   unlockAudio();
   game.mode = selMode;
@@ -212,10 +237,11 @@ function dismissBoot(): void {
   // Hide the menu immediately — the overlay fades for another 600ms, and
   // without this the loadout buttons stay clickable mid-run.
   bootMenu.hidden = true;
+  bootOverlay.classList.remove('menu-open');
   effects.spawnLightning(canvas.width * 0.15, 0, canvas.width * 0.65, canvas.height * 0.8, '#ffffff', 2.5);
   effects.flash(0.9, 180);
   effects.shake(6, 240);
-  game.beginRun();
+  game.beginRun(seed ?? undefined);
   if (!audioConsoleManual && coarsePointer.matches) setAudioConsoleCollapsed(true);
   bootOverlay.classList.add('done');
   hint.classList.add('hidden');
@@ -244,8 +270,9 @@ const input = new InputController({
   rotateCCW: () => game.rotateCCW(),
   rotate180: () => game.rotate180(),
   holdPiece: () => game.holdPiece(),
-  pause: () => game.pause(),
-  restart: () => game.restart(),
+  pause: () => { input.reset(); game.pause(); },
+  suspend: () => { game.suspend(); syncPauseOverlay(); },
+  restart: () => { input.reset(); game.restart(); },
   toggleMute: () => game.toggleMute(),
   start: () => {
     // Typing phase: any key skips to the loadout menu. Menu phase: keys are
@@ -279,6 +306,13 @@ document.getElementById('das-up')!.addEventListener('click', () => setDas(dasMs 
 document.getElementById('arr-down')!.addEventListener('click', () => setArr(arrMs - 5));
 document.getElementById('arr-up')!.addEventListener('click', () => setArr(arrMs + 5));
 document.getElementById('boot-start')!.addEventListener('click', () => dismissBoot());
+seedInput.addEventListener('input', () => seedInput.setCustomValidity(''));
+seedInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    dismissBoot();
+  }
+});
 
 // Touch controls — shown only when touch is the primary input, so they never
 // appear on desktop (including touchscreen laptops).
@@ -309,7 +343,7 @@ touchControls.querySelectorAll<HTMLButtonElement>('button').forEach((btn) => {
       case 'r180': game.rotate180(); break;
       case 'hold': game.holdPiece(); break;
       case 'drop': game.hardDrop(); break;
-      case 'pause': game.pause(); break;
+      case 'pause': input.reset(); game.pause(); break;
     }
   });
   const release = (e: PointerEvent): void => {
@@ -326,9 +360,11 @@ touchControls.querySelectorAll<HTMLButtonElement>('button').forEach((btn) => {
 // Pause overlay — DOM buttons so pausing never depends on keyboard focus.
 const pauseOverlay = document.getElementById('pause-overlay')!;
 document.getElementById('pause-resume')!.addEventListener('click', () => {
+  input.reset();
   if (game.phase === 'paused') game.pause();
 });
 document.getElementById('pause-restart')!.addEventListener('click', () => {
+  input.reset();
   game.restart();
 });
 let pauseOverlayShown = false;
@@ -352,7 +388,7 @@ document.addEventListener('visibilitychange', () => {
 function loop(now: number): void {
   const dt = frameDelta(now, last);
   last = now;
-  input.update();
+  input.update(dt);
   game.update(dt);
   effects.update(dt, canvas.width, canvas.height);
   syncPauseOverlay();
@@ -366,6 +402,13 @@ function loop(now: number): void {
     nextQueue: game.nextQueuePreview(3),
     score: game.score,
     hiScore: game.hiScore,
+    legacyHiScore: game.legacyHiScore,
+    fastestWinMs: game.fastestWinMs,
+    seed: game.seed,
+    mode: game.mode,
+    difficulty: game.difficulty,
+    reducedEffects,
+    spawnPreview: game.spawnPreview,
     lines: game.lines,
     level: game.level,
     combo: game.combo,

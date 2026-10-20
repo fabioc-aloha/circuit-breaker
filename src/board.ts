@@ -156,10 +156,15 @@ export class Board {
 
   /** Rise N garbage rows from the bottom with a random hole column. */
   addGarbage(rows: number, holeCol?: number): boolean {
+    return this.addGarbageWithHoles(
+      Array.from({ length: rows }, () => holeCol ?? Math.floor(Math.random() * COLS)),
+    );
+  }
+
+  addGarbageWithHoles(holes: readonly number[]): boolean {
     let displacedBlocks = false;
-    for (let i = 0; i < rows; i++) {
+    for (const hole of holes) {
       if (this.grid[0].some((value) => value !== 0)) displacedBlocks = true;
-      const hole = holeCol ?? Math.floor(Math.random() * COLS);
       const row: CellValue[] = Array<CellValue>(COLS).fill('G');
       row[hole] = 0;
       this.grid.push(row);
@@ -169,13 +174,18 @@ export class Board {
   }
 
   /** Swap two columns (FEEDBACK LOOP attack). */
-  scrambleColumns(a: number, b: number): void {
-    if (a === b) return;
+  scrambleColumns(a: number, b: number, active: ActivePiece | null = null): boolean {
+    if (active && cellsOf(active).some(({ x, y }) => {
+      const sourceX = x === a ? b : x === b ? a : x;
+      return y >= 0 && y < TOTAL_ROWS && this.grid[y][sourceX] !== 0;
+    })) return false;
+    if (a === b) return true;
     for (let y = 0; y < TOTAL_ROWS; y++) {
       const tmp = this.grid[y][a];
       this.grid[y][a] = this.grid[y][b];
       this.grid[y][b] = tmp;
     }
+    return true;
   }
 
   /** True if any cell in hidden rows is filled (topped out). */

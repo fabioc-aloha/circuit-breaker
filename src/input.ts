@@ -1,5 +1,6 @@
 // CIRCUIT BREAKER — keyboard input with DAS/ARR
-import { ARR_MS, DAS_MS } from './constants';
+import { ARR_MS, COLS, DAS_MS } from './constants';
+import { frameDelta } from './frame-timing';
 
 export interface InputActions {
   moveLeft(): void;
@@ -11,6 +12,7 @@ export interface InputActions {
   rotate180(): void;
   holdPiece(): void;
   pause(): void;
+  suspend(): void;
   restart(): void;
   toggleMute(): void;
   start(): void; // any-key start / boot dismiss
@@ -29,14 +31,14 @@ export class InputController {
   private rightHeldMs = 0;
   private leftRepeatMs = 0;
   private rightRepeatMs = 0;
-  private lastFrame = 0;
 
   constructor(actions: InputActions) {
     this.actions = actions;
-    this.lastFrame = performance.now();
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
     window.addEventListener('pointerdown', this.onPointerDown, { once: false });
+    window.addEventListener('blur', this.onFocusLost);
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
   }
 
   /** Tune auto-shift / auto-repeat (persisted; adjustable on the boot screen). */
@@ -70,31 +72,52 @@ export class InputController {
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
     window.removeEventListener('pointerdown', this.onPointerDown);
+    window.removeEventListener('blur', this.onFocusLost);
+    document.removeEventListener('visibilitychange', this.onVisibilityChange);
+    this.reset();
   }
 
+  reset(): void {
+    this.leftDown = this.rightDown = this.downDown = false;
+    this.leftHeldMs = this.rightHeldMs = 0;
+    this.leftRepeatMs = this.rightRepeatMs = 0;
+    this.actions.softDrop(false);
+  }
+
+  private onFocusLost = (): void => {
+    this.reset();
+    this.actions.suspend();
+  };
+
+  private onVisibilityChange = (): void => {
+    if (document.hidden) this.onFocusLost();
+  };
+
   /** Call each frame to service DAS/ARR + soft-drop hold. */
-  update(): void {
-    const now = performance.now();
-    const dt = now - this.lastFrame;
-    this.lastFrame = now;
+  update(elapsedMs: number): void {
+    const dt = frameDelta(elapsedMs, 0);
 
     if (this.leftDown) {
+      const previous = this.leftHeldMs;
       this.leftHeldMs += dt;
       if (this.leftHeldMs >= this.dasMs) {
-        this.leftRepeatMs += dt;
-        while (this.leftRepeatMs >= this.arrMs) {
+        this.leftRepeatMs += Math.max(0, this.leftHeldMs - this.dasMs) - Math.max(0, previous - this.dasMs);
+        const repeats = Math.min(COLS, Math.floor(this.leftRepeatMs / this.arrMs));
+        this.leftRepeatMs %= this.arrMs;
+        for (let i = 0; i < repeats; i++) {
           this.actions.moveLeft();
-          this.leftRepeatMs -= this.arrMs;
         }
       }
     }
     if (this.rightDown) {
+      const previous = this.rightHeldMs;
       this.rightHeldMs += dt;
       if (this.rightHeldMs >= this.dasMs) {
-        this.rightRepeatMs += dt;
-        while (this.rightRepeatMs >= this.arrMs) {
+        this.rightRepeatMs += Math.max(0, this.rightHeldMs - this.dasMs) - Math.max(0, previous - this.dasMs);
+        const repeats = Math.min(COLS, Math.floor(this.rightRepeatMs / this.arrMs));
+        this.rightRepeatMs %= this.arrMs;
+        for (let i = 0; i < repeats; i++) {
           this.actions.moveRight();
-          this.rightRepeatMs -= this.arrMs;
         }
       }
     }
@@ -107,6 +130,7 @@ export class InputController {
   };
 
   private onKeyDown = (e: KeyboardEvent): void => {
+    if (e.target instanceof HTMLElement && e.target.closest('input, select, textarea, [contenteditable="true"]')) return;
     // Prevent scrolling with space/arrows.
     if ([' ', 'ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp'].includes(e.key)) e.preventDefault();
     if (e.repeat) return;

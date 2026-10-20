@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>⚡ CIRCUIT BREAKER</title>
+    <title>CIRCUIT BREAKER</title>
     <meta name="description" content="Play a high-voltage cyberpunk block-stacker with Boss Rush mode." />
     <link rel="canonical" href="https://cb.correax.com/" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="⚡ CIRCUIT BREAKER" />
+    <meta property="og:title" content="CIRCUIT BREAKER" />
     <meta property="og:description" content="Play a high-voltage cyberpunk block-stacker with Boss Rush mode." />
     <meta property="og:url" content="https://cb.correax.com/" />
     <meta property="og:image" content="https://cb.correax.com/circuit-breaker-social.png" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="⚡ CIRCUIT BREAKER" />
+    <meta name="twitter:title" content="CIRCUIT BREAKER" />
     <meta name="twitter:description" content="Play a high-voltage cyberpunk block-stacker with Boss Rush mode." />
     <meta name="twitter:image" content="https://cb.correax.com/circuit-breaker-social.png" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='28'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E" />
@@ -34,9 +34,9 @@
             <div class="chase-lights bottom" aria-hidden="true"></div>
           </div>
           <div class="ticker">
-            <div id="ticker-track" class="ticker-track" aria-label="Arcade ticker and indicative market quotes">
-              <div class="ticker-loop">◆ HIGH VOLTAGE BLOCK STACKER ◆ BOSS RUSH PROTOCOL ◆ STACK THE CURRENT ◆ TRIP THE MAINFRAME ◆ INSERT COIN TO CONTINUE ◆</div>
-              <div class="ticker-loop" aria-hidden="true">◆ HIGH VOLTAGE BLOCK STACKER ◆ BOSS RUSH PROTOCOL ◆ STACK THE CURRENT ◆ TRIP THE MAINFRAME ◆ INSERT COIN TO CONTINUE ◆</div>
+            <div id="ticker-track" class="ticker-track" aria-label="Circuit Breaker AI Portfolio indicative market quotes">
+              <div class="ticker-loop">Circuit Breaker AI Portfolio</div>
+              <div class="ticker-loop" aria-hidden="true">Circuit Breaker AI Portfolio</div>
             </div>
             <div class="ticker-fade ticker-fade-l" aria-hidden="true"></div>
             <div class="ticker-fade ticker-fade-r" aria-hidden="true"></div>
@@ -51,10 +51,10 @@
           <div id="pause-overlay" class="pause-overlay" hidden>
             <div class="pause-panel" role="dialog" aria-label="Game paused">
               <div class="pause-title">⏸ PAUSED</div>
-              <div class="pause-sub">P / ESC — RESUME&nbsp;&nbsp;·&nbsp;&nbsp;R — RESTART</div>
+              <div class="pause-sub">P / ESC — RESUME&nbsp;&nbsp;·&nbsp;&nbsp;R — RETRY SEED</div>
               <div class="pause-actions">
                 <button type="button" id="pause-resume" class="pause-btn">▶ RESUME</button>
-                <button type="button" id="pause-restart" class="pause-btn pause-btn-warn">↻ RESTART</button>
+                <button type="button" id="pause-restart" class="pause-btn pause-btn-warn">↻ RETRY SEED</button>
               </div>
             </div>
           </div>
@@ -73,6 +73,11 @@
                 <button type="button" class="boot-opt" data-diff="overdrive">[5] OVERDRIVE</button>
               </div>
               <div class="boot-menu-row">
+                <label class="boot-menu-label" for="run-seed">RUN SEED</label>
+                <input id="run-seed" class="seed-input" type="text" inputmode="numeric" maxlength="10" placeholder="RANDOM" aria-describedby="seed-help" />
+                <span id="seed-help" class="boot-menu-label">0–4294967295 · R RETRIES THIS SEED</span>
+              </div>
+              <div class="boot-menu-row">
                 <span class="boot-menu-label">DAS <span id="das-val" class="boot-val"></span></span>
                 <button type="button" class="boot-opt boot-step" id="das-down" title="DAS -10ms" aria-label="Decrease DAS">−</button>
                 <button type="button" class="boot-opt boot-step" id="das-up" title="DAS +10ms" aria-label="Increase DAS">+</button>
@@ -84,7 +89,7 @@
                 <tr><td>← →</td><td>MOVE</td><td>↓</td><td>SOFT DROP</td></tr>
                 <tr><td>SPACE</td><td>HARD DROP</td><td>↑ / X · Z</td><td>ROTATE ↻ · ↺</td></tr>
                 <tr><td>A</td><td>180° SPIN</td><td>SHIFT / C</td><td>HOLD</td></tr>
-                <tr><td>P</td><td>PAUSE</td><td>R · M</td><td>RESTART · MUTE</td></tr>
+                <tr><td>P</td><td>PAUSE</td><td>R · M</td><td>RETRY SEED · MUTE</td></tr>
               </table>
               <button type="button" id="boot-start" class="boot-start">▶ INITIALIZE&nbsp;&nbsp;(ENTER)</button>
             </div>
@@ -144,6 +149,11 @@
             <button id="audio-mute" type="button" title="Mute audio (M)"></button>
           </div>
         </section>
+        <label class="effects-setting" for="reduced-effects">
+          <input id="reduced-effects" type="checkbox" />
+          REDUCED EFFECTS
+          <span>No shake, flashes, or foreground effects</span>
+        </label>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

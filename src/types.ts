@@ -64,10 +64,15 @@ export interface CutsceneState {
 export type GameMode = 'boss-rush' | 'free-stack';
 export type DifficultyId = 'chill' | 'normal' | 'overdrive';
 
-export interface PendingAttack {
-  kind: BossAttackKind;
-  rows: number; // garbage rows (0 for non-garbage attacks)
-  remainingMs: number;
+export type PendingAttack = { remainingMs: number } & (
+  | { kind: 'garbage'; holes: number[] }
+  | { kind: 'scramble'; columns: [number, number] }
+  | { kind: 'spike' | 'blackout' }
+);
+
+export interface SpawnPreview {
+  piece: ActivePiece;
+  adjusted: boolean;
 }
 
 /** Per-run stats shown on the game-over / victory summary. */

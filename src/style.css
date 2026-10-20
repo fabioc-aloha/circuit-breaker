@@ -8,6 +8,51 @@
   --red: #ff2b4a;
 }
 
+.seed-input {
+  width: 130px;
+  padding: 8px;
+  border: 1px solid var(--cyan);
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.effects-setting {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 4px 8px;
+  color: var(--cyan);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.effects-setting input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--cyan);
+}
+
+.effects-setting span {
+  color: var(--fg);
+  font-size: 10px;
+}
+
+body.reduced-effects *,
+body.reduced-effects *::before,
+body.reduced-effects *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+body.reduced-effects .ticker {
+  display: none;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -182,7 +227,7 @@ body {
   display: flex;
   width: max-content;
   white-space: nowrap;
-  animation: scroll-x 32s linear infinite;
+  animation: ticker-enter 0s linear, scroll-x 32s linear infinite;
   /* Promote to a compositor layer up front so the infinite crawl never
      hitches on first paint; the transform-only keyframes stay on the GPU. */
   will-change: transform;
@@ -206,11 +251,14 @@ body {
 }
 
 .ticker-quote {
-  padding: 0 12px 0 10px;
-  border-left: 1px solid rgba(230, 248, 255, 0.32);
-  border-right: 1px solid rgba(230, 248, 255, 0.32);
   color: var(--fg);
   font-weight: 700;
+}
+
+.ticker-phrase + .ticker-quote,
+.ticker-quote + .ticker-quote {
+  border-left: 1px solid rgba(230, 248, 255, 0.32);
+  padding-left: 18px;
 }
 
 .ticker-up {
@@ -270,10 +318,10 @@ body {
 #game {
   display: block;
   max-width: 100%;
-  /* Reserve room for the real chrome (marquee + coin slot + audio console +
-     gaps + padding ≈ 360px) so the cabinet fits the viewport without the
+  /* Reserve room for the chrome, mixer, effects setting, gaps, and padding
+     so the cabinet fits the viewport without the
      page needing to scroll at common desktop heights. */
-  max-height: calc(100vh - 360px);
+  max-height: calc(100vh - 400px);
   height: auto;
   image-rendering: pixelated;
   border-radius: 6px;
@@ -538,6 +586,26 @@ body {
   pointer-events: none;
 }
 
+.boot-overlay.menu-open {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 8px;
+  pointer-events: auto;
+}
+
+.boot-overlay.menu-open pre {
+  display: none;
+}
+
+.boot-overlay.menu-open .boot-menu,
+.boot-overlay.menu-open #hint {
+  flex-shrink: 0;
+}
+
 #hint {
   /* In-flow under the boot menu: the old absolute positioning overlapped the
      INITIALIZE button, ghosting its label and swallowing clicks. */
@@ -740,6 +808,11 @@ body {
   0%, 78%, 100% { opacity: 0.42; }
   82%, 88% { opacity: 1; }
   85%, 91% { opacity: 0.65; }
+}
+
+@keyframes ticker-enter {
+  from { transform: translateX(var(--ticker-entry-offset, 0px)); }
+  to   { transform: translateX(0); }
 }
 
 @keyframes scroll-x {

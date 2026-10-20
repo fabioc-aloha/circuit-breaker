@@ -1,4 +1,4 @@
-export const QUOTE_SYMBOLS = ['MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'AMD', 'AVGO', 'ORCL', 'PLTR', 'TSM'];
+export const QUOTE_SYMBOLS = ['MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'AMD', 'AVGO', 'ORCL', 'PLTR', 'TSM', 'MU', 'ANET', 'VRT'];
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 3_000;
@@ -16,7 +16,8 @@ function quoteValidationError(symbol) {
 export function normalizeYahooQuote(symbol, payload) {
   const meta = payload?.chart?.result?.[0]?.meta;
   const price = Number(meta?.regularMarketPrice);
-  const previousClose = Number(meta?.chartPreviousClose);
+  // chartPreviousClose is range-dependent, not necessarily the prior session.
+  const previousClose = Number(meta?.previousClose);
   if (!Number.isFinite(price) || price <= 0 || !Number.isFinite(previousClose) || previousClose <= 0) {
     throw quoteValidationError(symbol);
   }
@@ -37,7 +38,7 @@ export function normalizeYahooQuote(symbol, payload) {
 }
 
 function quoteUrl(symbol) {
-  return `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d`;
+  return `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1d&interval=1m`;
 }
 
 function wait(delayMs) {

@@ -16,7 +16,7 @@ export interface TickerSegment {
 export const QUOTE_FETCH_OPTIONS = { cache: 'default' } as const;
 
 // Constant crawl speed (px/sec) so the ticker reads the same whether it's
-// showing the 10-phrase fallback or a full board of live quotes. The CSS
+// showing the portfolio name alone or a full board of live quotes. The CSS
 // keeps a 32s fallback duration for first paint / no-JS; once the track is
 // measured we override animation-duration inline.
 export const TICKER_PX_PER_SEC = 70;
@@ -27,33 +27,26 @@ export function tickerDurationForWidth(trackWidthPx: number): number {
 }
 
 /**
- * Pin the CSS animation duration to the measured content width and restart
- * the animation so the -50% loop seam stays aligned with the fresh content.
+ * Enter from the viewport's right edge, then loop at the same crawl speed.
+ * Restart so the -50% loop seam stays aligned with fresh content.
  * Without the restart, replacing children mid-flight moves the seam and the
  * crawl visibly pops when quotes arrive.
  */
-function syncTickerSpeed(track: HTMLElement): void {
+export function syncTickerSpeed(track: HTMLElement): void {
   const half = track.scrollWidth / 2;
   if (!(half > 0)) return;
-  track.style.animationDuration = `${tickerDurationForWidth(track.scrollWidth)}s`;
+  const entryWidth = track.parentElement?.clientWidth ?? 0;
+  const entrySeconds = entryWidth / TICKER_PX_PER_SEC;
+  track.style.setProperty('--ticker-entry-offset', `${entryWidth}px`);
+  track.style.animationDuration = `${entrySeconds}s, ${tickerDurationForWidth(track.scrollWidth)}s`;
+  track.style.animationDelay = `0s, ${entrySeconds}s`;
   track.style.animationName = 'none';
   // Force reflow so the animation-name toggle takes effect.
   void track.offsetWidth;
   track.style.animationName = '';
 }
 
-const ARCADE_PHRASES = [
-  'INSERT COIN TO CONTINUE',
-  'VIBE CODE DEPLOYED',
-  'LOOP ENGINEERING ACTIVE',
-  'PROMPT STACK OVERCLOCKED',
-  'AGENT MODE ENGAGED',
-  'TOKEN BUDGET CRITICAL',
-  'CONTEXT WINDOW MAXED',
-  'INFERENCE ENGINE HOT',
-  'RAG PIPELINE ARMED',
-  'HUMAN IN THE LOOP',
-];
+const PORTFOLIO_NAME = 'Circuit Breaker AI Portfolio';
 
 function formatQuote(quote: MarketQuote): string {
   const arrow = quote.direction === 'up' ? '▲' : quote.direction === 'down' ? '▼' : '◆';
@@ -62,13 +55,8 @@ function formatQuote(quote: MarketQuote): string {
 }
 
 export function buildTickerSegments(quotes: MarketQuote[]): TickerSegment[] {
-  if (quotes.length === 0) return ARCADE_PHRASES.map((text) => ({ type: 'phrase', text }));
-
-  const segments: TickerSegment[] = [];
-  for (let quoteIndex = 0; quoteIndex < quotes.length; quoteIndex++) {
-    const text = ARCADE_PHRASES[quoteIndex % ARCADE_PHRASES.length];
-    segments.push({ type: 'phrase', text });
-    const quote = quotes[quoteIndex];
+  const segments: TickerSegment[] = [{ type: 'phrase', text: PORTFOLIO_NAME }];
+  for (const quote of quotes) {
     segments.push({
       type: 'quote',
       text: formatQuote(quote),
@@ -105,7 +93,7 @@ function renderTicker(track: HTMLElement, segments: TickerSegment[]): void {
     for (const segment of loops[loopIndex]) {
       const item = document.createElement('span');
       item.className = `ticker-segment ticker-${segment.type}${segment.direction ? ` ticker-${segment.direction}` : ''}`;
-      item.textContent = `◆ ${segment.text} `;
+      item.textContent = segment.text;
       if (segment.type === 'quote') {
         item.title = segment.marketTime
           ? `Indicative quote as of ${new Date(segment.marketTime).toLocaleString()}`
@@ -136,6 +124,6 @@ export async function initializeMarketTicker(): Promise<void> {
     const quotes = payload.quotes.filter(isMarketQuote);
     if (quotes.length > 0) renderTicker(track, buildTickerSegments(quotes));
   } catch {
-    // The arcade crawl remains usable when delayed quote data is unavailable.
+    // Keep the portfolio name visible when delayed quote data is unavailable.
   }
 }

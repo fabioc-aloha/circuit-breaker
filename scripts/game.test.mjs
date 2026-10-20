@@ -231,14 +231,7 @@ test('raises the active piece with a garbage attack', () => {
   const game = createGame();
   game.beginRun();
   game.active = { kind: 'T', rotation: 0, x: 3, y: 10 };
-  const originalRandom = Math.random;
-  Math.random = () => 0;
-
-  try {
-    game.executeAttack('garbage');
-  } finally {
-    Math.random = originalRandom;
-  }
+  game.executeAttack({ kind: 'garbage', holes: [0], remainingMs: 0 });
 
   assert.equal(game.active.y, 9);
 });
@@ -247,14 +240,7 @@ test('allows garbage attacks to raise four rows', () => {
   const game = createGame();
   game.beginRun();
   game.active = { kind: 'T', rotation: 0, x: 3, y: 10 };
-  const originalRandom = Math.random;
-  Math.random = () => 0.99;
-
-  try {
-    game.executeAttack('garbage');
-  } finally {
-    Math.random = originalRandom;
-  }
+  game.executeAttack({ kind: 'garbage', holes: [9, 9, 9, 9], remainingMs: 0 });
 
   assert.equal(game.active.y, 6);
 });
@@ -326,13 +312,7 @@ test('flushes a pending line-clear before applying a garbage attack', () => {
   game.pendingLineClear = { rows: [21], remainingMs: 200 };
   game.board.clearingRows.add(21);
 
-  const originalRandom = Math.random;
-  Math.random = () => 0.5;
-  try {
-    game.executeAttack('garbage');
-  } finally {
-    Math.random = originalRandom;
-  }
+  game.executeAttack({ kind: 'garbage', holes: [5, 5, 5], remainingMs: 0 });
 
   // Pending clear resolved: the full row is gone, clearing set empty, and
   // one garbage row now sits at the bottom.
@@ -346,14 +326,7 @@ test('ends the run when garbage displaces blocks above the board', () => {
   const { game, effects } = createGameWithEffects();
   game.beginRun();
   game.board.grid[0][0] = 'T';
-  const originalRandom = Math.random;
-  Math.random = () => 0;
-
-  try {
-    game.executeAttack('garbage');
-  } finally {
-    Math.random = originalRandom;
-  }
+  game.executeAttack({ kind: 'garbage', holes: [0], remainingMs: 0 });
 
 
   assert.equal(game.phase, 'gameover');
@@ -497,7 +470,7 @@ test('telegraphs a boss attack before executing it', () => {
 
   // Warning is live, attack has not landed yet.
   assert.ok(game.pendingAttack);
-  assert.equal(game.pendingAttack.remainingMs, ATTACK_WARNING_MS - 5);
+  assert.equal(game.pendingAttack.remainingMs, ATTACK_WARNING_MS);
   assert.equal(game.isSpike(), false);
 
   game.update(ATTACK_WARNING_MS);
@@ -510,7 +483,7 @@ test('holds garbage rows back until the telegraph window expires', () => {
   const game = createGame();
   game.beginRun();
   game.active = { kind: 'T', rotation: 0, x: 3, y: 10 };
-  game.pendingAttack = { kind: 'garbage', rows: 2, remainingMs: 500 };
+  game.pendingAttack = { kind: 'garbage', holes: [2, 7], remainingMs: 500 };
 
   game.update(499);
 
@@ -628,4 +601,403 @@ test('pause is a no-op outside playing/paused phases', () => {
   assert.equal(game.phase, 'ready');
   game.pause();
   assert.equal(game.phase, 'ready');
+});
+
+test('run time counts playing updates, not pauses or cutscenes', () => {
+  const game = createGame();
+  game.beginRun();
+  game.update(100);
+  game.phase = 'paused';
+  game.update(10_000);
+  game.phase = 'cutscene';
+  game.update(1000);
+  assert.equal(game.runStats.timeMs, 100);
+});
+
+test('run summary stops changing after game over or victory', () => {
+  for (const end of ['gameOver', 'victory']) {
+    const game = createGame();
+    game.beginRun();
+    game.update(500);
+    game[end]();
+    const stats = game.runStats;
+    game.update(5000);
+    assert.deepEqual(game.runStats, stats);
+    assert.equal(game.runStats.timeMs, 500);
+  }
+});
+
+test('status effects consume only active gameplay time', () => {
+  const game = createGame();
+  game.beginRun();
+  game.executeAttack({ kind: 'spike', remainingMs: 0 });
+  game.executeAttack({ kind: 'blackout', remainingMs: 0 });
+  game.phase = 'paused';
+  game.update(20_000);
+  assert.equal(game.isSpike(), true);
+  assert.equal(game.isBlackout(), true);
+  game.phase = 'playing';
+  game.update(6000);
+  assert.equal(game.isSpike(), false);
+  assert.equal(game.isBlackout(), true);
+  game.update(4000);
+  assert.equal(game.isBlackout(), false);
+});
+
+test('focus suspension is idempotent and preserves the paused phase', () => {
+  const game = createGame();
+  game.beginRun();
+  game.suspend();
+  game.suspend();
+  assert.equal(game.phase, 'paused');
+  game.update(5000);
+  assert.equal(game.runStats.timeMs, 0);
+});
+
+test('resuming a suspended cutscene preserves its remaining duration', () => {
+  const game = createGame();
+  game.beginRun();
+  game.phase = 'cutscene';
+  game.cutscene = { text: ['NEXT BOSS'], timer: 1000 };
+  game.suspend();
+  game.update(5000);
+  assert.equal(game.cutscene.timer, 1000);
+  game.lastPauseToggleMs = -Infinity;
+  game.pause();
+  assert.equal(game.phase, 'cutscene');
+});
+
+const { InputController } = loadTypeScriptModule(path.join(root, 'src', 'input.ts'));
+
+function withInput(run) {
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  globalThis.window = new EventTarget();
+  globalThis.document = new EventTarget();
+  globalThis.document.hidden = false;
+  let moves = 0;
+  let suspended = 0;
+  let dropping = false;
+  const input = new InputController({
+    moveLeft: () => { moves++; },
+    moveRight: () => { moves++; },
+    softDrop: (held) => { dropping = held; },
+    suspend: () => { suspended++; },
+  });
+  try {
+    run(input, () => ({ moves, suspended, dropping }));
+  } finally {
+    input.destroy();
+    globalThis.window = previousWindow;
+    globalThis.document = previousDocument;
+  }
+}
+
+test('input reset releases movement and soft drop', () => withInput((input, state) => {
+  input.setLeftHeld(true);
+  input.setSoftDropHeld(true);
+  input.reset();
+  input.update(1000);
+  assert.deepEqual(state(), { moves: 1, suspended: 0, dropping: false });
+}));
+
+test('input repeat uses only time after the DAS threshold', () => withInput((input, state) => {
+  input.setTimings(150, 40);
+  input.setLeftHeld(true);
+  input.update(140);
+  input.update(20);
+  assert.equal(state().moves, 1);
+  input.update(30);
+  assert.equal(state().moves, 2);
+}));
+
+test('input repeat caps catch-up work after a stalled frame', () => withInput((input, state) => {
+  input.setTimings(50, 10);
+  input.setLeftHeld(true);
+  input.lastFrame = performance.now() - 60_000;
+  input.update(60_000);
+  assert.ok(state().moves <= 11);
+}));
+
+test('blur and hidden document clear inputs and suspend without auto-resuming', () => withInput((input, state) => {
+  input.setLeftHeld(true);
+  input.setSoftDropHeld(true);
+  window.dispatchEvent(new Event('blur'));
+  document.hidden = true;
+  document.dispatchEvent(new Event('visibilitychange'));
+  document.hidden = false;
+  document.dispatchEvent(new Event('visibilitychange'));
+  input.update(1000);
+  assert.deepEqual(state(), { moves: 1, suspended: 2, dropping: false });
+}));
+
+test('garbage execution uses the exact holes scheduled in the warning', () => {
+  const game = createGame();
+  game.beginRun();
+  game.pendingAttack = { kind: 'garbage', holes: [2, 7], remainingMs: 1 };
+  game.update(1);
+  assert.equal(game.board.grid[20][2], 0);
+  assert.equal(game.board.grid[21][7], 0);
+  assert.equal(game.board.grid[20].filter((v) => v === 'G').length, 9);
+  assert.equal(game.board.grid[21].filter((v) => v === 'G').length, 9);
+});
+
+function clearSingle(game) {
+  game.active = { kind: 'I', rotation: 0, x: 0, y: 20 };
+  game.board.grid[21] = [0, 0, 0, 0, 'J', 'J', 'J', 'J', 'J', 'J'];
+  game.lockAndAdvance();
+}
+
+test('a single clear cancels the earliest incoming garbage row', () => {
+  const game = createGame();
+  game.beginRun();
+  game.pendingAttack = { kind: 'garbage', holes: [2, 7, 5], remainingMs: 900 };
+  clearSingle(game);
+  assert.deepEqual(game.pendingAttack, { kind: 'garbage', holes: [7, 5], remainingMs: 900 });
+});
+
+test('cancelling all incoming garbage removes its warning without adding rows', () => {
+  const game = createGame();
+  game.beginRun();
+  game.pendingAttack = { kind: 'garbage', holes: [2], remainingMs: 900 };
+  clearSingle(game);
+  assert.equal(game.pendingAttack, null);
+  game.update(1000);
+  assert.equal(game.board.grid.flat().includes('G'), false);
+});
+
+test('a large frame cannot consume a newly scheduled warning', () => {
+  const game = createGame();
+  game.beginRun();
+  game.boss.attackTimer = 0;
+  game.update(1000);
+  assert.equal(game.isSpike(), false);
+  assert.equal(game.pendingAttack.remainingMs, ATTACK_WARNING_MS);
+});
+
+test('unsafe scramble is deferred atomically until the active piece clears', () => {
+  const game = createGame();
+  game.beginRun();
+  game.active = { kind: 'O', rotation: 0, x: 3, y: 10 };
+  game.board.grid[10][0] = 'J';
+  const before = structuredClone(game.board.grid);
+  game.pendingAttack = { kind: 'scramble', columns: [0, 4], remainingMs: 0 };
+  game.update(0);
+  assert.deepEqual(game.board.grid, before);
+  assert.ok(game.pendingAttack);
+  assert.equal(game.board.collides(game.active), false);
+  game.active = null;
+  game.update(0);
+  assert.equal(game.pendingAttack, null);
+  assert.equal(game.board.grid[10][4], 'J');
+});
+
+test('fatal garbage stops the current update before further gravity or locking', () => {
+  const game = createGame();
+  game.beginRun();
+  game.board.grid[0][0] = 'J';
+  game.active = { kind: 'O', rotation: 0, x: 3, y: 10 };
+  game.gravityTimer = 999;
+  game.pendingAttack = { kind: 'garbage', holes: [0], remainingMs: 1 };
+  game.update(100);
+  assert.equal(game.phase, 'gameover');
+  assert.equal(game.active.y, 9);
+  assert.equal(game.piecesPlaced, 0);
+});
+
+test('identical run seeds reproduce pieces, boss payloads, and Kong targets', () => {
+  const a = createGame({ seed: 12345 });
+  const b = createGame({ seed: 12345 });
+  a.beginRun();
+  b.beginRun();
+  assert.equal(a.seed, 12345);
+  assert.equal(b.seed, 12345);
+  for (let i = 0; i < 30; i++) {
+    assert.equal(a.bag.next(), b.bag.next());
+    assert.deepEqual(a.makeAttack('garbage'), b.makeAttack('garbage'));
+    assert.deepEqual(a.makeAttack('scramble'), b.makeAttack('scramble'));
+    a.kong.pickNewTarget();
+    b.kong.pickNewTarget();
+    assert.equal(a.kong.targetX, b.kong.targetX);
+  }
+});
+
+test('queue peeks and cosmetic randomness cannot perturb gameplay streams', () => {
+  const a = createGame({ seed: 22 });
+  const b = createGame({ seed: 22 });
+  a.beginRun();
+  b.beginRun();
+  a.bag.peek(100);
+  const effects = new EffectsManager();
+  effects.spawnSpark(0, 0, '#fff', 30);
+  for (let i = 0; i < 20; i++) {
+    a.makeAttack('garbage');
+    a.kong.pickNewTarget();
+  }
+  assert.deepEqual(Array.from({ length: 70 }, () => a.bag.next()), Array.from({ length: 70 }, () => b.bag.next()));
+  assert.deepEqual(a.makeAttack('scramble'), b.makeAttack('scramble'));
+});
+
+test('seeded restart restores the original random sequences', () => {
+  const game = createGame({ seed: 72 });
+  game.beginRun();
+  const queue = game.bag.peek(14);
+  const attack = game.makeAttack('garbage');
+  game.restart();
+  assert.equal(game.seed, 72);
+  assert.deepEqual(game.bag.peek(14), queue);
+  assert.deepEqual(game.makeAttack('garbage'), attack);
+});
+
+test('seed parsing rejects malformed or out-of-range numbers without coercion', () => {
+  const { parseSeed } = loadTypeScriptModule(path.join(root, 'src', 'random.ts'));
+  assert.equal(parseSeed(''), null);
+  assert.equal(parseSeed('0'), 0);
+  assert.equal(parseSeed('4294967295'), 4294967295);
+  for (const bad of ['-1', '1.5', 'NaN', '4294967296', '1e3', 'abc']) {
+    assert.throws(() => parseSeed(bad), RangeError);
+  }
+});
+
+const storageModule = loadTypeScriptModule(path.join(root, 'src', 'storage.ts'));
+function withStorage(run) {
+  const previous = globalThis.localStorage;
+  const previousWarn = console.warn;
+  const warnings = [];
+  console.warn = (...args) => warnings.push(args);
+  const entries = new Map();
+  globalThis.localStorage = {
+    getItem: (key) => entries.get(key) ?? null,
+    setItem: (key, value) => entries.set(key, value),
+  };
+  try { run(entries, warnings); } finally {
+    globalThis.localStorage = previous;
+    console.warn = previousWarn;
+  }
+}
+
+test('records separate modes and difficulties while preserving legacy high scores', () => withStorage((entries) => {
+  entries.set('cb.hiscore', '9000');
+  storageModule.saveRunRecord('boss-rush', 'normal', 100, null);
+  storageModule.saveRunRecord('free-stack', 'normal', 200, null);
+  storageModule.saveRunRecord('boss-rush', 'chill', 300, null);
+  assert.equal(storageModule.loadRunRecord('boss-rush', 'normal').score, 100);
+  assert.equal(storageModule.loadRunRecord('free-stack', 'normal').score, 200);
+  assert.equal(storageModule.loadRunRecord('boss-rush', 'chill').score, 300);
+  assert.equal(storageModule.loadRunRecord('boss-rush', 'overdrive').score, 0);
+  assert.equal(entries.get('cb.hiscore'), '9000');
+}));
+
+test('records retain best score and fastest successful Boss Rush time', () => withStorage(() => {
+  storageModule.saveRunRecord('boss-rush', 'normal', 200, 600_000);
+  storageModule.saveRunRecord('boss-rush', 'normal', 100, 650_000);
+  storageModule.saveRunRecord('boss-rush', 'normal', 150, 550_000);
+  storageModule.saveRunRecord('boss-rush', 'normal', 90, null);
+  assert.deepEqual(storageModule.loadRunRecord('boss-rush', 'normal'), { score: 200, fastestWinMs: 550_000 });
+}));
+
+test('record reads reject malformed persisted values', () => withStorage((entries, warnings) => {
+  for (const raw of ['null', '[]', '{"score":-1,"fastestWinMs":-5}', '{"score":"oops","fastestWinMs":"600"}', '{']) {
+    entries.set('cb.records.boss-rush.normal', raw);
+    assert.deepEqual(storageModule.loadRunRecord('boss-rush', 'normal'), { score: 0, fastestWinMs: null });
+  }
+  assert.equal(warnings.length, 5);
+}));
+
+test('Game records completed runs under their selected ruleset', () => withStorage(() => {
+  const game = createGame({ mode: 'boss-rush', difficulty: 'chill' });
+  game.beginRun();
+  game.elapsedMs = 120_000;
+  game.score = 456;
+  game.victory();
+  assert.deepEqual(storageModule.loadRunRecord('boss-rush', 'chill'), { score: 456, fastestWinMs: 120_000 });
+  assert.equal(storageModule.loadRunRecord('boss-rush', 'normal').score, 0);
+}));
+
+test('full effects are the default until a reduced-effects preference is saved', () => withStorage((entries, warnings) => {
+  assert.equal(storageModule.loadReducedEffects(), false);
+  storageModule.saveReducedEffects(false);
+  assert.equal(storageModule.loadReducedEffects(), false);
+  storageModule.saveReducedEffects(true);
+  assert.equal(storageModule.loadReducedEffects(), true);
+  entries.set('cb.reducedEffects', 'invalid');
+  assert.equal(storageModule.loadReducedEffects(), false);
+  assert.equal(warnings.length, 1);
+}));
+
+test('Kong aim preview uses the same collision adjustment as the actual spawn', () => {
+  const game = createGame({ seed: 5 });
+  game.beginRun();
+  game.kong.state = 'winding-up';
+  game.kong.pendingKind = 'T';
+  game.kong.throwColumn = 5;
+  for (let y = 0; y < 2; y++) {
+    for (let x = 3; x < 10; x++) game.board.grid[y][x] = 'J';
+  }
+  const preview = game.spawnPreview;
+  assert.ok(preview);
+  assert.equal(preview.adjusted, true);
+  assert.deepEqual(preview.piece, game.resolveSpawn('T', 5));
+  assert.deepEqual(game.spawnPreview, preview); // Reading cannot consume a throw.
+  game.kong.emitReady = true;
+  game.update(0);
+  assert.deepEqual(game.active, preview.piece);
+  assert.equal(game.spawnPreview, null);
+});
+
+const { Renderer } = loadTypeScriptModule(path.join(root, 'src', 'renderer.ts'));
+function recordingRenderer() {
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get: (_target, method) => (...args) => calls.push([method, ...args]),
+    set: () => true,
+  });
+  const renderer = Object.create(Renderer.prototype);
+  Object.assign(renderer, { ctx, boardX: 240, boardY: 132 });
+  return { renderer, calls };
+}
+
+test('garbage warning draws every scheduled hole in its future row', () => {
+  const { renderer, calls } = recordingRenderer();
+  renderer.drawAttackWarning({ kind: 'garbage', holes: [2, 7], remainingMs: 900 }, 0);
+  assert.ok(calls.some(([method, x, y]) => method === 'strokeRect' && x === 300.5 && y === 672.5));
+  assert.ok(calls.some(([method, x, y]) => method === 'strokeRect' && x === 450.5 && y === 702.5));
+  assert.ok(calls.some(([method, text]) => method === 'fillText' && text.includes('CLEAR LINES TO CANCEL')));
+});
+
+test('scramble warning highlights the fixed pair and explains a deferred attack', () => {
+  const { renderer, calls } = recordingRenderer();
+  renderer.drawAttackWarning({ kind: 'scramble', columns: [0, 4], remainingMs: 0 }, 0);
+  assert.ok(calls.some(([method, x]) => method === 'strokeRect' && x === 240.5));
+  assert.ok(calls.some(([method, x]) => method === 'strokeRect' && x === 360.5));
+  assert.ok(calls.some(([method, text]) => method === 'fillText' && text.includes('WAITING FOR CLEARANCE')));
+});
+
+test('reduced-effects rendering suppresses shake, flashes, and foreground flourishes but keeps gameplay cues', () => {
+  const { renderer, calls } = recordingRenderer();
+  const draws = [];
+  for (const name of ['drawBackground', 'drawLightning', 'drawLeftPanel', 'drawBoard', 'drawRightPanel',
+    'drawKongLedge', 'drawPacmen', 'drawParticles', 'drawScanlines', 'drawAnnouncement',
+    'drawAttackWarning', 'drawDangerVignette', 'drawHint', 'drawGameOverWraith', 'drawSpawnPreview']) {
+    renderer[name] = () => draws.push(name);
+  }
+  renderer.effects = { currentShake: () => ({ x: 5, y: 6 }), currentFlash: () => 1, currentAnnouncement: () => null };
+  renderer.render({
+    reducedEffects: true, time: 100, danger: true,
+    kong: { draw() {}, drawThrownPiece() {} },
+    attackWarning: { kind: 'spike', remainingMs: 500 },
+    spawnPreview: { piece: { kind: 'T', x: 3, y: 0, rotation: 0 }, adjusted: false },
+  });
+  assert.ok(calls.some(([method, x, y]) => method === 'translate' && x === 0 && y === 0));
+  assert.equal(calls.some(([method]) => method === 'fillRect'), false);
+  for (const name of ['drawLightning', 'drawPacmen', 'drawParticles', 'drawGameOverWraith']) assert.equal(draws.includes(name), false);
+  for (const name of ['drawBoard', 'drawAttackWarning', 'drawDangerVignette', 'drawSpawnPreview']) assert.ok(draws.includes(name));
+});
+
+test('boot and cabinet expose accessible seed and reduced-effects controls', () => {
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.match(html, /id="run-seed"/);
+  assert.match(html, /for="run-seed"/);
+  assert.match(html, /id="reduced-effects"[^>]*type="checkbox"/);
+  assert.match(html, /for="reduced-effects"/);
 });

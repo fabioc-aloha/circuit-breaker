@@ -12,8 +12,8 @@ import {
 
 const root = path.resolve(import.meta.dirname, '..');
 
-test('uses ten configured market symbols', () => {
-  assert.deepEqual(QUOTE_SYMBOLS, ['MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'AMD', 'AVGO', 'ORCL', 'PLTR', 'TSM']);
+test('tracks the AI basket including memory, networking, and power infrastructure', () => {
+  assert.deepEqual(QUOTE_SYMBOLS, ['MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'AMD', 'AVGO', 'ORCL', 'PLTR', 'TSM', 'MU', 'ANET', 'VRT']);
 });
 
 test('allows a short public cache for delayed quote responses', () => {
@@ -31,7 +31,8 @@ test('normalizes delayed provider data into a direction-safe quote', () => {
     chart: {
       result: [{
         meta: {
-          chartPreviousClose: 400,
+          previousClose: 400,
+          chartPreviousClose: 500,
           regularMarketPrice: 410,
           regularMarketTime: 1_700_000_000,
         },
@@ -48,6 +49,41 @@ test('normalizes delayed provider data into a direction-safe quote', () => {
   });
 });
 
+test('closed-market daily change compares the last session with the preceding session close', () => {
+  const quote = normalizeYahooQuote('MSFT', {
+    chart: { result: [{ meta: {
+      regularMarketPrice: 533.52,
+      previousClose: 529.05,
+      chartPreviousClose: 541.15,
+      regularMarketTime: Date.parse('2026-10-19T20:00:00Z') / 1000,
+    } }] },
+  });
+  assert.equal(quote.price, 533.52);
+  assert.equal(quote.changePercent, 0.84);
+  assert.equal(quote.direction, 'up');
+});
+
+test('rejects missing or invalid daily reference closes instead of using the chart baseline', () => {
+  for (const previousClose of [undefined, null, 0, -1, NaN, Infinity, 'invalid']) {
+    assert.throws(() => normalizeYahooQuote('MSFT', {
+      chart: { result: [{ meta: { regularMarketPrice: 101, previousClose, chartPreviousClose: 100 } }] },
+    }), /Invalid indicative quote/);
+  }
+});
+
+test('requests one-day intraday data for the daily previous-close field', async () => {
+  const quote = await fetchDelayedQuote('MSFT', async (url) => {
+    const request = new URL(url);
+    assert.equal(request.searchParams.get('range'), '1d');
+    assert.equal(request.searchParams.get('interval'), '1m');
+    return {
+      ok: true,
+      json: async () => ({ chart: { result: [{ meta: { previousClose: 100, regularMarketPrice: 102 } }] } }),
+    };
+  }, { maxAttempts: 1 });
+  assert.equal(quote.changePercent, 2);
+});
+
 test('uses the latest provider market time as the quote response timestamp', async () => {
   const quotes = createDelayedQuoteService({
     fetchImpl: async (_url) => ({
@@ -57,7 +93,7 @@ test('uses the latest provider market time as the quote response timestamp', asy
           chart: {
             result: [{
               meta: {
-                chartPreviousClose: 100,
+                previousClose: 100,
                 regularMarketPrice: 101,
                 regularMarketTime: 1_700_000_000,
               },
@@ -83,7 +119,7 @@ test('caches delayed quote provider responses for five minutes', async () => {
       async json() {
         return {
           chart: {
-            result: [{ meta: { chartPreviousClose: 100, regularMarketPrice: 101 } }],
+            result: [{ meta: { previousClose: 100, regularMarketPrice: 101 } }],
           },
         };
       },
@@ -109,7 +145,7 @@ test('retries transient provider failures with exponential backoff', async () =>
     return {
       ok: true,
       async json() {
-        return { chart: { result: [{ meta: { chartPreviousClose: 100, regularMarketPrice: 102 } }] } };
+        return { chart: { result: [{ meta: { previousClose: 100, regularMarketPrice: 102 } }] } };
       },
     };
   }, {
@@ -132,7 +168,7 @@ test('does not retry malformed provider quote data', async () => {
       return {
         ok: true,
         async json() {
-          return { chart: { result: [{ meta: { chartPreviousClose: 100 } }] } };
+          return { chart: { result: [{ meta: { previousClose: 100 } }] } };
         },
       };
     }, { sleep: async () => {} }),
@@ -154,7 +190,7 @@ test('limits concurrent provider requests during a refresh', async () => {
       return {
         ok: true,
         async json() {
-          return { chart: { result: [{ meta: { chartPreviousClose: 100, regularMarketPrice: 101 } }] } };
+          return { chart: { result: [{ meta: { previousClose: 100, regularMarketPrice: 101 } }] } };
         },
       };
     },
@@ -175,7 +211,7 @@ test('coalesces concurrent cold-cache quote refreshes', async () => {
       return {
         ok: true,
         async json() {
-          return { chart: { result: [{ meta: { chartPreviousClose: 100, regularMarketPrice: 101 } }] } };
+          return { chart: { result: [{ meta: { previousClose: 100, regularMarketPrice: 101 } }] } };
         },
       };
     },

@@ -264,6 +264,12 @@ export class Kong {
     }
   }
 
+  /** Preview the locked-in throw without consuming its spawn instruction. */
+  peekSpawnRequest(): { kind: PieceKind; column: number } | null {
+    if (this.pendingKind === null || (this.state !== 'winding-up' && this.state !== 'throwing')) return null;
+    return { kind: this.pendingKind, column: this.throwColumn };
+  }
+
   /** Returns and clears a pending spawn instruction, or null if none ready. */
   takeSpawnRequest(): { kind: PieceKind; column: number } | null {
     if (!this.emitReady || this.pendingKind === null) return null;

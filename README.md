@@ -40,8 +40,8 @@ from somewhere far weirder:
   roaming attackers on the higher tiers.
 - **A live stock ticker** rides the cabinet marquee — real indicative quotes
   for an AI-focused basket (`MSFT`, `NVDA`, `GOOGL`, `AMZN`, `META`, `AMD`,
-  `AVGO`, `ORCL`, `PLTR`, `TSM`) interleaved with arcade phrases like
-  *"◆ TOKEN BUDGET CRITICAL"* and *"◆ INFERENCE ENGINE HOT"*. It's the
+  `AVGO`, `ORCL`, `PLTR`, `TSM`, `MU`, `ANET`, `VRT`), with
+  *"Circuit Breaker AI Portfolio"* at the start of each complete cycle. It's the
   Bloomberg terminal that grew up watching *Tron*, and it gives the cabinet
   the exact mood of a trading floor about to trip a breaker.
 
@@ -82,11 +82,25 @@ npm run preview
 | Shift / C     | Hold piece                |
 | P             | Pause / resume            |
 | M             | Mute audio                |
-| R             | Restart run               |
+| R             | Retry the same seed       |
 
 Boot menu: `1`/`2` select mode (Boss Rush / Free Stack), `3`/`4`/`5` select
 difficulty (Chill / Normal / Overdrive), `[`/`]` tune DAS, `;`/`'` tune ARR,
 `Enter` initializes. Touch controls appear automatically on touch devices.
+
+Leave RUN SEED blank for a random run, or enter a whole number from `0` to
+`4294967295`. The HUD shows your seed; `R` retries it with the same piece
+sequence and random streams for boss attacks and Kong. Matching a full run
+also requires the same inputs and timing.
+
+Switching tabs or leaving the window pauses the game and releases held controls.
+Resume explicitly with `P`, `Esc`, or the RESUME button. Pauses and boss cutscenes
+do not count toward run time, and the final summary freezes when the run ends.
+
+The REDUCED EFFECTS checkbox below the mixer hides the stock ticker and disables
+shake, flashes, foreground flourishes, and animated cabinet decorations. Attack warnings, Kong's aim marker,
+and the ghost piece stay visible. Full effects are on by default; your choice is
+saved for future visits.
 
 Click or press any key to boot the cabinet. The browser requires a user gesture
 before it can start the audio graph.
@@ -105,7 +119,9 @@ cleanly from Tetr.io / Jstris:
   on tetrises and T-spins, and **perfect-clear** bonuses
 - **Lock delay capped at 15 resets** — no infinite stalling on the stack; the
   piece commits once the cap is hit
-- **AMPERAGE ×N** combo tracker, **VOLTAGE TIER** that rises every ten line clears *and* on each boss defeat (whichever comes first) with a live *NEXT TIER IN N* progress bar under the LINES stat, gravity curve tied to tier, and a local high score
+- **AMPERAGE ×N** combo tracker, **VOLTAGE TIER** that rises every ten line clears *and* on each boss defeat (whichever comes first) with a live *NEXT TIER IN N* progress bar under the LINES stat and gravity curve tied to tier
+- Local best scores for each mode and difficulty, plus fastest Boss Rush wins
+  for each difficulty. Your old shared high score stays visible as LEGACY BEST.
 - Line clears freeze the row visibly-but-briefly while a neon Pacman streaks across the empty space, then the stack drops — the animation and the mutation happen together instead of the clear finishing before the effect starts
 
 ### Kong on the girder
@@ -125,6 +141,8 @@ the spawn point:
 - If his throw would collide with the stack, the piece **nudges to the nearest
   free column** instead of ending the run — only a genuinely full spawn zone
   tops you out
+- A subtle aim marker shows the piece's intended columns during wind-up and
+  release. AIM ADJUSTED marks a collision-driven change to the spawn point.
 - When the run ends (top-out or victory) he breaks into a **five-pose
   360° victory spin** on the girder — front pose → side-profile spin →
   back pose → side → alt-front → side → alt-back → side, bouncing on each
@@ -143,8 +161,11 @@ plus gravity curve:
 4. **FEEDBACK LOOP** -- scrambles columns
 5. **THE MAINFRAME** -- every attack, twice as fast
 
-Every attack is **telegraphed a full second ahead** — garbage previews the
-exact rows about to be hit, so it never feels instant. Boss HP is paced per
+Every attack is **telegraphed a full second ahead**. Garbage previews its exact
+hole positions, and scramble warnings mark the two columns that will swap.
+Clear lines during a garbage warning to cancel one incoming row per line,
+starting with the earliest row. A scramble waits if it would overlap your
+falling piece, then executes once the piece clears its path. Boss HP is paced per
 tier (18 / 25 / 35 / 45 / 70) with +10% damage per voltage tier, and intro
 cutscenes are skippable.
 
@@ -173,7 +194,7 @@ sync with the game clock:
 - **Neon Pacman line clear** -- one chomping cyberpunk Pacman per cleared row, alternating direction, RGB split, and glowing pellet trail; a Tetris summons a giant breaker Pacman with foreground lightning arcs
 - `MAIN BREAKER TRIPPED` four-line-clear banner, circuit lightning, particles, screen shake, and chromatic flash
 - A large top-layer Grid Wraith roams the board briefly when a run ends, then dissolves into the cabinet glow
-- Indicative quotes for an AI-focused basket alternate with arcade phrases in the ticker crawl
+- Each ticker cycle starts with "Circuit Breaker AI Portfolio", followed by the full AI-focused stock list
 - The cabinet's `INSERT COIN` slot links to *Loop Engineering* on Amazon
 - Responsive arcade cabinet chrome with animated marquee, occasional blinking lights, scrolling ticker, bezel reflection, and corner screws
 - Hot-path glows (particles, pellet trails, active-piece halos) stamp
@@ -188,8 +209,9 @@ attached — the client only ever talks to our own first-party endpoint, and
 that endpoint is aggressively cached:
 
 - The browser calls only the first-party `/api/quotes` endpoint; it never contacts the quote provider directly.
-- The server returns indicative quotes for `MSFT`, `NVDA`, `GOOGL`, `AMZN`, `META`, `AMD`, `AVGO`, `ORCL`, `PLTR`, and `TSM`, with a five-minute server cache, a short browser/edge cache, and bounded retries.
-- If quote retrieval fails, the ticker continues with arcade phrases and gameplay remains unaffected.
+- The server returns indicative quotes for `MSFT`, `NVDA`, `GOOGL`, `AMZN`, `META`, `AMD`, `AVGO`, `ORCL`, `PLTR`, `TSM`, `MU`, `ANET`, and `VRT`, with a five-minute server cache, a short browser/edge cache, and bounded retries.
+- Percentage changes compare the regular-market price with the previous regular-session close, not a multi-day chart baseline or extended-hours price.
+- If quote retrieval fails, the ticker shows only the portfolio name and gameplay remains unaffected.
 - Ticker values and interaction are not tracked. The Amazon purchase link is not tracked either.
 
 ## 🛠️ Tech
@@ -198,7 +220,7 @@ Built with an unfashionably small stack for a game that leans this hard on
 visual and audio effects:
 
 - **TypeScript** (strict) + **HTML5 Canvas 2D** + **Web Audio API**
-- **Vite** for dev / build (about 75 KB JavaScript, about 23 KB gzipped)
+- **Vite** for dev / build
 - **Zero runtime dependencies**
 - Deployed on **Azure Static Web Apps** (Standard tier, custom domain w/ managed TLS)
 
@@ -219,6 +241,8 @@ src/
 ├── effects.ts        # particles, lightning, announcements, Pacman runs
 ├── renderer.ts       # canvas draw pipeline
 ├── input.ts          # keyboard + DAS/ARR
+├── random.ts         # seeded gameplay streams, independent of cosmetic randomness
+├── storage.ts        # ruleset records, legacy score, input and effects preferences
 ├── market-ticker.ts  # arcade phrase and indicative quote ticker
 ├── audio/
 │   ├── audio.ts      # graph, mixer persistence, reverb bus, compressor

@@ -12,6 +12,78 @@ import {
   STORAGE_RUNS,
   STORAGE_VOLUMES,
 } from './constants';
+import type { DifficultyId, GameMode } from './types';
+
+export interface RunRecord {
+  score: number;
+  fastestWinMs: number | null;
+}
+
+function emptyRecord(): RunRecord {
+  return { score: 0, fastestWinMs: null };
+}
+
+export function loadRunRecord(mode: GameMode, difficulty: DifficultyId): RunRecord {
+  if (typeof localStorage === 'undefined') return emptyRecord();
+  try {
+    const raw = localStorage.getItem(`cb.records.${mode}.${difficulty}`);
+    if (raw === null) return emptyRecord();
+    const value: unknown = JSON.parse(raw);
+    if (typeof value !== 'object' || value === null || !('score' in value) || !('fastestWinMs' in value)
+      || typeof value.score !== 'number' || !Number.isSafeInteger(value.score) || value.score < 0
+      || (value.fastestWinMs !== null && (typeof value.fastestWinMs !== 'number'
+        || !Number.isFinite(value.fastestWinMs) || value.fastestWinMs <= 0))) {
+      console.warn('[Storage] Invalid run record; using an empty record.');
+      return emptyRecord();
+    }
+    return { score: value.score, fastestWinMs: mode === 'boss-rush' ? value.fastestWinMs : null };
+  } catch (error) {
+    console.warn('[Storage] Could not read run record.', error instanceof Error ? error.name : 'Unknown error');
+    return emptyRecord();
+  }
+}
+
+export function saveRunRecord(mode: GameMode, difficulty: DifficultyId, score: number, winMs: number | null): RunRecord {
+  if (!Number.isSafeInteger(score) || score < 0
+    || (winMs !== null && (!Number.isFinite(winMs) || winMs <= 0))) {
+    throw new RangeError('Run records require a nonnegative integer score and a positive finish time.');
+  }
+  const previous = loadRunRecord(mode, difficulty);
+  const record = {
+    score: Math.max(previous.score, score),
+    fastestWinMs: mode === 'boss-rush' && winMs !== null
+      ? Math.min(previous.fastestWinMs ?? Infinity, winMs) : previous.fastestWinMs,
+  };
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem(`cb.records.${mode}.${difficulty}`, JSON.stringify(record));
+    } catch (error) {
+      console.warn('[Storage] Could not save run record.', error instanceof Error ? error.name : 'Unknown error');
+    }
+  }
+  return record;
+}
+
+export function loadReducedEffects(): boolean {
+  if (typeof localStorage === 'undefined') return false;
+  try {
+    const saved = localStorage.getItem('cb.reducedEffects');
+    if (saved === null) return false;
+    if (saved === 'true' || saved === 'false') return saved === 'true';
+    console.warn('[Storage] Invalid reduced-effects setting; using full effects.');
+  } catch (error) {
+    console.warn('[Storage] Could not read reduced-effects setting.', error instanceof Error ? error.name : 'Unknown error');
+  }
+  return false;
+}
+
+export function saveReducedEffects(reduced: boolean): void {
+  try {
+    localStorage.setItem('cb.reducedEffects', String(reduced));
+  } catch (error) {
+    console.warn('[Storage] Could not save reduced-effects setting.', error instanceof Error ? error.name : 'Unknown error');
+  }
+}
 
 export function loadHiScore(): number {
   try {

@@ -43,7 +43,8 @@ import type { EffectsManager } from './effects';
 import type { InputActions } from './input';
 import { Kong, makeKongConfig } from './kong';
 import { Bag, cellsOf, spawnPiece, spawnRangeX } from './piece';
-import { incrementRunsCompleted, loadHiScore, loadRunsCompleted, saveHiScore } from './storage';
+import { newRunSeed, parseSeed, seededRandom } from './random';
+import { incrementRunsCompleted, loadHiScore, loadRunRecord, loadRunsCompleted, saveRunRecord } from './storage';
 import type {
     ActiveBoss,
     ActivePiece,
@@ -55,6 +56,7 @@ import type {
     PendingAttack,
     PieceKind,
     RunStats,
+    SpawnPreview,
 } from './types';
 
 const BOARD_PIXEL_ORIGIN_X = HUD_PADDING + SIDE_PANEL_W + HUD_PADDING;
@@ -65,9 +67,9 @@ const LINE_CLEAR_HOLD_MS = 260;
 
 const TSPIN_LABELS: Record<number, string> = { 1: 'T-SPIN SINGLE', 2: 'T-SPIN DOUBLE', 3: 'T-SPIN TRIPLE' };
 
-function attackWarningLabel(kind: BossAttackKind, rows: number): string {
-    switch (kind) {
-        case 'garbage': return `${rows} GARBAGE ROW${rows === 1 ? '' : 'S'} INBOUND`;
+function attackWarningLabel(attack: PendingAttack): string {
+    switch (attack.kind) {
+        case 'garbage': return `${attack.holes.length} ROWS - CLEAR LINES TO CANCEL`;
         case 'spike': return 'VOLTAGE SPIKE INCOMING';
         case 'blackout': return 'SIGNAL JAM INCOMING';
         case 'scramble': return 'COLUMN SCRAMBLE INCOMING';
@@ -84,7 +86,13 @@ export class Game implements InputActions {
   hold: PieceKind | null = null;
   holdLocked = false;
   score = 0;
-  hiScore = loadHiScore();
+  hiScore = 0;
+  legacyHiScore = loadHiScore();
+  fastestWinMs: number | null = null;
+  seed = 0;
+  private requestedSeed?: number;
+  private bossRandom = seededRandom(0, 'boss');
+  private garbageRandom = seededRandom(0, 'garbage');
   lines = 0;
   level = 1;
   combo = 0;
@@ -116,7 +124,9 @@ export class Game implements InputActions {
   maxCombo = 0;
   tspins = 0;
   bossesDefeated = 0;
-  runStartMs = 0;
+  elapsedMs = 0;
+  private finalStats: RunStats | null = null;
+  private resumePhase: 'playing' | 'cutscene' = 'playing';
   private dangerTickAt = 0;
   private runsCompleted: number;
   // Guards the pause toggle against duplicate keydown events (see pause()).
@@ -131,10 +141,14 @@ export class Game implements InputActions {
     private sfx: SFX,
     private music: Music,
     private onMuteToggle: () => void,
-    opts?: { mode?: GameMode; difficulty?: DifficultyId },
+    opts?: { mode?: GameMode; difficulty?: DifficultyId; seed?: number },
   ) {
     this.mode = opts?.mode ?? 'boss-rush';
     this.difficulty = opts?.difficulty ?? 'normal';
+    this.requestedSeed = opts?.seed;
+    const record = loadRunRecord(this.mode, this.difficulty);
+    this.hiScore = record.score;
+    this.fastestWinMs = record.fastestWinMs;
     this.runsCompleted = loadRunsCompleted();
   }
 
@@ -155,10 +169,11 @@ export class Game implements InputActions {
   }
 
   get runStats(): RunStats {
+    if (this.finalStats) return { ...this.finalStats };
     return {
       pieces: this.piecesPlaced,
       maxCombo: this.maxCombo,
-      timeMs: Math.max(0, performance.now() - this.runStartMs),
+      timeMs: this.elapsedMs,
       tspins: this.tspins,
       bosses: this.bossesDefeated,
       lines: this.lines,
@@ -169,15 +184,22 @@ export class Game implements InputActions {
    *  player's first few runs (persisted count in localStorage). */
   hintText(): string | null {
     if (this.runsCompleted >= 3 || this.phase !== 'playing') return null;
-    const elapsed = performance.now() - this.runStartMs;
+    const elapsed = this.elapsedMs;
     if (elapsed > 30_000) return null;
     const hints = ['SHIFT — HOLD PIECE', 'SPACE — HARD DROP', 'A — 180° SPIN', 'P — PAUSE'];
     return hints[Math.floor(elapsed / 7500) % hints.length];
   }
 
-  beginRun(): void {
+  beginRun(seed = this.requestedSeed ?? newRunSeed()): void {
+    if (parseSeed(String(seed)) === null) throw new RangeError('A numeric seed is required.');
+    this.seed = seed;
+    this.bossRandom = seededRandom(seed, 'boss');
+    this.garbageRandom = seededRandom(seed, 'garbage');
     this.board.reset();
-    this.bag = new Bag();
+    this.bag = new Bag(seededRandom(seed, 'pieces'));
+    const record = loadRunRecord(this.mode, this.difficulty);
+    this.hiScore = record.score;
+    this.fastestWinMs = record.fastestWinMs;
     this.hold = null;
     this.holdLocked = false;
     this.score = 0;
@@ -205,20 +227,25 @@ export class Game implements InputActions {
     this.maxCombo = 0;
     this.tspins = 0;
     this.bossesDefeated = 0;
-    this.runStartMs = performance.now();
+    this.elapsedMs = 0;
+    this.finalStats = null;
+    this.resumePhase = 'playing';
+    this.lastPauseToggleMs = -Infinity;
     this.dangerTickAt = 0;
     // Fresh Kong for this run — he climbs the ladder and beats his chest
     // before the first piece drops. Piece queued now, released after intro.
-    this.kong = new Kong(makeKongConfig(BOARD_PIXEL_ORIGIN_X, BOARD_PIXEL_ORIGIN_Y));
+    this.kong = new Kong(makeKongConfig(BOARD_PIXEL_ORIGIN_X, BOARD_PIXEL_ORIGIN_Y), seededRandom(seed, 'kong'));
     this.requestSpawn();
     this.phase = 'playing';
     this.music.setMode(this.musicForPlay());
   }
 
   update(dtMs: number): void {
+    if (this.phase === 'paused') return;
+    if (this.phase === 'playing') this.elapsedMs += dtMs;
     // Tick the deferred line-clear regardless of phase so a boss-defeat
     // cutscene doesn't strand the board with permanently-empty rows.
-    if (this.pendingLineClear && this.phase !== 'paused') {
+    if (this.pendingLineClear && (this.phase === 'playing' || this.phase === 'cutscene')) {
       this.pendingLineClear.remainingMs -= dtMs;
       if (this.pendingLineClear.remainingMs <= 0) {
         this.board.removeRows(this.pendingLineClear.rows);
@@ -238,9 +265,7 @@ export class Game implements InputActions {
       // Cutscenes still let Kong pace so he doesn't freeze mid-stride, but
       // an explicit pause freezes EVERYTHING (including Kong) so screenshots
       // can capture him mid-throw without motion smearing the frame.
-      if (this.phase !== 'paused') {
-        this.kong.update(dtMs);
-      }
+      this.kong.update(dtMs);
       return;
     }
 
@@ -273,20 +298,18 @@ export class Game implements InputActions {
       this.boss.attackTimer -= dtMs;
       if (this.boss.attackTimer <= 0) {
         const kind = this.pickAttack(this.boss);
-        const rows = kind === 'garbage' ? 1 + Math.floor(Math.random() * 4) : 0;
-        this.pendingAttack = { kind, rows, remainingMs: ATTACK_WARNING_MS };
+        this.pendingAttack = this.makeAttack(kind);
         this.sfx.alarm();
-        this.effects.showAnnouncement('⚠ INCOMING', attackWarningLabel(kind, rows), ATTACK_WARNING_MS);
+        this.effects.showAnnouncement('⚠ INCOMING', attackWarningLabel(this.pendingAttack), ATTACK_WARNING_MS);
         this.boss.attackTimer =
           this.boss.def.attackIntervalMs * DIFFICULTY[this.difficulty].attackIntervalScale;
       }
-    }
-    if (this.pendingAttack) {
-      this.pendingAttack.remainingMs -= dtMs;
+    } else if (this.pendingAttack) {
+      this.pendingAttack.remainingMs = Math.max(0, this.pendingAttack.remainingMs - dtMs);
       if (this.pendingAttack.remainingMs <= 0) {
         const atk = this.pendingAttack;
-        this.pendingAttack = null;
-        this.executeAttack(atk.kind, atk.rows);
+        if (this.executeAttack(atk)) this.pendingAttack = null;
+        if (this.phase !== 'playing') return;
       }
     }
 
@@ -319,7 +342,7 @@ export class Game implements InputActions {
 
     // Danger warning tick (throttled) while the stack rides high.
     if (this.active && this.danger) {
-      const now = performance.now();
+      const now = this.elapsedMs;
       if (now - this.dangerTickAt >= DANGER_TICK_MS) {
         this.dangerTickAt = now;
         this.sfx.dangerTick();
@@ -366,6 +389,12 @@ export class Game implements InputActions {
     const cleared = this.board.getFullRows();
     const rows = cleared.length;
     if (rows > 0) {
+      if (this.pendingAttack?.kind === 'garbage') {
+        const cancelled = Math.min(rows, this.pendingAttack.holes.length);
+        this.pendingAttack.holes.splice(0, cancelled);
+        if (this.pendingAttack.holes.length === 0) this.pendingAttack = null;
+        this.effects.showAnnouncement('GARBAGE CANCELLED', `${cancelled} ROW${cancelled === 1 ? '' : 'S'} BLOCKED`, 900);
+      }
       for (const r of cleared) this.board.clearingRows.add(r);
       this.combo += 1;
       this.maxCombo = Math.max(this.maxCombo, this.combo);
@@ -492,6 +521,14 @@ export class Game implements InputActions {
     return null;
   }
 
+  get spawnPreview(): SpawnPreview | null {
+    if (this.active || this.phase === 'gameover' || this.phase === 'victory') return null;
+    const aim = this.kong.peekSpawnRequest();
+    if (!aim) return null;
+    const piece = this.resolveSpawn(aim.kind, aim.column);
+    return piece ? { piece, adjusted: piece.x !== aim.column } : null;
+  }
+
   /** 3-corner rule: at least 3 of the 4 diagonal cells around the T piece's
    *  3×3-box center are occupied. Walls and floor count as occupied. */
   private isTSpin(piece: ActivePiece): boolean {
@@ -570,7 +607,21 @@ export class Game implements InputActions {
 
   private pickAttack(b: ActiveBoss): BossAttackKind {
     const kinds = b.def.attackKinds;
-    return kinds[Math.floor(Math.random() * kinds.length)];
+    return kinds[Math.floor(this.bossRandom() * kinds.length)];
+  }
+
+  private makeAttack(kind: BossAttackKind): PendingAttack {
+    const remainingMs = ATTACK_WARNING_MS;
+    if (kind === 'garbage') {
+      const rows = 1 + Math.floor(this.garbageRandom() * 4);
+      return { kind, remainingMs, holes: Array.from({ length: rows }, () => Math.floor(this.garbageRandom() * COLS)) };
+    }
+    if (kind === 'scramble') {
+      const a = Math.floor(this.bossRandom() * COLS);
+      const other = Math.floor(this.bossRandom() * (COLS - 1));
+      return { kind, remainingMs, columns: [a, other >= a ? other + 1 : other] };
+    }
+    return { kind, remainingMs };
   }
 
   /** Force the deferred line-clear to resolve immediately. Called before boss
@@ -582,53 +633,49 @@ export class Game implements InputActions {
     this.pendingLineClear = null;
   }
 
-  private executeAttack(kind: BossAttackKind, rows = 1 + Math.floor(Math.random() * 4)): void {
-    this.effects.shake(4, 300);
-    switch (kind) {
+  private executeAttack(attack: PendingAttack): boolean {
+    switch (attack.kind) {
       case 'garbage': {
         this.flushPendingLineClear();
-        const displacedBlocks = this.board.addGarbage(rows);
-        if (this.active) this.active.y -= rows;
+        const displacedBlocks = this.board.addGarbageWithHoles(attack.holes);
+        if (this.active) this.active.y -= attack.holes.length;
         if (displacedBlocks || (this.active && this.board.collides(this.active))) this.gameOver();
         break;
       }
       case 'spike':
-        this.spikeUntil = performance.now() + SPIKE_DURATION_MS;
+        this.spikeUntil = this.elapsedMs + SPIKE_DURATION_MS;
         break;
       case 'blackout':
-        this.blackoutUntil = performance.now() + BLACKOUT_DURATION_MS;
+        this.blackoutUntil = this.elapsedMs + BLACKOUT_DURATION_MS;
         break;
       case 'scramble': {
         this.flushPendingLineClear();
-        const a = Math.floor(Math.random() * COLS);
-        let b = Math.floor(Math.random() * COLS);
-        while (b === a) b = Math.floor(Math.random() * COLS);
-        this.board.scrambleColumns(a, b);
+        if (!this.board.scrambleColumns(...attack.columns, this.active)) return false;
         break;
       }
     }
+    this.effects.shake(4, 300);
+    return true;
   }
 
   isSpike(): boolean {
-    return performance.now() < this.spikeUntil;
+    return this.elapsedMs < this.spikeUntil;
   }
   isBlackout(): boolean {
-    return performance.now() < this.blackoutUntil;
+    return this.elapsedMs < this.blackoutUntil;
   }
 
   private gameOver(): void {
     if (this.phase === 'gameover') return;
     this.phase = 'gameover';
+    this.finalStats = this.runStats;
     this.runsCompleted = incrementRunsCompleted();
     this.effects.spawnGameOverWraith(
       BOARD_PIXEL_ORIGIN_X + BOARD_PX_W / 2,
       BOARD_PIXEL_ORIGIN_Y + BOARD_PX_H / 2,
     );
     this.sfx.gameOver();
-    if (this.score > this.hiScore) {
-      this.hiScore = this.score;
-      saveHiScore(this.hiScore);
-    }
+    this.saveRecord(false);
     this.music.setMode('silent');
     // Kong doesn't lose — he beats his chest either way.
     this.kong.startCelebration();
@@ -636,17 +683,21 @@ export class Game implements InputActions {
 
   private victory(): void {
     this.phase = 'victory';
+    this.finalStats = this.runStats;
     this.boss = null;
     this.sfx.fanfare();
     this.runsCompleted = incrementRunsCompleted();
     // Even on a win, Kong celebrates — he's the one who threw every piece
     // that built the winning stack.
     this.kong.startCelebration();
-    if (this.score > this.hiScore) {
-      this.hiScore = this.score;
-      saveHiScore(this.hiScore);
-    }
+    this.saveRecord(true);
     this.music.setMode('main');
+  }
+
+  private saveRecord(won: boolean): void {
+    const record = saveRunRecord(this.mode, this.difficulty, this.score, won && this.elapsedMs > 0 ? this.elapsedMs : null);
+    this.hiScore = record.score;
+    this.fastestWinMs = record.fastestWinMs;
   }
 
   // ----- InputActions -----
@@ -746,18 +797,24 @@ export class Game implements InputActions {
     const now = performance.now();
     if (now - this.lastPauseToggleMs < PAUSE_DEBOUNCE_MS) return;
     this.lastPauseToggleMs = now;
-    if (this.phase === 'playing') {
-      this.phase = 'paused';
-      this.music.setMode('silent');
+    if (this.phase === 'playing' || this.phase === 'cutscene') {
+      this.suspend();
       this.sfx.uiBlip();
     } else if (this.phase === 'paused') {
-      this.phase = 'playing';
-      this.music.setMode(this.musicForPlay());
+      this.phase = this.resumePhase;
+      this.music.setMode(this.resumePhase === 'playing' ? this.musicForPlay() : 'silent');
       this.sfx.uiBlip();
     }
   }
+  suspend(): void {
+    if (this.phase !== 'playing' && this.phase !== 'cutscene') return;
+    this.resumePhase = this.phase;
+    this.phase = 'paused';
+    this.softDropHeld = false;
+    this.music.setMode('silent');
+  }
   restart(): void {
-    this.beginRun();
+    this.beginRun(this.seed);
     this.sfx.uiBlip();
   }
   toggleMute(): void {
