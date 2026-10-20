@@ -15,3 +15,11 @@ test('exposes a secure Loop Engineering Amazon purchase command', () => {
   assert.match(html, /class="coin-slot-purchase"[\s\S]*LOOP ENGINEERING[\s\S]*BUY THE BOOK/);
   assert.doesNotMatch(html, /Amazon Associate|affiliate-disclosure|sponsored/);
 });
+
+test('keeps the book slot inside the startup-only Play panel', () => {
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const play = html.match(/<section id="panel-play"[^>]*>([\s\S]*?)<\/section>/)?.[1];
+
+  assert.ok(play?.includes('<aside id="coin-slot"'), 'the book slot belongs in the Play panel');
+  assert.equal([...html.matchAll(/id="coin-slot"/g)].length, 1);
+});

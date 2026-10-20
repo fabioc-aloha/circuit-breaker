@@ -1,17 +1,24 @@
 # Circuit Breaker
 
-> Circuit Breaker is a browser-playable cyberpunk block-stacker with a five-stage Boss Rush mode.
+> Circuit Breaker is a cyberpunk block-stacker built primarily for desktop browsers and keyboard controls, with secondary phone and touch support.
 
 ## Canonical resource
 
-- [Play Circuit Breaker](https://cb.correax.com/): Start the game, review the controls, and play Boss Rush in a modern browser.
+- [Play Circuit Breaker](https://cb.correax.com/): Choose Boss Rush or Free Stack, adjust settings, and review keyboard controls before starting.
 
 ## Published facts
 
-- The game uses seven tetrominoes, SRS rotation, a seven-bag randomizer, hold, ghost preview, a local high score, and boss-driven voltage tiers.
+- The game uses seven tetrominoes, SRS rotation, a seven-bag randomizer, hold, ghost preview, and voltage tiers driven by line clears and boss defeats.
 - Boss Rush contains five rogue-AI encounters with distinct attack patterns; defeating a boss advances the voltage tier.
+- Free Stack has no boss attacks. Both modes support Chill, Normal, and Overdrive difficulty.
+- Best scores are stored by mode and difficulty, with fastest successful Boss Rush times and a separate legacy high score.
+- A run seed reproduces gameplay random streams. Retrying uses the same seed; matching a complete run also requires the same inputs and timing.
+- The start screen has Play, Settings, and Controls tabs. Settings is also available while paused without changing the active run's mode, difficulty, or seed.
 - A four-line clear triggers a `MAIN BREAKER TRIPPED` banner and a giant cyberpunk breaker Pacman.
 - Music and sound effects are synthesized in the browser with the Web Audio API. Master, SFX, and BGM levels persist locally, as does mute state.
-- The visual arcade ticker alternates game phrases with indicative quotes for `MSFT`, `NVDA`, `GOOGL`, `AMZN`, `META`, `AMD`, `AVGO`, `ORCL`, `PLTR`, and `TSM` from the first-party `/api/quotes` endpoint. The browser never contacts the provider directly, and ticker data is not analytics.
-- Scores, volume preferences, and mute state remain in the visitor's browser and are not sent to the CorreaX tracker.
+- Full effects are the default. Reduced effects hides the ticker and suppresses decorative effects while preserving essential gameplay cues. Effects and input-timing preferences persist locally.
+- Each ticker cycle starts with "Circuit Breaker AI Portfolio", followed by indicative stock quotes fetched once per page load from the first-party `/api/quotes` endpoint. It does not alternate game phrases or stream updates.
+- The [configured stock universe](https://github.com/fabioc-aloha/circuit-breaker/blob/main/api/src/quotes.js) is maintained in source. Daily percentage changes compare regular-market prices with the previous regular-session close.
+- The browser never contacts the quote provider directly. Production analytics are limited to the approved homepage page view; scores, settings, seeds, inputs, and ticker interactions are not sent to the tracker.
+- iOS Home Screen shortcuts use a dedicated PNG Apple touch icon.
 - Source code is available from the [Circuit Breaker repository](https://github.com/fabioc-aloha/circuit-breaker).

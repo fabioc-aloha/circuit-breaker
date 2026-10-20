@@ -6,7 +6,8 @@ CorreaX Constellation Tracker and which game data must remain local.
 Read this before changing tracker scripts, production activation, Content Security
 Policy, client cache headers, URLs, or browser storage.
 
-Last updated: 2026-07-22.
+Last reviewed against the site implementation: 2026-10-20. This review does not
+re-audit the external tracker server or dashboard configuration.
 
 ## Portfolio Setup
 
@@ -31,12 +32,21 @@ the decorative arcade ticker.
   It caches normalized results for five minutes; the public response has a short
   60-second browser/edge cache. It returns only symbol, price, percentage change,
   direction, and provider market timestamp when available.
-- The configured AI-focused universe is `MSFT`, `NVDA`, `GOOGL`, `AMZN`, `META`,
-  `AMD`, `AVGO`, `ORCL`, `PLTR`, and `TSM`.
+- The configured AI-focused universe is maintained in
+  [`QUOTE_SYMBOLS` in `api/src/quotes.js`](api/src/quotes.js). Only successful
+  provider results are returned if some symbols fail.
 - The browser never contacts the quote provider directly and no provider key is exposed.
+- The adapter uses the provider's one-day intraday metadata. Daily percentage
+  change is `(regularMarketPrice - previousClose) / previousClose * 100`, rounded
+  to two decimal places. It does not use the range-dependent
+  `chartPreviousClose` or an extended-hours price.
 - Quotes are presented as indicative. The response `asOf` value uses the latest provider
   market timestamp when available, otherwise the cache refresh time.
-- Quote fetch failures retain the normal arcade crawl; they do not block or change play.
+- The client fetches once per page load, not periodically. Server cache expiry
+  does not refresh quotes already displayed in an open page.
+- If no quotes are available, the ticker repeats only "Circuit Breaker AI
+  Portfolio". Failures do not block or change play. Reduced effects hides the
+  ticker entirely.
 - The ticker has no event telemetry. Quote symbols, values, or ticker interaction must
   never be attached to the tracker payload.
 
@@ -70,14 +80,15 @@ portfolio's retail-click event, including for the external Loop Engineering purc
 - Lines cleared, combo, level, boss, boss integrity, attacks, or victory state.
 - Piece sequence, movement, rotation, hold, drop, pause, restart, or mute actions.
 - Audio volume and mute preferences.
+- Run seeds, ruleset records, reduced-effects preferences, and DAS/ARR settings.
 - Timing, frame rate, or session duration.
 - Any local-storage value other than tracker consent state.
 - Market-ticker request timing, errors, quote values, or ticker interaction.
 - Query parameters other than the three approved UTM fields.
 - URL fragments, full URLs, credentials, or visitor identity.
 
-The game stores high score and audio preferences locally. Tracker code must never read
-those storage keys.
+The game stores ruleset records, the legacy high score, audio preferences, reduced
+effects, and input timings locally. Tracker code must never read those storage keys.
 
 ## Consent and Failure Behavior
 

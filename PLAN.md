@@ -1,203 +1,124 @@
-# ⚡ CIRCUIT BREAKER — Plan
+# Circuit Breaker delivery record
 
-## Delivery record
+Last reviewed against the implementation: 2026-10-20.
 
-**Last assessed:** 2026-09-27
+This is the current delivery record. [README.md](README.md) owns player and
+developer guidance; [HANDOFF.md](HANDOFF.md) owns restart state and the next action.
+The implementation table and historical links record completed work. Pending
+work and decisions live below, rather than in a separate task list.
+The original design is preserved under [Historical material](#historical-material).
 
-| Status | Area | Evidence or next action |
-| --- | --- | --- |
-| Complete | Core block-stacker | Seven-bag, SRS, collision, hold, ghost, scoring, gravity, pause, restart, and local high score are implemented. |
-| Complete | Competitive scoring | T-spins (3-corner rule), back-to-back ×1.5, perfect-clear bonuses, lock-delay cap of 15 resets, and 180° rotation are implemented, with regression tests. |
-| Complete | Boss fairness | Every attack telegraphed 1000 ms ahead (garbage previews exact rows); boss HP paced per tier (18/25/35/45/70) with +10% damage per voltage tier; colliding spawns nudge to the nearest free column; cutscenes skippable. |
-| Complete | Boss Rush | Five bosses, dual-source voltage tiers (whichever is higher of `1 + floor(lines / LINES_PER_LEVEL)` and `bossIndex + 1`, with `NEXT TIER IN N` progress bar and tier-up announcement), distinct HUD silhouettes, integrity, damage, attacks, cutscenes, victory, and terminal-state regression coverage are implemented. |
-| Complete | Line-clear animation | Cleared rows hold visible-but-empty for 260 ms while the neon Pacman crosses; grid mutation is deferred so the effect and the drop land together. |
-| Complete | Audio baseline | Procedural SFX/BGM, mute persistence, boss-low mode, and autoplay-safe boot are implemented. |
-| Complete | Visual baseline | Responsive cabinet framing, HUD hierarchy, bezel reflection and screws, circuit-grid background, ambient and boot lightning, neon blocks, scanlines, particles, flash, shake, row Pacmen, the giant Tetris breaker Pacman with foreground lightning arcs, the top-layer board-roaming game-over Grid Wraith, boot text, and favicon are implemented. |
-| Complete | Delivery | Vite build, resilient cached Static Web Apps quote API, static deployment configuration, SEO assets, privacy-safe visit instrumentation, and the local validation gate are implemented. |
-| Complete | Audio controls | Master, SFX, and BGM sliders persist through `AudioManager.setVolumes()`; the mute control stays synchronized with the `M` shortcut. |
-| Complete | Tetris feedback | Four-line clears trigger the visible `MAIN BREAKER TRIPPED` / `FOUR-LINE OVERLOAD` announcement, giant breaker Pacman, flash, shake, and boom. |
-| Complete | Garbage tuning | Garbage attacks now use the planned 1-4 row range, with maximum-displacement regression coverage. |
-| Complete | Run structure | Free Stack mode alongside Boss Rush; difficulty tiers (Chill/Normal/Overdrive); tunable DAS/ARR persisted to local storage; touch controls with holdable buttons; danger vignette within 5 rows of the top; end-of-run telemetry summary. |
-| Complete | UI hardening | Neon boot menu with chunky mode/difficulty/DAS/ARR controls, DOM pause overlay (Resume/Restart), 64px touch targets, safe-area layout, ticker edge fades, INITIALIZE label legibility fix. |
-| Complete | Render performance | Ticker pinned to constant 70 px/s on a compositor layer with seamless rebuilds; particles/pellets/active-cell glows use pre-baked radial sprites instead of per-frame shadowBlur; pacman RGB ghosts skip shadowBlur; button glow animates opacity only. |
-| Decided | Tooling | ESLint and Prettier are excluded: strict TypeScript, focused Node tests, and the built-site validator provide the current quality gate without extra dependencies. |
+## Implementation status
 
-**Current state:** the implementation plan is complete. Revisit the accepted
-soundtrack decision only if a non-boss gameplay phase is added.
+| Area | Current implementation |
+| --- | --- |
+| Core block-stacker | Seven-bag randomization, SRS, collision, hold, ghost, next queue, scoring, gravity, and bounded lock resets. |
+| Scoring | T-spins, back-to-back multipliers, combos, and perfect-clear bonuses. |
+| Modes and difficulty | Boss Rush and Free Stack, with Chill, Normal, and Overdrive difficulty. |
+| Boss fairness | Timed attack warnings, exact garbage-hole previews, cancellation through line clears, deferred unsafe scrambles, and collision-adjusted spawns. |
+| Progression | Boss integrity and attacks, line-driven voltage tiers, boss-defeat progression, skippable cutscenes, victory, and frozen end-of-run summaries. |
+| Timing and input | Elapsed-time gravity and soft drop, bounded input catch-up, focus-loss suspension, and explicit resume. |
+| Reproducible runs | Separate seeded streams for pieces, boss attacks, and Kong; retry preserves the run seed. Matching a run also requires matching inputs and timing. |
+| Local records | Best scores by mode and difficulty, fastest successful Boss Rush times, and a separate legacy high score. |
+| Setup and pause | Shared Play, Settings, and Controls dialog; paused settings lock run configuration and return to pause without resuming. |
+| Responsive layout | Height-constrained, aspect-preserving canvas; touch controls reserve their actual bar height, fit narrow phones, and use one row in short landscape windows. |
+| Preferences | Persistent audio mix, mute, reduced effects, and DAS/ARR; invalid restored audio values fall back to valid defaults. |
+| Effects and audio | Canvas gameplay effects, CSS cabinet presentation, credited Kong sprites, and procedural Web Audio music and effects. |
+| Ticker | Portfolio name followed by configured stocks, right-edge entry, constant 70px/s motion with position-preserving retiming, daily regular-session percentage changes, and first-party cached quotes fetched once per page load. Reduced effects hides it. |
+| iOS icon | Opaque 180x180 PNG, explicit Apple touch icon declaration, and artifact-validation coverage. |
+| Delivery | TypeScript, Node tests, preview/production artifact checks, and Azure Static Web Apps deployment of the client and quote API. |
+| Instrumentation | Production-only homepage page views with the privacy and consent boundaries in [INSTRUMENTATION.md](INSTRUMENTATION.md). |
 
-Run `npm run check` after every implementation update. For tracker, SEO, CSP,
-cache, URL, or browser-storage changes, also follow the production verification
-steps in [`INSTRUMENTATION.md`](INSTRUMENTATION.md).
+This release includes the start-screen-only book link, documentation refresh,
+responsive-layout fixes, ticker-motion changes, and animation pacing adjustments.
+Production deployment evidence is linked from the handoff, not duplicated here.
 
-## Accepted Design Decision
+## Design decisions
 
-| Decision | Current behavior | Rationale |
-| --- | --- | --- |
-| Boss Rush soundtrack | Every level is a boss encounter, so the 132 BPM boss mix begins at run start; the 100 BPM main mix plays after victory. | The game has no normal-play phase. Revisit only if one is introduced. |
+| Decision | Current direction |
+| --- | --- |
+| Primary platform | Desktop browser with keyboard input. Phone and touch support are secondary. |
+| Soundtrack | Boss Rush uses the boss mix, with a low-integrity variant. Free Stack and victory use the main mix. |
+| Audio assets | Music and sound effects are synthesized; Kong artwork is a separate, credited image asset. |
+| Dependencies | The browser bundle has no runtime package dependencies. The quote API uses `@azure/functions`. |
+| Quality gate | Strict TypeScript, focused Node tests, and the built-site validator. ESLint and Prettier are not configured. |
+| Release path | Commit and push directly to `main` when a release is requested. Actions builds and deploys both the site and API. |
 
-## 🎯 Scope
+Run `npm run check` for implementation changes. The production build flag must be
+set before building; see [the release instructions](README.md#-deploy).
 
-A browser-playable **high-voltage cyberpunk block-stacker with Boss Rush mode**, rendered on HTML5 `<canvas>` and built with Vite.
+## Regression safeguards
 
-**Title:** ⚡ **CIRCUIT BREAKER**
-**Tagline:** *Stack the current. Trip the mainframe.*
+- Startup waits for a completed `click`, rather than opening setup on
+  `pointerdown`. Otherwise the same gesture can click a newly revealed control.
+  [Input regressions](scripts/game.test.mjs) cover the event boundary and consuming
+  the Enter key that opened setup.
+- Daily quote changes use `previousClose`, not the range-dependent
+  `chartPreviousClose`. A correct price does not prove the percentage is correct.
+  [Quote regressions](scripts/market-quotes.test.mjs) deliberately give those
+  fields different values, including a closed-market example.
+- Apple icon validation covers the built HTML, not just the source declaration.
+  Vite rewrites the icon URL to a relative path.
+  [Artifact regressions](scripts/validate-site.test.mjs) accept that output while
+  still rejecting a missing declaration or asset.
+- The book box belongs inside the startup Play panel, so existing dialog and
+  tab visibility controls it without another visibility flag.
+  [Placement coverage](scripts/book-link.test.mjs) prevents a duplicate or an
+  exterior gameplay box.
+- Ticker timing uses fractional geometry and preserves the current pixel offset
+  when quotes, fonts, or viewport dimensions change. Unchanged geometry does not
+  restart the animation, and each fallback loop covers the viewport.
+  [Ticker regressions](scripts/market-ticker.test.mjs) cover velocity and phase.
 
-## 🎨 Theme: High-Voltage Cyberpunk + Boss Rush
+## UI and animation follow-up
 
-### Visual style
+This release addresses the responsive defects found in the initial 2026-10-20 UAT:
 
-- **Palette:** pitch black + faint copper trace lines; blocks glow in electric cyan, hot magenta, high-voltage yellow, plasma purple, lime, orange, red
-- **Blocks =** charged capacitors / circuit nodes with a subtle electric hum glow
-- **Line clears =** "short circuit" — arcing electricity flashes across the row before it vanishes
-- **Tetris (4-line) =** "MAIN BREAKER TRIPPED" — screen flashes white, sparks, deeper bass thump
-- **Effects:** scanlines, bloom/glow on active piece, chromatic aberration on clears, spark/lightning particle bursts
-- **Background:** subtle animated circuit traces pulsing with current; occasional lightning arcs across the void
-- **Font:** monospace / pixel, all-caps HUD labels
+- **Canvas fit:** the cabinet allocates its remaining height to the screen,
+  rather than letting the short-window breakpoint force a full-width canvas
+  beyond the viewport. The canvas preserves its aspect ratio and fits above
+  the touch bar.
+- **Touch controls:** shared sizing variables keep the reserved space and fixed
+  bar consistent. Narrow-phone buttons remain at least 44x44 CSS pixels;
+  short landscape windows use a single row. Gameplay controls hide while paused
+  so they cannot cover the pause menu.
+- **Ticker motion:** quote arrival and geometry changes retain the current
+  position rather than replaying the right-edge entry. Fractional measurements
+  maintain 70px/s, and viewport-width fallback loops avoid a visible reset gap.
+- **Pacman pacing:** regular row-clear sweeps take about 333ms instead of 267ms;
+  four-line-clear sweeps take about 467ms instead of 367ms. The ordinary sweep
+  and row-clear hold share the same timing constant.
+- **End-game ghost:** hovers for four seconds instead of 1.8 seconds, with its
+  existing movement and fade behavior.
 
-### Boss Rush layer — Rogue AIs / Power Grid Threats
+Browser rechecks covered desktop 1280x720, 1366x768, 1440x1000, and 1920x1080,
+plus touch 320x480, 390x844, and 844x390. Canvas bounds, aspect ratio, complete
+touch-button bounds, minimum target sizes, and button-center hit targets passed.
+Follow-up checks also covered setup scrolling, reduced effects, seed rejection,
+startup-only book visibility, pause/settings/resume, retry, and actual hold/drop
+input. Chromium emulation is not physical iOS Safari.
 
-- Each **level = one boss** with a name, silhouette, and **BOSS INTEGRITY** bar (jagged voltage-meter style) in the side panel
-- Line clears deal damage: single=1, double=3, triple=5, **Tetris=10** (× **AMPERAGE ×N** combo multiplier)
-- Bosses **attack back** on a timer:
-  - **Blown fuses** — garbage lines rise from bottom (1–4 rows with a random hole)
-  - **Voltage spike** — gravity temporarily doubles
-  - **Blackout** — cuts your sensor feed (hides next-piece preview ~10s)
-  - **Signal interference** — scrambles two columns
-- Defeat boss → short cutscene text → next boss loads → **VOLTAGE TIER** increases
-- Final boss combines multiple attack patterns
+## Open work and decisions
 
-### Boss roster
+- Proposed, not approved: add an isolated browser smoke flow for keyboard
+  startup, opening gestures, settings, reduced effects, play, and pause. It would
+  complement the current Node tests with actual DOM event ordering and visibility.
+  Confirm CI browser support and package-policy compatibility before adding
+  dependencies or automation.
+- The README has described the code as MIT, but no standalone license file is
+  tracked. Adding one requires the owner's licensing decision.
+- Third-party sprite permissions remain subject to [CREDITS.md](CREDITS.md).
+- The old handoff proposed restoring editor-extension recommendations. No
+  `.vscode` configuration is currently tracked; confirm the desired editor
+  tooling before reviving that proposal.
 
-1. **SURGE.exe** — voltage spikes
-2. **BLACKOUT** — blackout attacks
-3. **SHORTFUSE** — blown fuses (garbage)
-4. **FEEDBACK LOOP** — signal interference (column scrambles)
-5. **THE MAINFRAME** — final boss, all attacks combined
+Running UAT and fixing its findings does not approve the separate proposal to
+add permanent browser-test automation.
 
-### Flavor labels
+## Historical material
 
-- HP → **BOSS INTEGRITY**
-- Combo → **AMPERAGE ×N**
-- Level → **VOLTAGE TIER**
-- Game over → **⚡ CIRCUIT BROKEN ⚡**
-- Boot: fake BIOS/POST text scrolls, then title drops in with a lightning crack
+The original design and earlier implementation notes are preserved without being
+presented as current requirements:
 
-## 🧱 Tech stack
-
-- **TypeScript** — type safety for game state, bosses, SRS tables
-- **HTML5 Canvas 2D** for rendering (neon glow via canvas shadows, particles)
-- **Web Audio API** for procedural SFX + BGM (zero audio assets)
-- **Vite** for dev server, HMR, and static build
-- **Zero runtime dependencies** — output is plain HTML/JS/CSS, hostable anywhere
-- Dev-only deps: `typescript`, `vite`
-
-## 📁 File structure
-
-```text
-tetris/
-├── index.html
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-├── README.md
-└── src/
-    ├── main.ts              # entry, boot, game loop
-    ├── game.ts              # GameState orchestration
-    ├── board.ts             # grid + line-clear
-    ├── piece.ts             # tetrominoes + SRS + wall kicks
-    ├── input.ts             # keyboard, DAS/ARR
-    ├── renderer.ts          # canvas draw pipeline
-    ├── effects.ts           # particles, screen shake, glow passes
-    ├── bosses.ts            # roster + attack logic
-    ├── audio/
-    │   ├── audio.ts         # AudioContext manager
-    │   ├── sfx.ts           # procedural SFX
-    │   └── music.ts         # BGM sequencer
-    ├── storage.ts           # localStorage (hi-score, volumes)
-    ├── constants.ts
-    └── types.ts
-```
-
-## 🎮 Features
-
-### Core
-
-- 7 standard tetrominoes (I, O, T, S, Z, J, L) with neon colors
-- Movement, rotation (SRS with wall kicks), soft/hard drop
-- Line clears (1–4) with scoring
-- Level progression + gravity curve
-- Next-piece preview
-- Game over + restart
-
-### Nice-to-haves (confirmed)
-
-- Hold piece (Shift/C)
-- Ghost piece (shadow at landing spot)
-- Pause (P)
-- Local high score (localStorage)
-
-### Theme-specific
-
-- Boss Rush progression (five bosses)
-- Boss HP bar + damage-per-clear
-- Boss attack patterns (garbage, speed surge, fog, scramble)
-- Neon glow, scanlines, particle FX on clears
-- Boss defeat cutscene text
-
-### Audio (procedural — Web Audio API, zero assets)
-
-- **SFX (synthesized):** move blip, rotate click, soft-drop tick, hard-drop thud+zap, lock clink, line-clear zap, Tetris BOOM ("MAIN BREAKER TRIPPED"), hold swoosh, level-up/boss-defeat fanfare, boss-attack alarm, game-over power-down whine, UI blip
-- **BGM (synthesized):** a 100 BPM main mix, a 132 BPM boss mix, and a 150 BPM
-  low-integrity boss variant; the run begins in the boss mix because every level is a boss encounter
-  - **Main theme** after victory
-  - **Boss theme** during every encounter
-  - **Low-integrity variant** when BOSS INTEGRITY < 25%
-  - Short game-over fade stinger
-- **Controls:** `M` mute toggle; separate SFX/BGM sliders; volumes persisted in localStorage
-- **Autoplay:** audio starts on first user input (browser policy compliance)
-
-## 🕹️ Controls
-
-| Key      | Action        |
-|----------|---------------|
-| ← →      | Move          |
-| ↓        | Soft drop     |
-| Space    | Hard drop     |
-| ↑ / X    | Rotate CW     |
-| Z        | Rotate CCW    |
-| Shift/C  | Hold piece    |
-| P        | Pause         |
-| M        | Mute audio    |
-| R        | Restart       |
-
-## 🖼️ HUD layout
-
-```text
-┌─ HOLD ─┐  ┌──── BOARD ────┐  ┌─ NEXT ─┐
-│        │  │               │  │        │
-└────────┘  │               │  └────────┘
-            │               │  SCORE
-BOSS: ▓▓▓▓░ │               │  LEVEL
-GLITCH.exe  │               │  LINES
-            └───────────────┘  HI-SCORE
-```
-
-## ✅ Decisions locked
-
-- **Title:** ⚡ CIRCUIT BREAKER
-- Feature set: Core + hold, ghost, pause, high score
-- Theme: **High-Voltage Cyberpunk + Boss Rush**
-- Stack: **TypeScript + HTML5 Canvas + Vite** (Web Audio API for sound), zero runtime deps
-
-## Implementation phases
-
-| Phase | Status | Result |
-| --- | --- | --- |
-| Scaffold | Complete | Vite and TypeScript are in place; ESLint and Prettier are intentionally excluded by the documented tooling decision. |
-| Constants and types | Complete | Board geometry, pieces, SRS, colors, timings, and shared game types are implemented. |
-| Core engine | Complete | Board state, collision, locking, clearing, gravity, and fixed animation updates are implemented. |
-| Rendering | Complete | Hold, board, next queue, ghost piece, HUD, overlays, boss silhouettes, and responsive cabinet framing are implemented. |
-| Input and scoring | Complete | DAS/ARR, drops, rotation, hold, pause, restart, scoring, level progression, and local high score are implemented. |
-| Boss Rush | Complete | Five bosses, dual-source voltage tiers (line-count and boss defeat, whichever is higher), damage, combo scaling, four attacks, cutscenes, victory, and the planned garbage-row range are implemented. |
-| Audio | Complete | Procedural music and effects, mute, persisted volume controls, and autoplay-safe initialization are implemented. |
-| Polish | Complete | The arcade visual system, lightning, particles, clear effects, boot sequence, favicon, README, SEO, and instrumentation are complete. |
+- [Original plan and delivery history](https://github.com/fabioc-aloha/circuit-breaker/blob/4c12e2b3ef304ae273e065209b5a977d1ce1d31c/PLAN.md)
+- [Earlier session notes and historical tooling proposals](https://github.com/fabioc-aloha/circuit-breaker/blob/4c12e2b3ef304ae273e065209b5a977d1ce1d31c/HANDOFF.md)

@@ -5,6 +5,8 @@ const MAX_PARTICLES = 600;
 const MAX_LIGHTNING = 12;
 const MAX_PACMEN = 8;
 
+export const PACMAN_TRAVEL_FRAMES = 20;
+
 // In-place write-index compaction. Avoids the per-frame `.filter()` allocation
 // on hot animation arrays (particles/lightning/pacmen/pellets tick every frame).
 function compact<T>(arr: T[], keep: (item: T) => boolean): void {
@@ -107,20 +109,20 @@ export class EffectsManager {
     this.announcement = { title, subtitle, remainingMs: durationMs, durationMs };
   }
 
-  spawnGameOverWraith(centerX: number, centerY: number, size = 76, durationMs = 1_800): void {
+  spawnGameOverWraith(centerX: number, centerY: number, size = 76, durationMs = 4_000): void {
     this.gameOverWraith = { centerX, centerY, size, remainingMs: durationMs, durationMs };
   }
 
   spawnPacman(startX: number, y: number, endX: number, color: string, size = 14): void {
-    // 16 frames ≈ 267ms — synced with LINE_CLEAR_HOLD_MS so the pacman finishes
+    // 20 frames ≈ 333ms — synced with LINE_CLEAR_HOLD_MS so the pacman finishes
     // its run just as the cleared rows drop out of the board.
-    this.createPacman(startX, y, endX, color, size, 'standard', 16);
+    this.createPacman(startX, y, endX, color, size, 'standard', PACMAN_TRAVEL_FRAMES);
   }
 
   spawnBreakerPacman(startX: number, y: number, endX: number, color: string, size = 48): void {
     // Tetris flourish runs slightly slower for drama, still tuned to overlap
     // the cleared-row hold rather than trail behind it.
-    this.createPacman(startX, y, endX, color, size, 'breaker', 22);
+    this.createPacman(startX, y, endX, color, size, 'breaker', 28);
     const boltOffsets = [-size / 2, 0, size / 2];
     const boltColors = [color, '#00f0ff', '#ff2bd6'];
     for (let index = 0; index < boltOffsets.length; index++) {

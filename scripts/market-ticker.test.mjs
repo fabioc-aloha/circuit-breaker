@@ -22,13 +22,92 @@ function loadTypeScriptModule(filePath) {
 
 const { buildTickerLoops, buildTickerSegments, initializeMarketTicker, syncTickerSpeed, QUOTE_FETCH_OPTIONS, tickerDurationForWidth, TICKER_PX_PER_SEC } = loadTypeScriptModule(path.join(root, 'src', 'market-ticker.ts'));
 
+function tickerElement(width = 1400, viewportWidth = 700) {
+  return {
+    children: [],
+    left: 0,
+    width,
+    scrollWidth: Math.round(width),
+    getBoundingClientRect() { return { left: this.left, width: this.width }; },
+    parentElement: {
+      clientWidth: viewportWidth,
+      clientLeft: 0,
+      getBoundingClientRect() { return { left: 0 }; },
+    },
+    restarts: 0,
+    style: {
+      setProperty(name, value) { this[name] = value; },
+    },
+    get offsetWidth() { this.restarts++; return this.width; },
+    setAttribute() {},
+    append(child) { this.children.push(child); },
+    replaceChildren() { this.children = []; },
+  };
+}
+
 test('keeps a constant crawl speed regardless of content width', () => {
   // One full -50% loop of a 1400px-wide track at 70px/s takes 10 seconds.
   assert.equal(TICKER_PX_PER_SEC, 70);
   assert.equal(tickerDurationForWidth(1400), 10);
   assert.equal(tickerDurationForWidth(700), 5);
-  // Degenerate widths still get a sane minimum duration.
-  assert.equal(tickerDurationForWidth(100), 4);
+  assert.equal(tickerDurationForWidth(100), 50 / 70);
+  assert.equal(tickerDurationForWidth(0), 0);
+});
+
+test('uses fractional track width instead of rounded scrollWidth for exact velocity', () => {
+  const track = tickerElement(1400.75);
+  syncTickerSpeed(track);
+  const loopDuration = Number.parseFloat(track.style.animationDuration.split(',')[1]);
+  assert.equal(loopDuration, 700.375 / 70);
+});
+
+test('does not restart a running ticker when geometry has not changed', () => {
+  const track = tickerElement();
+  syncTickerSpeed(track);
+  const restarts = track.restarts;
+  track.left = 300;
+  syncTickerSpeed(track);
+  assert.equal(track.restarts, restarts);
+});
+
+test('preserves right-edge entry progress when quote content changes width', () => {
+  const track = tickerElement();
+  syncTickerSpeed(track);
+  track.left = 350;
+  track.width = track.scrollWidth = 2800;
+  syncTickerSpeed(track);
+  assert.equal(track.style['--ticker-entry-offset'], '350px');
+  assert.equal(track.style.animationDuration, '5s, 20s');
+  assert.equal(track.style.animationDelay, '0s, 5s');
+});
+
+test('preserves loop position instead of jumping back to the right on resize', () => {
+  const track = tickerElement();
+  syncTickerSpeed(track);
+  track.left = -140;
+  track.parentElement.clientWidth = 500;
+  syncTickerSpeed(track);
+  assert.equal(track.style.animationDuration, '0s, 10s');
+  assert.equal(track.style.animationDelay, '0s, -2s');
+});
+
+test('keeps the old pixel phase when responsive fonts change the percentage transform', () => {
+  const track = tickerElement();
+  syncTickerSpeed(track);
+  // The old -140px position becomes -70px when CSS halves the track width.
+  track.width = track.scrollWidth = 700;
+  track.left = -70;
+  syncTickerSpeed(track);
+  assert.equal(track.style.animationDuration, '0s, 5s');
+  assert.equal(track.style.animationDelay, '0s, -2s');
+});
+
+test('makes a portfolio-only loop cover the viewport before it repeats', () => {
+  const track = tickerElement();
+  syncTickerSpeed(track);
+  assert.equal(track.style['--ticker-viewport-width'], '700px');
+  const css = fs.readFileSync(path.join(root, 'src', 'style.css'), 'utf8');
+  assert.match(css, /\.ticker-loop\s*\{[^}]*min-width:\s*var\(--ticker-viewport-width,\s*0px\)/);
 });
 
 test('allows browser caching for delayed quote responses', () => {
@@ -41,14 +120,10 @@ test('reduced effects hide the ticker rather than leaving a frozen stock list', 
 });
 
 test('recalculates ticker entry and speed when a hidden ticker becomes visible', () => {
-  const track = {
-    scrollWidth: 0,
-    parentElement: { clientWidth: 0 },
-    style: { setProperty(name, value) { this[name] = value; } },
-  };
+  const track = tickerElement(0, 0);
   syncTickerSpeed(track);
   assert.equal(track.style.animationDuration, undefined);
-  track.scrollWidth = 1400;
+  track.width = track.scrollWidth = 1400;
   track.parentElement.clientWidth = 700;
   syncTickerSpeed(track);
   assert.equal(track.style.animationDuration, '10s, 10s');
@@ -146,15 +221,7 @@ test('static ticker fallback matches the portfolio-only message', () => {
 test('renders only the portfolio name and quotes without leftover phrase separators', async () => {
   const previousDocument = globalThis.document;
   const previousFetch = globalThis.fetch;
-  const element = () => ({
-    children: [],
-    style: { setProperty(name, value) { this[name] = value; } },
-    parentElement: { clientWidth: 700 },
-    scrollWidth: 1400,
-    setAttribute() {},
-    append(child) { this.children.push(child); },
-    replaceChildren() { this.children = []; },
-  });
+  const element = () => tickerElement();
   const track = element();
   globalThis.document = {
     getElementById: () => track,

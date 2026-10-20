@@ -21,29 +21,49 @@ export const QUOTE_FETCH_OPTIONS = { cache: 'default' } as const;
 // measured we override animation-duration inline.
 export const TICKER_PX_PER_SEC = 70;
 
+const tickerGeometry = new WeakMap<HTMLElement, { width: number; viewportWidth: number }>();
+
 /** Seconds for one full -50% loop of a track `trackWidthPx` wide. */
 export function tickerDurationForWidth(trackWidthPx: number): number {
-  return Math.max(4, trackWidthPx / 2 / TICKER_PX_PER_SEC);
+  return trackWidthPx / 2 / TICKER_PX_PER_SEC;
 }
 
-/**
- * Enter from the viewport's right edge, then loop at the same crawl speed.
- * Restart so the -50% loop seam stays aligned with fresh content.
- * Without the restart, replacing children mid-flight moves the seam and the
- * crawl visibly pops when quotes arrive.
- */
-export function syncTickerSpeed(track: HTMLElement): void {
-  const half = track.scrollWidth / 2;
-  if (!(half > 0)) return;
-  const entryWidth = track.parentElement?.clientWidth ?? 0;
+function tickerOffset(track: HTMLElement): number | undefined {
+  const viewport = track.parentElement;
+  const geometry = tickerGeometry.get(track);
+  if (!viewport || !geometry) return undefined;
+  const rect = track.getBoundingClientRect();
+  const offset = rect.left
+    - viewport.getBoundingClientRect().left - viewport.clientLeft;
+  // Percentage loop transforms have already scaled to the new font/width.
+  return offset < 0 && rect.width > 0 ? offset * geometry.width / rect.width : offset;
+}
+
+/** Retime changed geometry without sending an in-flight title back to the right. */
+export function syncTickerSpeed(track: HTMLElement, offset = tickerOffset(track)): void {
+  const viewportWidth = track.parentElement?.clientWidth ?? 0;
+  if (!(viewportWidth > 0)) {
+    tickerGeometry.delete(track);
+    return;
+  }
+  track.style.setProperty('--ticker-viewport-width', `${viewportWidth}px`);
+  const width = track.getBoundingClientRect().width;
+  if (!(width > 0)) return;
+  const previous = tickerGeometry.get(track);
+  if (previous?.width === width && previous.viewportWidth === viewportWidth) return;
+
+  const position = offset ?? viewportWidth;
+  const entryWidth = Math.max(0, position);
   const entrySeconds = entryWidth / TICKER_PX_PER_SEC;
+  const loopOffset = Math.min(0, position) % (width / 2);
   track.style.setProperty('--ticker-entry-offset', `${entryWidth}px`);
-  track.style.animationDuration = `${entrySeconds}s, ${tickerDurationForWidth(track.scrollWidth)}s`;
-  track.style.animationDelay = `0s, ${entrySeconds}s`;
+  track.style.animationDuration = `${entrySeconds}s, ${tickerDurationForWidth(width)}s`;
+  track.style.animationDelay = `0s, ${entrySeconds + loopOffset / TICKER_PX_PER_SEC}s`;
   track.style.animationName = 'none';
-  // Force reflow so the animation-name toggle takes effect.
+  // Apply the new timeline at the old pixel position, including mid-loop.
   void track.offsetWidth;
   track.style.animationName = '';
+  tickerGeometry.set(track, { width, viewportWidth });
 }
 
 const PORTFOLIO_NAME = 'Circuit Breaker AI Portfolio';
@@ -84,6 +104,7 @@ function isMarketQuote(value: unknown): value is MarketQuote {
 }
 
 function renderTicker(track: HTMLElement, segments: TickerSegment[]): void {
+  const offset = tickerOffset(track);
   track.replaceChildren();
   const loops = buildTickerLoops(segments);
   for (let loopIndex = 0; loopIndex < loops.length; loopIndex++) {
@@ -103,7 +124,7 @@ function renderTicker(track: HTMLElement, segments: TickerSegment[]): void {
     }
     track.append(loop);
   }
-  syncTickerSpeed(track);
+  syncTickerSpeed(track, offset);
 }
 
 export async function initializeMarketTicker(): Promise<void> {
@@ -111,8 +132,11 @@ export async function initializeMarketTicker(): Promise<void> {
   if (!track) return;
 
   renderTicker(track, buildTickerSegments([]));
-  // Webfont arrival changes the measured width — re-pin the speed once fonts
-  // settle so the crawl stays at exactly TICKER_PX_PER_SEC.
+  if (typeof ResizeObserver !== 'undefined') {
+    const observer = new ResizeObserver(() => syncTickerSpeed(track));
+    observer.observe(track);
+    if (track.parentElement) observer.observe(track.parentElement);
+  }
   if (typeof document !== 'undefined' && document.fonts?.ready) {
     void document.fonts.ready.then(() => syncTickerSpeed(track));
   }

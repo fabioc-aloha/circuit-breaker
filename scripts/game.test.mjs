@@ -151,6 +151,19 @@ test('spawns and expires the game-over Grid Wraith', () => {
   assert.equal(effects.currentGameOverWraith(), null);
 });
 
+test('lets the end-game ghost hover for four seconds by default', () => {
+  const effects = new EffectsManager();
+  effects.spawnGameOverWraith(400, 320);
+
+  assert.equal(effects.currentGameOverWraith().durationMs, 4_000);
+  effects.update(1_800);
+  assert.equal(effects.currentGameOverWraith().remainingMs, 2_200);
+  effects.update(2_199);
+  assert.equal(effects.currentGameOverWraith().remainingMs, 1);
+  effects.update(1);
+  assert.equal(effects.currentGameOverWraith(), null);
+});
+
 test('moves the game-over Grid Wraith around the board center', () => {
   const wraith = {
     centerX: 400,
@@ -181,6 +194,36 @@ test('creates an oversized breaker Pacman for a Tetris', () => {
   assert.equal(effects.lightning.length, 3);
   assert.deepEqual(effects.lightning.map((bolt) => bolt.foreground), [true, true, true]);
   assert.deepEqual(effects.lightning.map((bolt) => bolt.color), ['#ffe600', '#00f0ff', '#ff2bd6']);
+});
+
+for (const [spawn, frames] of [['spawnPacman', 20], ['spawnBreakerPacman', 28]]) {
+  test(`${spawn} uses the slightly slower sweep in either direction`, () => {
+    for (const [start, end] of [[0, 400], [400, 0]]) {
+      const effects = new EffectsManager();
+      effects[spawn](start, 300, end, '#ffe600');
+
+      effects.update(frames / 2 * 16.6667);
+
+      assert.ok(Math.abs(effects.pacmen[0].x - 200) < 0.001);
+      effects.update(frames / 2 * 16.6667);
+      assert.ok(Math.abs(effects.pacmen[0].x - end) < 0.001);
+    }
+  });
+}
+
+test('holds cleared rows for the slower ordinary Pacman sweep', () => {
+  const game = createGame();
+  game.beginRun();
+  game.active = { kind: 'I', rotation: 0, x: 3, y: 20 };
+  game.board.grid[21] = ['J', 'J', 'J', 0, 0, 0, 0, 'J', 'J', 'J'];
+
+  game.lockAndAdvance();
+
+  assert.ok(Math.abs(game.pendingLineClear.remainingMs - 1000 / 3) < 0.001);
+  game.update(300);
+  assert.ok(game.pendingLineClear);
+  game.update(34);
+  assert.equal(game.pendingLineClear, null);
 });
 
 test('assigns each boss a distinct HUD silhouette', () => {
@@ -307,7 +350,7 @@ test('flushes a pending line-clear before applying a garbage attack', () => {
   const game = createGame();
   game.beginRun();
   // Set up a completed row that would be pending-cleared, then simulate a
-  // boss garbage attack firing before the 260 ms hold expires.
+  // boss garbage attack firing before the row-clear hold expires.
   game.board.grid[21] = ['J', 'J', 'J', 'J', 'J', 'J', 'J', 'J', 'J', 'J'];
   game.pendingLineClear = { rows: [21], remainingMs: 200 };
   game.board.clearingRows.add(21);
@@ -516,7 +559,7 @@ test('awards a perfect-clear bonus when the well is emptied', () => {
   game.lockAndAdvance();
   assert.ok(game.pendingLineClear);
 
-  game.update(300); // resolve the deferred clear -> perfect clear
+  game.update(game.pendingLineClear.remainingMs); // resolve the deferred clear -> perfect clear
 
   // Single (100) + perfect clear (2000 x level 1).
   assert.equal(game.score, 2100);

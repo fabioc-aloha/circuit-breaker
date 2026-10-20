@@ -1,146 +1,103 @@
-# Session Handoff
+# Circuit Breaker handoff
 
-Last updated: 2026-09-27 (gameplay pass + smoothness pass merged to main; prior handoff follows)
-
-## 2026-09-27 - Gameplay pass, UAT hardening, smoothness pass → main
-
-PR #6 (`alex/gameplay-pass`) merged to `main` (merge commit `9552605`) and
-deployed to production — `cb.correax.com` verified serving the new bundle.
-Docs updated same day: README (bundle size, lock cap, spawn nudge, telegraphs,
-danger vignette, run summary, render-perf note), PLAN.md delivery record.
-
-Shipped on the branch, in order:
-
-- **Gameplay pass (13 items):** lock-reset cap (15), boss attack telegraphs
-  (1000 ms, garbage previews exact rows), spawn-column nudge to nearest free
-  column, danger vignette within 5 rows of top, T-spins (3-corner rule),
-  back-to-back ×1.5, skippable cutscenes, boss HP pacing (18/25/35/45/70,
-  +10% damage per voltage tier), Free Stack mode, controls/onboarding hints,
-  run telemetry summary, touch controls, difficulty tiers + tunable DAS/ARR,
-  perfect clears, 180° rotation, scaled hard-drop shake.
-- **UAT repair:** neon boot menu with chunky controls, DOM pause overlay with
-  Resume/Restart, 64px touch targets, safe-area layout, INITIALIZE label
-  legibility (hint moved in-flow, pointer-events none), ticker edge fades via
-  real DOM elements (mask-image and ::before/::after both failed in prod
-  Chromium — do not retry those approaches).
-- **Smoothness pass:** ticker pinned to constant 70 px/s from measured width
-  with `will-change: transform` and seamless rebuilds; INITIALIZE pulse
-  reworked to opacity-only `::after` glow (box-shadow keyframes repaint every
-  frame); renderer pre-bakes one radial glow sprite per color and stamps
-  `drawImage` for particles/pellets instead of per-particle `shadowBlur`;
-  pacman RGB ghosts skip shadowBlur; active-cell glow via layered alpha rects;
-  Kong sprite dest rounded to whole pixels.
-
-78/78 tests green (`npm run check`), production deploy successful.
-Merge via API is `PUT /repos/{owner}/{repo}/pulls/{n}/merge` — POST 404s.
-
-## 2026-08-08 - Circuit Breaker instrumentation health
-
-Production passed the complete tracker contract: activation, both client assets,
-`circuit-breaker` site key, tracker endpoint, CSP, exact-origin preflight, and
-collector POST. Both clients return `Cache-Control: no-store`, no gameplay or
-score state appears in the tracker payload, and no Umami residue was found. No
-Circuit Breaker code or configuration change was needed. The worktree was clean
-at audit start; the older uncommitted-work snapshot below is historical.
-Portfolio evidence: [2026-08-08 audit](https://github.com/fabioc-aloha/seo-correax/blob/main/reports/2026-08-08-instrumentation-health-audit.md).
-
-## Just shipped (in working tree — not yet committed)
-
-Play + polish pass across game feel, visual seams, and hot-path cost. 11 files
-changed, all under `src/` and `scripts/`. No changes to instrumentation,
-tracker, CSP, storage keys, or the `/api/quotes` contract.
-
-- **VOLTAGE TIER is now dual-source.** Tier advances every `LINES_PER_LEVEL`
-  (10) line clears *and* by boss defeat — whichever is higher wins each round.
-  Announcement + `uiBlip` fire on tier up (suppressed during a Tetris so it
-  doesn't stomp the MAIN BREAKER banner). Right panel gets a small
-  "NEXT TIER IN N" progress bar under the LINES row. Two prior tier tests
-  updated to match; added a "holds tier when clear doesn't cross threshold"
-  test.
-- **Seamless line-clear animation.** `Board.clearLines` split into
-  `getFullRows()` + `removeRows()`. Game marks cleared rows in
-  `board.clearingRows`, the renderer skips drawing them, and a 260 ms
-  `pendingLineClear` timer defers the actual grid mutation. Pacman travel
-  tightened from 30 frames → 16 (~267 ms) so it finishes crossing empty
-  space right as the stack drops. Breaker pacman 42 → 22 frames.
-- **Kong celebration dance fixed.** Frames on `kong-dance.png` are 2 back,
-  2 front, 1 side profile; the prior cycle `1→2→3→4→0` opened with Kong's
-  back to the player and skipped the side frame between direction changes.
-  New `DANCE_ORDER = [3, 2, 0, 2, 4, 2, 1, 2]` reads as a proper 360° spin
-  (front → side → back → side → alt-front → side → alt-back → side). Bounce
-  switched from `sin*2π` to `|cos|` so it peaks on the pose frames and dips
-  through the transitions.
-- **Stats panel layout fix.** `⚡ VOLTAGE SPIKE` was overflowing the panel
-  bottom (drawn at `sy+198` in a 200 px panel with bold 11 px baseline drop)
-  and `NEXT TIER IN N` was clipping the LINES underline. Panel height
-  200 → 220, progress label moved below the bar, AMPERAGE + SPIKE share a
-  row at `sy+200` — combo left, spike right-aligned via `measureText`.
-- **Frame-rate independence for soft drop.** `Game.softDrop` no longer
-  accumulates `+= 16` per input-controller tick; the ticker lives inside
-  `Game.update(dt)` with real frame delta. Prevents 2× soft-drop speed on
-  120 Hz displays. `softDropTimer` and `softDropHeld` now reset in
-  `beginRun`.
-- **Bug fix in `sfx.lineClear`.** The `[880,1108,1319][rows-1] ? [660,880,
-  1108,1319].slice(0, rows) : [880]` fall-through was rewritten to
-  `[660, 880, 1108, 1319].slice(0, Math.max(1, Math.min(4, rows)))`.
-- **Performance.** Scanlines rendered from a cached 1×3 `CanvasPattern`
-  (one `fillRect` per frame instead of 240). Grid strokes in
-  `drawBackground` + `drawBoard` batched into one path per orientation
-  (~60 fewer stroke calls per frame). `Effects.update` uses in-place
-  write-index compaction for `lightning`, `particles`, `pacmen`, and
-  `pellets` — no more per-frame `.filter()` reallocation.
-- **Dead-code removal.** `COLORS.gridStrong`, `COLORS.ghost`,
-  `EffectFlags`, `cellsAtRotation`, `KONG_PIXEL_SCALE`,
-  `RenderState.bootText` removed. `LINES_PER_LEVEL`, `LOW_HP_THRESHOLD`,
-  `SOFT_DROP_FACTOR` were defined but never imported — now wired up as
-  the constants they were always intended to be. Merged
-  `Kong.spawnColumnFor` / `computeSpawnColumn` into one method.
-- **Race fix**: `Game.flushPendingLineClear()` now runs at the top of the
-  `garbage` and `scramble` boss-attack cases, so a boss attack during the
-  260 ms line-clear hold applies against the *post-clear* grid instead of
-  removing the wrong rows. Regression test in
-  [scripts/game.test.mjs](scripts/game.test.mjs) — `flushes a pending
-  line-clear before applying a garbage attack`.
-- **CREDITS.md attribution filled in**. Kong sprites attributed to
-  [JayHyperStarX on DeviantArt](https://www.deviantart.com/jayhyperstarx),
-  with an honest carve-out that the underlying character is
-  © Nintendo and the sheet itself is displayed without an explicit
-  license grant — non-commercial fan-tribute framing with a takedown
-  path. If the site scales past personal-portfolio use, contact the
-  artist for permission.
+Last updated: 2026-10-20.
 
 ## Current state
 
-- Branch: `main`
-- Working tree: **11 files modified, uncommitted** (`+202 / −91`)
-- Gate: `npm run check` → typecheck ✓, 60/60 tests ✓, build ✓ (62.67 kB
-  gzip 19.27 kB), preview and production validators ✓
-- Production still at `f6f2dca` (previous session's sitemap `lastmod`
-  addition)
+Production: [cb.correax.com](https://cb.correax.com/). The
+[production deployment history](https://github.com/fabioc-aloha/circuit-breaker/actions/workflows/azure-static-web-apps.yml?query=branch%3Amain)
+records each deployed commit and its outcome; use a successful production run,
+not this file's commit date, to identify the live release.
 
-## Backlog / notes for next session
+Previously verified baseline: commit
+[`4c12e2b`](https://github.com/fabioc-aloha/circuit-breaker/commit/4c12e2b3ef304ae273e065209b5a977d1ce1d31c).
+It includes the consolidated settings dialog, startup click-through fix, and
+Apple touch icon. The user confirmed that the iOS icon works.
 
-- **Commit the play/polish pass**. All changes are gameplay-side and green
-  under the full local gate. Suggested split into 3 commits for readable
-  history: (1) dead-code removal + wire-up of previously-defined
-  constants, (2) tier system + line-clear animation + Kong dance fix +
-  stats layout, (3) performance passes.
-- **`.vscode/extensions.json` regression to restore** (still pending from
-  2026-07-22): five ACT-Edition-aligned entries need to be added back next
-  to the Azure Functions recommendation:
-  `GitHub.vscode-pull-request-github`,
-  `fabioc-aloha.alex-cognitive-architecture`,
-  `DavidAnson.vscode-markdownlint`,
-  `streetsidesoftware.code-spell-checker`, `redhat.vscode-yaml`.
-- **From prior session**: `MAX_DELTA_MS = 750` in
-  [src/frame-timing.ts](src/frame-timing.ts) assumes max level 5 gravity
-  (600 ms). Revisit if a future mode adds higher gravity tiers.
-- **From prior session**: `/api/quotes` `asOf` falls back to cache time if
-  the provider drops `regularMarketTime` — reviewers shouldn't read it as
-  authoritative freshness without checking the underlying quotes.
+This release refreshes documentation, moves the `INSERT COIN` /
+`BUY THE BOOK` box into startup Play only, fixes the two responsive-layout UAT
+findings, preserves ticker motion through quote and geometry changes, and slows
+both Pacman sweeps by about 20% with a matching ordinary row-clear hold.
+The end-game ghost now hovers for four seconds instead of 1.8 seconds.
+See [PLAN.md](PLAN.md) for implementation and regression safeguards. Confirm
+deployment through the production workflow and live-site checks.
+Use `git status` for the actual working-tree state rather than assuming `main`
+is checked out.
 
-## Resume point
+Desktop browser and keyboard are the primary target. Phone/touch is secondary;
+the user plans to test those controls and report findings.
 
-Pick up by committing the working tree (see backlog for the suggested
-split), then triage the `.vscode/*` cleanup and `CREDITS.md` attribution
-TODOs.
+## Next action
+
+The requested layout, ticker, and animation changes are implemented. Physical iPhone
+gameplay and perceived ticker smoothness still need the user's device feedback.
+For a release, commit the intended files on the current
+worktree branch and push `HEAD:main` without a pull request.
+The Azure workflow deploys both `dist/` and `api/`; do not upload only the client.
+
+Use [PLAN.md](PLAN.md) for delivery status, regression safeguards, and open
+decisions, rather than reconstructing a backlog from the historical handoff.
+Its browser-smoke proposal is not approved implementation work.
+
+## Verification
+
+For implementation changes, run `npm run check`. Also build with
+`CB_TRACKER_ENABLED=true` and run `npm run validate -- --tracking-enabled`
+before release. [README.md](README.md#-deploy) gives the PowerShell commands;
+[INSTRUMENTATION.md](INSTRUMENTATION.md) owns tracker-specific checks.
+
+The final local implementation passed `npm run check` (typecheck, Node tests,
+preview build, and artifact validation). A fresh build with
+`CB_TRACKER_ENABLED=true` also passed `npm run validate -- --tracking-enabled`.
+The existing no-dependency Markdown conversion preflight passed for PLAN and
+HANDOFF; it is not a full Markdownlint check.
+
+The initial browser UAT on 2026-10-20 completed 71 checks: 63 passed, six layout
+checks failed across two findings, and two background-tab checks were blocked
+because automation did not produce a genuine hidden-tab transition.
+Actual window-blur auto-pause was verified independently. Tested desktop
+viewports were 1440x1000, 1280x720, 1366x768, and 1920x1080; touch viewports
+were 390x844, 320x480, and 844x390.
+
+Startup, tab navigation, seed validation, saved preferences, reduced effects,
+pause/settings/resume, retry, and startup-only book visibility passed. Keyboard
+and touch hold/drop actions visibly changed the board, hold slot, and score.
+No uncaught JavaScript errors were captured.
+
+After the fixes, browser geometry checks passed at all seven viewport sizes:
+the full canvas fits without touch-bar overlap, its aspect ratio is preserved,
+and all nine touch controls fit with targets at least 44x44 CSS pixels and
+uncovered centers. Another 40 scoped interface checks passed across keyboard and
+touch contexts. A further 320x480 pause-overlap regression was reproduced, fixed,
+and rechecked: the gameplay touch bar now hides while the pause menu is open.
+Actual keyboard and touch hold/drop runs with seed 42 each changed score from
+0 to 40. Owned test contexts were closed; the existing dev server remains running.
+
+Ticker checks covered delayed quote arrival, unchanged-geometry synchronization,
+font/viewport resize, full quote lists, portfolio-only fallback, and loop seams.
+Sampled steady velocity was 70px/s, with a 40ms seam crossing moving approximately
+2.8px as expected. Delayed quote arrival preserved position within 0.03px of
+elapsed-time motion in the measured run. Chromium already accelerated the old
+steady animation; this is evidence for removing restart/seam jumps, not a promise
+of hitch-free rendering on every device. Sample callbacks still had occasional
+40-50ms gaps, and physical iOS rendering remains unverified.
+
+These browser checks used Chromium and touch emulation, not physical iOS Safari.
+The user's iOS confirmation covers the Home Screen icon; phone gameplay controls
+still await their feedback.
+
+Markdownlint could not run: both CLI variants were blocked by npm's
+`EALLOWREMOTE` policy when the required package proxy returned remote tarballs.
+No npm security settings or dependency manifests were changed. Documentation
+link and drift checks passed before the meditation updates; that is not a full
+Markdownlint result.
+
+For the local book-box change, check that it is usable on startup, absent during
+play and paused settings, and does not overflow the desktop or phone setup panel.
+
+## Historical notes
+
+Earlier session records, including the old uncommitted-work snapshot and editor
+recommendations, are preserved in the
+[commit-pinned handoff](https://github.com/fabioc-aloha/circuit-breaker/blob/4c12e2b3ef304ae273e065209b5a977d1ce1d31c/HANDOFF.md).
+They are historical evidence, not instructions to commit already-released work.

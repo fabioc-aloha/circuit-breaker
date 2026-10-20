@@ -8,12 +8,12 @@
 
 [![Play now](https://img.shields.io/badge/PLAY%20NOW-cb.correax.com-ff00e5?style=for-the-badge&labelColor=05010f)](https://cb.correax.com)
 ![TypeScript, Canvas, and WebAudio](https://img.shields.io/badge/stack-TypeScript%20%2B%20Canvas%20%2B%20WebAudio-00f0ff?style=for-the-badge&labelColor=05010f)
-![Zero runtime dependencies](https://img.shields.io/badge/deps-zero-ffe066?style=for-the-badge&labelColor=05010f)
+![Zero client runtime dependencies](https://img.shields.io/badge/client_deps-zero-ffe066?style=for-the-badge&labelColor=05010f)
 
 *A high-voltage cyberpunk arcade **remix** — the falling blocks of Tetris,
 the girder-perched gorilla hurling them down from a Donkey Kong-style
 construction site, a **Boss Rush** mode where roaming Pac-Man-shaped
-attackers chew through your stack, and a live AI-basket stock ticker
+attackers chew through your stack, and an indicative AI-stock ticker
 running across the marquee. Build the stack. Break the circuit.
 Take down the mainframe.*
 
@@ -38,7 +38,7 @@ from somewhere far weirder:
   trail; a Tetris (four-line clear) summons a giant *MAIN BREAKER* Pacman
   with foreground lightning. In Boss Rush, hostile Pacmen also appear as
   roaming attackers on the higher tiers.
-- **A live stock ticker** rides the cabinet marquee — real indicative quotes
+- **A stock ticker** rides the cabinet marquee — indicative quotes
   for an AI-focused basket (`MSFT`, `NVDA`, `GOOGL`, `AMZN`, `META`, `AMD`,
   `AVGO`, `ORCL`, `PLTR`, `TSM`, `MU`, `ANET`, `VRT`), with
   *"Circuit Breaker AI Portfolio"* at the start of each complete cycle. It's the
@@ -55,12 +55,21 @@ there to sell the illusion that you cracked open a rogue arcade machine at
 
 Live in a browser near you: **[cb.correax.com](https://cb.correax.com)**
 
-Or run it locally:
+**Desktop browser and keyboard are the primary way to play.** Phone and touch
+support are secondary; they should not compromise desktop controls or layout.
+
+On iOS, Safari can add the site to the Home Screen using the dedicated lightning
+icon. If an existing shortcut keeps its old icon, remove it and add it again.
+
+Or run it locally with Node.js 22 or 24 (CI uses 22):
 
 ```bash
-npm install
+npm ci --registry=https://packagefeedproxy.microsoft.io/npm/
 npm run dev # http://localhost:5173
 ```
+
+The lockfile uses Microsoft's npm package proxy. The Vite development server also
+serves `/api/quotes`, so local development can display the ticker's quote data.
 
 Ship a static bundle:
 
@@ -72,7 +81,7 @@ npm run preview
 ## 🎮 Controls
 
 | Key           | Action                    |
-|---------------|---------------------------|
+| ------------- | ------------------------- |
 | ← / →         | Move                      |
 | ↓             | Soft drop                 |
 | Space         | Hard drop                 |
@@ -80,7 +89,7 @@ npm run preview
 | Z             | Rotate CCW                |
 | A             | Rotate 180°               |
 | Shift / C     | Hold piece                |
-| P             | Pause / resume            |
+| P / Esc       | Pause / resume            |
 | M             | Mute audio                |
 | R             | Retry the same seed       |
 
@@ -89,6 +98,24 @@ selects mode and difficulty. Settings contains the audio mixer, reduced effects,
 and an expandable advanced section for the run seed and DAS/ARR timing.
 Controls lists the keyboard reference. Start Game stays visible on every tab,
 including on small screens where the content scrolls.
+
+Fresh visits use these defaults:
+
+| Setting | Default |
+| --- | --- |
+| Game mode | Boss Rush |
+| Difficulty | Normal |
+| Run seed | Random |
+| Reduced effects | Off |
+| Audio | Unmuted |
+| Master / effects / music | 70% / 70% / 45% |
+| DAS / ARR | 150 ms / 40 ms |
+
+Audio mix, mute, reduced effects, and input timing persist in this browser.
+Mode, difficulty, and seed are selected for each run rather than saved as defaults.
+DAS (Delayed Auto Shift) is the delay before a held direction starts repeating.
+ARR (Auto Repeat Rate) is the interval between repeated moves after that delay.
+A tap moves one column immediately. Lower values make held movement more responsive.
 
 Setup shortcuts: `1`/`2` select mode (Boss Rush / Free Stack), `3`/`4`/`5` select
 difficulty (Chill / Normal / Overdrive), `[`/`]` tune DAS, and `;`/`'` tune ARR.
@@ -101,7 +128,7 @@ Leave RUN SEED blank for a random run, or enter a whole number from `0` to
 sequence and random streams for boss attacks and Kong. Matching a full run
 also requires the same inputs and timing.
 
-Switching tabs or leaving the window pauses the game and releases held controls.
+Switching browser tabs or leaving the window pauses the game and releases held controls.
 Resume explicitly with `P`, `Esc`, or the RESUME button. Pauses and boss cutscenes
 do not count toward run time, and the final summary freezes when the run ends.
 
@@ -111,9 +138,9 @@ stay locked for the current run. Back to Pause or Esc returns to the pause scree
 without resuming.
 
 The Reduced effects checkbox in Settings hides the stock ticker and disables
-shake, flashes, foreground flourishes, and animated cabinet decorations. Attack warnings, Kong's aim marker,
-and the ghost piece stay visible. Full effects are on by default; your choice is
-saved for future visits.
+shake, flashes, foreground flourishes, and animated cabinet decorations. Attack
+warnings, Kong's aim marker, and the ghost piece stay visible. Full effects are on
+by default; your choice is saved for future visits.
 
 Click or press any key to boot the cabinet. The browser requires a user gesture
 before it can start the audio graph.
@@ -199,21 +226,21 @@ different:
 
 ### The look
 
-Every visual effect is drawn in Canvas 2D — there are no SVG overlays or
-external image effects. That means everything scales cleanly and stays in
-sync with the game clock:
+Gameplay effects use Canvas 2D; the cabinet, ticker, and setup dialog use HTML and
+CSS. Kong uses the credited PNG sprite sheets:
 
 - Circuit-trace animated background, CRT scanlines, screen shake, chromatic flash
 - **Neon Pacman line clear** -- one chomping cyberpunk Pacman per cleared row, alternating direction, RGB split, and glowing pellet trail; a Tetris summons a giant breaker Pacman with foreground lightning arcs
 - `MAIN BREAKER TRIPPED` four-line-clear banner, circuit lightning, particles, screen shake, and chromatic flash
 - A large top-layer Grid Wraith roams the board briefly when a run ends, then dissolves into the cabinet glow
 - Each ticker cycle starts with "Circuit Breaker AI Portfolio", followed by the full AI-focused stock list
-- The cabinet's `INSERT COIN` slot links to *Loop Engineering* on Amazon
+- The start screen's Play tab includes the `INSERT COIN` / `BUY THE BOOK` link to
+  *Loop Engineering* on Amazon. It is absent during gameplay and paused settings.
 - Responsive arcade cabinet chrome with animated marquee, occasional blinking lights, scrolling ticker, bezel reflection, and corner screws
 - Hot-path glows (particles, pellet trails, active-piece halos) stamp
   pre-baked radial sprites instead of per-frame `shadowBlur`, and the marquee
-  ticker scrolls at a constant speed on its own compositor layer — bursts stay
-  at full frame rate
+  ticker scrolls at a constant speed on its own compositor layer, reducing
+  per-frame paint work
 
 ### Ticker and privacy
 
@@ -222,10 +249,15 @@ attached — the client only ever talks to our own first-party endpoint, and
 that endpoint is aggressively cached:
 
 - The browser calls only the first-party `/api/quotes` endpoint; it never contacts the quote provider directly.
-- The server returns indicative quotes for `MSFT`, `NVDA`, `GOOGL`, `AMZN`, `META`, `AMD`, `AVGO`, `ORCL`, `PLTR`, `TSM`, `MU`, `ANET`, and `VRT`, with a five-minute server cache, a short browser/edge cache, and bounded retries.
+- The configured stock basket is defined in [`api/src/quotes.js`](api/src/quotes.js).
+  The server uses a five-minute cache, a short browser/edge cache, and bounded retries.
 - Percentage changes compare the regular-market price with the previous regular-session close, not a multi-day chart baseline or extended-hours price.
+- The browser fetches quotes once per page load; the ticker is not a streaming
+  feed and does not refresh automatically. Reload the page to request updated data.
 - If quote retrieval fails, the ticker shows only the portfolio name and gameplay remains unaffected.
 - Ticker values and interaction are not tracked. The Amazon purchase link is not tracked either.
+- Production sends only the approved homepage `page_view` event. Game state,
+  scores, settings, and inputs stay local; see [INSTRUMENTATION.md](INSTRUMENTATION.md).
 
 ## 🛠️ Tech
 
@@ -234,12 +266,10 @@ visual and audio effects:
 
 - **TypeScript** (strict) + **HTML5 Canvas 2D** + **Web Audio API**
 - **Vite** for dev / build
-- **Zero runtime dependencies**
-- Deployed on **Azure Static Web Apps** (Standard tier, custom domain w/ managed TLS)
+- **Zero client runtime package dependencies**; the quote API uses `@azure/functions`
+- Deployed on **Azure Static Web Apps** at the custom domain `cb.correax.com`
 
-The whole client fits comfortably under an idle tab's memory budget and boots
-faster than the first synth pad note — the audio graph is what needs the user
-gesture, not the render loop.
+The game renders before audio is unlocked. A user gesture starts the audio graph.
 
 ## 📂 Project layout
 
@@ -254,9 +284,11 @@ src/
 ├── effects.ts        # particles, lightning, announcements, Pacman runs
 ├── renderer.ts       # canvas draw pipeline
 ├── input.ts          # keyboard + DAS/ARR
+├── setup-panel.ts    # shared startup/paused dialog and accessible tabs
+├── frame-timing.ts   # elapsed-time bounds for gameplay and input
 ├── random.ts         # seeded gameplay streams, independent of cosmetic randomness
-├── storage.ts        # ruleset records, legacy score, input and effects preferences
-├── market-ticker.ts  # arcade phrase and indicative quote ticker
+├── storage.ts        # ruleset records, legacy score, audio, input, and effects preferences
+├── market-ticker.ts  # portfolio name and indicative quote ticker
 ├── audio/
 │   ├── audio.ts      # graph, mixer persistence, reverb bus, compressor
 │   ├── music.ts      # synthwave sequencer
@@ -270,7 +302,10 @@ api/
 public/
 ├── kong-sprite.png            # Kong sprite sheet (see CREDITS.md)
 ├── kong-dance.png             # Kong celebration dance strip (see CREDITS.md)
-└── circuit-breaker-social.png # OpenGraph / social preview
+├── circuit-breaker-social.png # OpenGraph / social preview
+├── apple-touch-icon.png       # opaque 180x180 iOS Home Screen icon
+├── client/                   # production visit-tracker scripts
+└── staticwebapp.config.json   # security headers, caching, and Azure routes
 
 docs/
 └── assets/
@@ -281,12 +316,14 @@ docs/
 
 ## 🚀 Deploy
 
-The live site uses Azure Static Web Apps. A push to `main` runs typecheck, tests,
+The normal release path is a commit pushed directly to `main`; pull requests are
+not required for this solo project. A push runs typecheck, tests,
 production build, artifact validation, and deployment through
-`.github/workflows/azure-static-web-apps.yml`.
+the [Azure Static Web Apps workflow](.github/workflows/azure-static-web-apps.yml).
+The workflow deploys both `dist/` and the quote API in `api/`.
 
-Pull requests deploy tracker-disabled preview environments. Production pushes set
-`CB_TRACKER_ENABLED=true` so only the default environment emits page views.
+The workflow also supports tracker-disabled previews if a pull request is used.
+Production pushes set `CB_TRACKER_ENABLED=true`; ordinary local builds omit tracking.
 
 Run the complete local gate before a release:
 
@@ -294,21 +331,35 @@ Run the complete local gate before a release:
 npm run check
 ```
 
-For emergency recovery when GitHub Actions is unavailable:
+Check the production activation separately, setting the flag before building:
 
-```bash
+```powershell
+$env:CB_TRACKER_ENABLED = 'true'
 npm run build
-npx @azure/static-web-apps-cli deploy ./dist \
-  --deployment-token $env:SWA_TOKEN \
-  --env production
+npm run validate -- --tracking-enabled
+Remove-Item Env:CB_TRACKER_ENABLED
 ```
 
-The manual command is a recovery path, not the normal release process.
+Do not deploy `dist/` alone as a substitute for the workflow: it omits the quote
+API. After deployment, confirm the homepage, scripts, icon, and `/api/quotes`
+responses at the canonical URL. Tracker-specific checks are in
+[INSTRUMENTATION.md](INSTRUMENTATION.md).
+
+## Project documentation
+
+| Document | Purpose |
+| --- | --- |
+| [PLAN.md](PLAN.md) | Current delivery record and architecture decisions |
+| [HANDOFF.md](HANDOFF.md) | Restart state, open work, and the next action |
+| [INSTRUMENTATION.md](INSTRUMENTATION.md) | Tracking boundaries, quote-data behavior, and production verification |
+| [CREDITS.md](CREDITS.md) | Third-party artwork provenance and licensing limits |
+| [public/llms.txt](public/llms.txt) | Concise published facts for automated consumers |
 
 ## 📜 License
 
-MIT -- hack it, remix it, ship your own arcade cabinet.
+The code has been described as MIT, but this repository does not currently track a
+standalone `LICENSE` file.
 
-Third-party art assets (currently: the Kong sprite sheet + celebration dance strip) are credited
-separately in [CREDITS.md](CREDITS.md). Please preserve those attributions
-if you fork the game.
+Third-party art is not covered by that statement. The Kong sprite sheet and
+celebration dance strip have separate attribution and permission limits in
+[CREDITS.md](CREDITS.md). Preserve those attributions if you fork the game.

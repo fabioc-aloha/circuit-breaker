@@ -39,7 +39,7 @@ import {
     TSPIN_BOSS_DAMAGE,
     TSPIN_SCORE,
 } from './constants';
-import type { EffectsManager } from './effects';
+import { PACMAN_TRAVEL_FRAMES, type EffectsManager } from './effects';
 import type { InputActions } from './input';
 import { Kong, makeKongConfig } from './kong';
 import { Bag, cellsOf, spawnPiece, spawnRangeX } from './piece';
@@ -63,7 +63,7 @@ const BOARD_PIXEL_ORIGIN_X = HUD_PADDING + SIDE_PANEL_W + HUD_PADDING;
 const BOARD_PIXEL_ORIGIN_Y = HUD_PADDING + KONG_LEDGE_H;
 // Hold cleared rows visible-but-empty for this many ms so the pacman burst
 // finishes crossing them before the stack drops. Matches pacman travel time.
-const LINE_CLEAR_HOLD_MS = 260;
+const LINE_CLEAR_HOLD_MS = PACMAN_TRAVEL_FRAMES * (1000 / 60);
 
 const TSPIN_LABELS: Record<number, string> = { 1: 'T-SPIN SINGLE', 2: 'T-SPIN DOUBLE', 3: 'T-SPIN TRIPLE' };
 
