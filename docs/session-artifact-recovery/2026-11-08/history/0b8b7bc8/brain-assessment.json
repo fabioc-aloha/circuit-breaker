@@ -1,0 +1,2778 @@
+{
+  "schemaVersion": 2,
+  "target": {
+    "fileCount": 517,
+    "contentSha256": "a8fe75ef52cfe2229b04d64aec66ef27e8bc398a8fc207821da33835f7c966b1"
+  },
+  "includeHistory": false,
+  "artifacts": [
+    {
+      "id": "brain-auditor",
+      "type": "agent",
+      "path": ".github/agents/brain-auditor.agent.md",
+      "bytes": 12943,
+      "sha256": "96e6a21a8d268ae249e3115b696a698be7a986a94acdfd348d89745e95de8841",
+      "loadingTier": "on-demand",
+      "description": "Runs a local brain audit for ACT Edition (and Supervisor) using deterministic checks, then reports findings by severity with concrete file-level fixes. Pairs with extension-auditor — this side owns brain artefacts; extension-auditor owns the Marketplace surface."
+    },
+    {
+      "id": "document-assembler",
+      "type": "agent",
+      "path": ".github/agents/document-assembler.agent.md",
+      "bytes": 7687,
+      "sha256": "12893382ad6ae0b49564e1d337aecd42133f3d18e27c8f529c1bde046a380241",
+      "loadingTier": "on-demand",
+      "description": "Takes a draft markdown file containing `<!-- ILLUSTRATOR: ... -->` placeholders, dispatches the illustrator worker for each placeholder in parallel, and stitches the rendered diagrams back into the file. Use when a markdown draft has 2 or more diagram placeholders to render and assemble. Returns confirmation that the file was assembled."
+    },
+    {
+      "id": "illustrator",
+      "type": "agent",
+      "path": ".github/agents/illustrator.agent.md",
+      "bytes": 4710,
+      "sha256": "5ad01351833b4b9833ea4c5d29ea8c1b7db5d66c044ef2ecc230379e4b84fa16",
+      "loadingTier": "on-demand",
+      "description": "Creates visual diagrams (mermaid flowcharts and sequence/state/class diagrams, SVG, ASCII art) following all visual rules. Use when the task requires a diagram, chart, or visual artifact. Returns only the diagram block, no surrounding prose."
+    },
+    {
+      "id": "markdown-author",
+      "type": "agent",
+      "path": ".github/agents/markdown-author.agent.md",
+      "bytes": 15980,
+      "sha256": "f0b484c06ef0a9b4a2d5fcd533a47952d95ed7258641852d0cbe8e67305eeb69",
+      "loadingTier": "on-demand",
+      "description": "Authors or edits markdown content (prose, tables, lists, frontmatter) so it lints clean and follows project conventions. Use when the task requires substantive markdown writing or editing. Does NOT create diagrams; returns a placeholder for the illustrator instead."
+    },
+    {
+      "id": "README",
+      "type": "resource",
+      "path": ".github/config/README.md",
+      "bytes": 3170,
+      "sha256": "c28b71c025b6860d1c07f75d586c9b3ebfee1c9e8d75fed8d7901133320ba5b5",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "copilot-instructions.local",
+      "type": "research",
+      "path": ".github/copilot-instructions.local.md",
+      "bytes": 2094,
+      "sha256": "41300c9ed1bcecae159e61d188b3eeb21d76b22e8be26d01643c493617931f66",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "copilot-instructions",
+      "type": "instruction",
+      "path": ".github/copilot-instructions.md",
+      "bytes": 6104,
+      "sha256": "83670f6935dfa73543de63f82268e4ba4c1acf425b08889a1e7876431e5ea63a",
+      "loadingTier": "scope-dependent"
+    },
+    {
+      "id": "act-foundations",
+      "type": "instruction",
+      "path": ".github/instructions/act-foundations.instructions.md",
+      "bytes": 7192,
+      "sha256": "cd383f5c479ef400afaef958d3fb514f4d0148791507269d7afa25c2434f7f91",
+      "loadingTier": "scope-dependent",
+      "description": "The 10 tenets of ACT with rationale — why each exists, what it prevents, how to apply it"
+    },
+    {
+      "id": "act-pass",
+      "type": "instruction",
+      "path": ".github/instructions/act-pass.instructions.md",
+      "bytes": 8588,
+      "sha256": "a96957ed662c6509c997a201bda680cc40fa5686f7fd3de3884fa9072e0869da",
+      "loadingTier": "scope-dependent",
+      "description": "Run the 7-step ACT pass on medium and high stakes work — Materiality first, then Hypothesise, Alternatives, Disconfirmers, Audit-priors, Severity, Commit"
+    },
+    {
+      "id": "adversarial-review",
+      "type": "instruction",
+      "path": ".github/instructions/adversarial-review.instructions.md",
+      "bytes": 4833,
+      "sha256": "e76e916970fd8b7d23804ffdb87a736bfe3b7a4fe45976a854135404645cb9c6",
+      "loadingTier": "scope-dependent",
+      "description": "Structured devil's advocate and adversarial review — supports ACT Tenet VIII (Adversarial Self-Probe)"
+    },
+    {
+      "id": "agent-delegation",
+      "type": "instruction",
+      "path": ".github/instructions/agent-delegation.instructions.md",
+      "bytes": 5888,
+      "sha256": "0eda2f461bd163878b093012d184c25769c646a980cf9f6fc88fb80fb138449e",
+      "loadingTier": "scope-dependent",
+      "description": "Delegate mechanical work to worker subagents (workers in .github/agents/) so the parent session keeps capacity for ACT applied to the user's real problem"
+    },
+    {
+      "id": "brain-audit",
+      "type": "instruction",
+      "path": ".github/instructions/brain-audit.instructions.md",
+      "bytes": 1779,
+      "sha256": "185215a085ab3e7531e32f30713ad7d41ebf040b24d2003760287d3647cb5dfd",
+      "loadingTier": "scope-dependent",
+      "description": "Brain audit routing -- run local deterministic QA on brain artefacts, validate findings in files, and prioritize fixes by severity."
+    },
+    {
+      "id": "code-review",
+      "type": "instruction",
+      "path": ".github/instructions/code-review.instructions.md",
+      "bytes": 1588,
+      "sha256": "a15f5cdc32d96e584202893cddf3e68fa25928993e08387e7ffce55a0798e45d",
+      "loadingTier": "scope-dependent",
+      "description": "Code review quality gate protocols and feedback guidelines"
+    },
+    {
+      "id": "communication-craft",
+      "type": "instruction",
+      "path": ".github/instructions/communication-craft.instructions.md",
+      "bytes": 3317,
+      "sha256": "efa838caa2968ee93ed956b49132b8f69f5e12cd99ca1c140b7e5048cc4f46e0",
+      "loadingTier": "scope-dependent",
+      "description": "Communication craft — give feedback, explain concepts, tailor to audience, elicit needs"
+    },
+    {
+      "id": "converter",
+      "type": "instruction",
+      "path": ".github/instructions/converter.instructions.md",
+      "bytes": 2140,
+      "sha256": "21b036d4d25c46b8709028701faf412793e76642e933a197cb18fb7b95750a16",
+      "loadingTier": "scope-dependent",
+      "description": "Document conversion routing -- detect format, delegate to the converter SA or run the appropriate muscle directly"
+    },
+    {
+      "id": "critical-thinking",
+      "type": "instruction",
+      "path": ".github/instructions/critical-thinking.instructions.md",
+      "bytes": 2540,
+      "sha256": "2370b2ae7c9f678266711f8be042e6f37d18f9963b5aab39d4c90ef2a9fe254e",
+      "loadingTier": "scope-dependent",
+      "description": "Critical thinking framework — challenge assumptions, evaluate evidence, detect bias, and test falsifiability"
+    },
+    {
+      "id": "cross-project-isolation",
+      "type": "instruction",
+      "path": ".github/instructions/cross-project-isolation.instructions.md",
+      "bytes": 5825,
+      "sha256": "968e942c1e969a6bfd78ff9902975e1f24afc4d9979198e4dc051b09d4596d80",
+      "loadingTier": "scope-dependent",
+      "description": "Strip project specifics before writing to user-shared fleet channels — prevent one heir's project context from leaking into the rest of the fleet"
+    },
+    {
+      "id": "doc-hygiene",
+      "type": "instruction",
+      "path": ".github/instructions/doc-hygiene.instructions.md",
+      "bytes": 1192,
+      "sha256": "91d2e1e414f50203acf6b9514f10ced4586b911d4fb3ce816c457e62cd0395e4",
+      "loadingTier": "scope-dependent",
+      "description": "Routing pointer to doc-hygiene skill — fires on doc-audit / doc-quality / drift / hygiene file patterns and delegates to the skill body. The skill itself owns the anti-drift rules, count elimination, and living-document maintenance protocol."
+    },
+    {
+      "id": "emotional-intelligence",
+      "type": "instruction",
+      "path": ".github/instructions/emotional-intelligence.instructions.md",
+      "bytes": 2546,
+      "sha256": "ca688961813c3653cf23d65bb80eb44927c1760710e1664fc7225a6c5daa3a4a",
+      "loadingTier": "scope-dependent",
+      "description": "Unconscious emotional attunement — detect frustration, celebrate success, adapt tone to session health"
+    },
+    {
+      "id": "epistemic-calibration",
+      "type": "instruction",
+      "path": ".github/instructions/epistemic-calibration.instructions.md",
+      "bytes": 4249,
+      "sha256": "b9bfbc45017f0b4629d4e69d4f8da9712826e50a6aa0feb7fa8a79ac98b66ced",
+      "loadingTier": "scope-dependent",
+      "description": "Epistemic calibration — confidence matching, hallucination prevention, and self-correction"
+    },
+    {
+      "id": "falsifiability-deadlines",
+      "type": "instruction",
+      "path": ".github/instructions/falsifiability-deadlines.instructions.md",
+      "bytes": 5422,
+      "sha256": "381116db64692f94f5baea6b51e86a74540db0338c8903f0abc8d373e34e4fa9",
+      "loadingTier": "scope-dependent",
+      "description": "Every new or edited brain artefact (instruction / skill / prompt / agent) must declare a specific falsification deadline — a literal date, an observable event, or count+time bound — not 'after N passes' or 'when conditions warrant'."
+    },
+    {
+      "id": "git-workflow",
+      "type": "instruction",
+      "path": ".github/instructions/git-workflow.instructions.md",
+      "bytes": 1586,
+      "sha256": "f6aee346107612107bcc19879ad6c85d0aad79596a0146f73cdabc2a23a546cd",
+      "loadingTier": "scope-dependent",
+      "description": "Consistent git practices, recovery patterns, and safe operations"
+    },
+    {
+      "id": "greeting-checkin",
+      "type": "instruction",
+      "path": ".github/instructions/greeting-checkin.instructions.md",
+      "bytes": 2547,
+      "sha256": "4de03ba670506854d5669fb21c9502fec10100f8fbe9cc22ffb2fdc23077afed",
+      "loadingTier": "scope-dependent",
+      "description": "Greeting-triggered check-in — when the user opens the session with a greeting, run the Edition + shared memory bus check before responding"
+    },
+    {
+      "id": "knowledge-coverage",
+      "type": "instruction",
+      "path": ".github/instructions/knowledge-coverage.instructions.md",
+      "bytes": 1676,
+      "sha256": "cfeb771bf35f304b94f90e3dbc18ff69aaec8d189031527c3f83dce061cbe934",
+      "loadingTier": "scope-dependent",
+      "description": "Knowledge coverage taxonomy and visible uncertainty indicators — assess brain coverage per domain, display confidence badges"
+    },
+    {
+      "id": "lint-discipline",
+      "type": "instruction",
+      "path": ".github/instructions/lint-discipline.instructions.md",
+      "bytes": 2688,
+      "sha256": "64cc813e687192f9a49d6e8d6328ca1363025d3c7c70584037689ee4fcbcb5fd",
+      "loadingTier": "scope-dependent",
+      "description": "Fix lint always — if I edited a file, I own its lint state on exit, even for pre-existing findings"
+    },
+    {
+      "id": "mall-installation",
+      "type": "instruction",
+      "path": ".github/instructions/mall-installation.instructions.md",
+      "bytes": 10354,
+      "sha256": "3b60df770a898962d24168bbcce439a2c854afa5de084a07313cefb5505a9de0",
+      "loadingTier": "scope-dependent",
+      "description": "How heirs install plugins from the Alex ACT Plugin Mall into local/ paths so Edition upgrades don't clobber them"
+    },
+    {
+      "id": "markdown-mermaid",
+      "type": "instruction",
+      "path": ".github/instructions/markdown-mermaid.instructions.md",
+      "bytes": 1291,
+      "sha256": "084ea3fe29a3e02c4084ba6f6fdbdb797351c1c9966077e4c469e64bc2e8c91c",
+      "loadingTier": "scope-dependent",
+      "description": "Markdown and Mermaid — author markdown, render diagrams, prevent silent failures, lint clean, sanitize user content"
+    },
+    {
+      "id": "meditation",
+      "type": "instruction",
+      "path": ".github/instructions/meditation.instructions.md",
+      "bytes": 4215,
+      "sha256": "7ea61f73baafc3eeab73624108224bdde2e74483fd45339e9fc3b3068e292798",
+      "loadingTier": "scope-dependent",
+      "description": "Knowledge consolidation — transform working memory into permanent architecture"
+    },
+    {
+      "id": "memory-triggers",
+      "type": "instruction",
+      "path": ".github/instructions/memory-triggers.instructions.md",
+      "bytes": 4858,
+      "sha256": "2279cea2d6863a7323dae3f436657f042ae589d5cb4c59af70a79fdf87d53166",
+      "loadingTier": "scope-dependent",
+      "description": "Automatic memory formation triggers — when to persist without being asked"
+    },
+    {
+      "id": "no-deferred-debt",
+      "type": "instruction",
+      "path": ".github/instructions/no-deferred-debt.instructions.md",
+      "bytes": 3900,
+      "sha256": "c269e8c56d1bd03ff02d75d6d83b04b9416084ef05a6a141acec04ba8e0a4a1e",
+      "loadingTier": "scope-dependent",
+      "description": "When you spot tech debt, stale references, or outdated content — fix it in the same turn. Do not defer."
+    },
+    {
+      "id": "pii-memory-filter",
+      "type": "instruction",
+      "path": ".github/instructions/pii-memory-filter.instructions.md",
+      "bytes": 4121,
+      "sha256": "d73dbff0f8003f54340938657d9402ea48a5bef16c4cbb36b77babbbc2e85fe9",
+      "loadingTier": "scope-dependent",
+      "description": "PII filter at memory write boundaries — prevent sensitive data from entering persistent storage tiers"
+    },
+    {
+      "id": "privacy-responsible-ai",
+      "type": "instruction",
+      "path": ".github/instructions/privacy-responsible-ai.instructions.md",
+      "bytes": 1472,
+      "sha256": "7252e8e53e54aef91662c6156982c602ba2dd432efa87715e02f1303ff06edf4",
+      "loadingTier": "scope-dependent",
+      "description": "Privacy by design, data protection, and responsible AI principles"
+    },
+    {
+      "id": "proactive-awareness",
+      "type": "instruction",
+      "path": ".github/instructions/proactive-awareness.instructions.md",
+      "bytes": 4186,
+      "sha256": "d4b5e6ca87aa9224480f2a1121bba060a374f603498f010d191d0fc6770a4cf5",
+      "loadingTier": "scope-dependent",
+      "description": "Cross-session context recovery, uncommitted work detection, and proactive behaviors"
+    },
+    {
+      "id": "problem-framing-audit",
+      "type": "instruction",
+      "path": ".github/instructions/problem-framing-audit.instructions.md",
+      "bytes": 4501,
+      "sha256": "aecc4272f1a646d11ac60945006fe0e1f7498695b7c403a8118b48b3d01b486e",
+      "loadingTier": "scope-dependent",
+      "description": "Frame audit before solving — restate the problem, flag user-framing mismatches, surface symptom→cause reframes"
+    },
+    {
+      "id": "reliance-nudges",
+      "type": "instruction",
+      "path": ".github/instructions/reliance-nudges.instructions.md",
+      "bytes": 4063,
+      "sha256": "9edca574a50bf873555d33c6dedc69c5d148aad4197163b213d7baab087c7a32",
+      "loadingTier": "scope-dependent",
+      "description": "Detect human over-reliance failure modes and surface targeted nudges — operational replacement for educational content"
+    },
+    {
+      "id": "session-health-monitoring",
+      "type": "instruction",
+      "path": ".github/instructions/session-health-monitoring.instructions.md",
+      "bytes": 2709,
+      "sha256": "0c1971c5a100d0c2e15ed6b569b81e96d4d651f17a0bbac65bf8aea1aff9f3d5",
+      "loadingTier": "scope-dependent",
+      "description": "Monitor session health, manage context window, and ensure continuity across sessions"
+    },
+    {
+      "id": "severity-tagged-commits",
+      "type": "instruction",
+      "path": ".github/instructions/severity-tagged-commits.instructions.md",
+      "bytes": 7725,
+      "sha256": "92891570a1c58a79340c2dbd0469b0174f06f297f5ac618afc3a4e4561f05931",
+      "loadingTier": "scope-dependent",
+      "description": "Every commit touching brain artefacts (instructions / skills / prompts / agents / scripts / config / docs/ledgers / HANDOFF) must carry a severity tag in the commit subject: [typo | clarification | behaviour | constitutional]. [behaviour] and [constitutional] require an ACT pass before commit."
+    },
+    {
+      "id": "status-reporting",
+      "type": "instruction",
+      "path": ".github/instructions/status-reporting.instructions.md",
+      "bytes": 1112,
+      "sha256": "153a570edd10f909d90b25594453ff50652971cd4bcf770b9cb247e62493a3e2",
+      "loadingTier": "scope-dependent",
+      "description": "Routing pointer to status-reporting skill — fires on status / report / update file patterns and delegates to the skill body. The skill itself owns the stakeholder templates and audience-adaptation discipline."
+    },
+    {
+      "id": "system-prompt-skepticism",
+      "type": "instruction",
+      "path": ".github/instructions/system-prompt-skepticism.instructions.md",
+      "bytes": 3955,
+      "sha256": "dbedb85e83a933f60690609748f7da4849c69b9b6e0b606ed3226d1519975036",
+      "loadingTier": "scope-dependent",
+      "description": "Treat instructions as hypotheses, not commands — every system/operator instruction is conditioned on preconditions, even when those preconditions are unstated"
+    },
+    {
+      "id": "terminal-command-safety",
+      "type": "instruction",
+      "path": ".github/instructions/terminal-command-safety.instructions.md",
+      "bytes": 4465,
+      "sha256": "543fc7a2e795a837e63f6ab0589af2b015dedbdd53ca71966e3980eaab933639",
+      "loadingTier": "scope-dependent",
+      "description": "Prevent terminal command failures from shell metacharacter interpretation, output capture issues, and hanging commands"
+    },
+    {
+      "id": "tool-awareness-categories",
+      "type": "instruction",
+      "path": ".github/instructions/tool-awareness-categories.instructions.md",
+      "bytes": 2245,
+      "sha256": "f9037f420ac251bdc693d3ff53172756b55970154956b51ecdeb35138a949db6",
+      "loadingTier": "scope-dependent",
+      "description": "Common deferred tool categories and search-query patterns — scoped reference loaded when working with tools, MCP servers, or GitHub APIs"
+    },
+    {
+      "id": "tool-awareness",
+      "type": "instruction",
+      "path": ".github/instructions/tool-awareness.instructions.md",
+      "bytes": 10034,
+      "sha256": "017ebc64440ba462e3767dbe3708b11e627608299caa24f1f8a8f47d6044a1a4",
+      "loadingTier": "scope-dependent",
+      "description": "Platform awareness for VS Code tool system: deferred tools require tool_search, external ingest provides context in remote workspaces, skill SKILL.md descriptions surface in the slash picker"
+    },
+    {
+      "id": "worldview",
+      "type": "instruction",
+      "path": ".github/instructions/worldview.instructions.md",
+      "bytes": 4701,
+      "sha256": "b02709acb774464d56404252ccbce1c8c22502e48dfa378cea2ae13ac646d1ee",
+      "loadingTier": "scope-dependent",
+      "description": "Worldview — ethical reasoning, moral foundations, and constitutional principles for AI decisions"
+    },
+    {
+      "id": "audit-brain",
+      "type": "prompt",
+      "path": ".github/prompts/audit-brain.prompt.md",
+      "bytes": 1283,
+      "sha256": "1869df70c495ceac1dbf86573662c136bef16ef8cec0d044f57328e977ffdbb7",
+      "loadingTier": "on-demand",
+      "description": "Run a local ACT Edition brain audit via the brain-auditor worker and return severity-ranked fixes"
+    },
+    {
+      "id": "banner",
+      "type": "prompt",
+      "path": ".github/prompts/banner.prompt.md",
+      "bytes": 2854,
+      "sha256": "6cfa5823362454e8c037f5a95527d1bcfae2968db0b18d02aa2bcdfa78e29f6b",
+      "loadingTier": "on-demand",
+      "description": "Generate a 1200×300 SVG banner for a document — title, subtitle, watermark category, on-brand for Alex — ACT Edition"
+    },
+    {
+      "id": "checkin",
+      "type": "prompt",
+      "path": ".github/prompts/checkin.prompt.md",
+      "bytes": 1238,
+      "sha256": "a790364162314590db9c8a9efaabd83c98188972ea4916a5ba6697deda9ee695",
+      "loadingTier": "on-demand",
+      "description": "Run the greeting check-in on demand — Edition version + shared memory announcements"
+    },
+    {
+      "id": "configure-vscode-verify",
+      "type": "prompt",
+      "path": ".github/prompts/configure-vscode-verify.prompt.md",
+      "bytes": 4548,
+      "sha256": "c0ff30072d8cde586d9cc0b5e2a774ae91266eaf1a39c33ce2cdfa1b03ad5cb4",
+      "loadingTier": "on-demand",
+      "description": "Read-only audit of user-level VS Code/Copilot settings compliance"
+    },
+    {
+      "id": "configure-vscode",
+      "type": "prompt",
+      "path": ".github/prompts/configure-vscode.prompt.md",
+      "bytes": 3601,
+      "sha256": "3ed47c24ca4cc1544c8ea5b64760d26cef7d5891f52c9240b1a8aa89beea2264",
+      "loadingTier": "on-demand",
+      "description": "Apply baseline VS Code user-scope settings for fleet policy compliance"
+    },
+    {
+      "id": "configure-workspace-verify",
+      "type": "prompt",
+      "path": ".github/prompts/configure-workspace-verify.prompt.md",
+      "bytes": 7545,
+      "sha256": "ab40fe6e52999163aaeb141f703aa890ba7ea014991cc7c27621bff8b9afd84f",
+      "loadingTier": "on-demand",
+      "description": "Read-only audit of workspace VS Code settings and .vscode/ assets against the heir-workspace baseline"
+    },
+    {
+      "id": "configure-workspace",
+      "type": "prompt",
+      "path": ".github/prompts/configure-workspace.prompt.md",
+      "bytes": 7792,
+      "sha256": "0a4c53bc5b1e67a55f5093b3988b7b9c33c2d6cdf939b573adaa261f77405146",
+      "loadingTier": "on-demand",
+      "description": "Apply baseline VS Code workspace-scope settings for the current heir"
+    },
+    {
+      "id": "convert",
+      "type": "prompt",
+      "path": ".github/prompts/convert.prompt.md",
+      "bytes": 1959,
+      "sha256": "53a176d4666c2955d601c7dd63316bd9227d593d424cf915596e1f8cc6f5547f",
+      "loadingTier": "on-demand",
+      "description": "Convert a document between formats (md/html/word/eml/txt). Detects source and target format, runs the appropriate per-skill script, validates with converter-qa."
+    },
+    {
+      "id": "critical-thinking",
+      "type": "prompt",
+      "path": ".github/prompts/critical-thinking.prompt.md",
+      "bytes": 3583,
+      "sha256": "cde77a18732ca6fd421fe0e3a9a03b3df83db8eda95149657c4da8df729e3a15",
+      "loadingTier": "on-demand",
+      "description": "Run the full critical-thinking pass on a decision, claim, or recommendation — generate alternatives, check evidence, detect bias, test falsifiability"
+    },
+    {
+      "id": "feedback",
+      "type": "prompt",
+      "path": ".github/prompts/feedback.prompt.md",
+      "bytes": 2629,
+      "sha256": "7d000ad643f41b89a63d43ca5d64f58ebc05d2712179d8c37316bdd38cc6b505",
+      "loadingTier": "on-demand",
+      "description": "File feedback to the user (and their Supervisor, if any) via the shared memory bus — guided through stripping rules and file naming"
+    },
+    {
+      "id": "format-markdown",
+      "type": "prompt",
+      "path": ".github/prompts/format-markdown.prompt.md",
+      "bytes": 2896,
+      "sha256": "b407a14a5d034e469c6ac6fc48b3fc6c1037cbd41d172154883bf411472694d5",
+      "loadingTier": "on-demand",
+      "description": "Format Markdown files for professional appearance — whitespace cleanup, blockquote continuity, ATX heading spacing — no semantic changes"
+    },
+    {
+      "id": "initialize",
+      "type": "prompt",
+      "path": ".github/prompts/initialize.prompt.md",
+      "bytes": 6675,
+      "sha256": "2515bec23f54fc5c6b18925586594c31065b1fd4c6e679dd1be0fb238faa83a4",
+      "loadingTier": "on-demand",
+      "description": "Initialize this workspace as an ACT heir — bootstrap the brain or finish a partial install (path-1 quick register)"
+    },
+    {
+      "id": "lint-markdown",
+      "type": "prompt",
+      "path": ".github/prompts/lint-markdown.prompt.md",
+      "bytes": 3181,
+      "sha256": "4db184153a3fbdcdb6d32dc358dd73d7a4df6f954cf0e34a9a9f0e4666bfaa6f",
+      "loadingTier": "on-demand",
+      "description": "Validate Markdown files against converter requirements — frontmatter, mermaid syntax, SVG presence, structural rules — before running converters"
+    },
+    {
+      "id": "mall-contribute",
+      "type": "prompt",
+      "path": ".github/prompts/mall-contribute.prompt.md",
+      "bytes": 5433,
+      "sha256": "77d16c7ca9320c9d6d04d1c1460d57aea657e13ff2f180f73664831b3fd3936f",
+      "loadingTier": "on-demand",
+      "description": "Propose a local skill for contribution to the Plugin Mall — strip project specifics, format as a Mall-compatible proposal, submit via feedback channel"
+    },
+    {
+      "id": "mall-install",
+      "type": "prompt",
+      "path": ".github/prompts/mall-install.prompt.md",
+      "bytes": 2716,
+      "sha256": "b461f41359f36104a3eaea579caa7a4f87acf6ada489ca2006b12ba042c03956",
+      "loadingTier": "on-demand",
+      "description": "Install a plugin from the Plugin Mall catalog at a user-pinned version — deferred to Phase 5b of PLAN-mall-automation v3"
+    },
+    {
+      "id": "mall-refresh",
+      "type": "prompt",
+      "path": ".github/prompts/mall-refresh.prompt.md",
+      "bytes": 4284,
+      "sha256": "78a84f4546f5917b9bf27f4c7b06d0e86de56a7d9395ae475e4e5d7221ec6592",
+      "loadingTier": "on-demand",
+      "description": "Audit installed Mall plugins for upstream drift, then update or remove with explicit user consent"
+    },
+    {
+      "id": "mall-search",
+      "type": "prompt",
+      "path": ".github/prompts/mall-search.prompt.md",
+      "bytes": 4738,
+      "sha256": "ef0b9c77dd52dd300104de6b85b719c3bb72de8f95299fce28cf529145da2948",
+      "loadingTier": "on-demand",
+      "description": "Search the Plugin Mall trust-scored catalog by query; ranks Mall-curated entries (🏆) first, surfaces third-party alternatives with their trust signals"
+    },
+    {
+      "id": "mall-show",
+      "type": "prompt",
+      "path": ".github/prompts/mall-show.prompt.md",
+      "bytes": 5633,
+      "sha256": "23d6efd5ca108440abfc5917288e606c41bdc16e452b65d9e17beed8b479d8dc",
+      "loadingTier": "on-demand",
+      "description": "Show full metadata + trust signal breakdown for a single Plugin Mall entry"
+    },
+    {
+      "id": "meditate",
+      "type": "prompt",
+      "path": ".github/prompts/meditate.prompt.md",
+      "bytes": 1504,
+      "sha256": "71d3fbd4148eaa0fab56622f4033d96386378ec15c7de97a59d7602890c4ee26",
+      "loadingTier": "on-demand",
+      "description": "Consolidate session learning — extract new patterns into skills, instructions, prompts, or memory"
+    },
+    {
+      "id": "note",
+      "type": "prompt",
+      "path": ".github/prompts/note.prompt.md",
+      "bytes": 852,
+      "sha256": "9c8c50adf079c7ca76db317ef9c399dbe01a76906d32c36dfe7042b2ea85f135",
+      "loadingTier": "on-demand",
+      "description": "Short alias for /save-session-note — write a quick pending-action note to repo-root HANDOFF.md"
+    },
+    {
+      "id": "problem-framing-audit",
+      "type": "prompt",
+      "path": ".github/prompts/problem-framing-audit.prompt.md",
+      "bytes": 3980,
+      "sha256": "9f21aa5397afbf53b73ed25269c212df07498b4f20d8bdcc38e57926511748c9",
+      "loadingTier": "on-demand",
+      "description": "Audit the framing of a problem before solving — restate, generalise, specialise, invert, ask why, pre-mortem, check stakeholders, surface alternative framings"
+    },
+    {
+      "id": "review-agent",
+      "type": "prompt",
+      "path": ".github/prompts/review-agent.prompt.md",
+      "bytes": 1326,
+      "sha256": "b774365408c2070e6e7853f1397161e79b787c00576aa57d016e767c20125859",
+      "loadingTier": "on-demand",
+      "description": "Audit a candidate agent (.agent.md) using agent-review's six-gate process (Gate 6 = Tool Allowlist Minimality)"
+    },
+    {
+      "id": "review-instruction",
+      "type": "prompt",
+      "path": ".github/prompts/review-instruction.prompt.md",
+      "bytes": 1363,
+      "sha256": "395ef8a442987ccf6e40a6ee9dc51ef6c618e5b1b8a0afde4c1600cc4486434e",
+      "loadingTier": "on-demand",
+      "description": "Audit a candidate instruction (.instructions.md) using instruction-review's five-gate process (plus Gate 6 for always-on)"
+    },
+    {
+      "id": "review-prompt",
+      "type": "prompt",
+      "path": ".github/prompts/review-prompt.prompt.md",
+      "bytes": 1145,
+      "sha256": "6b38493c1a6afefbb53b6de92e464c42f68d6e605fc67d433065cca2aff2d34f",
+      "loadingTier": "on-demand",
+      "description": "Audit a candidate prompt (.prompt.md) using prompt-review's five-gate process"
+    },
+    {
+      "id": "review-skill",
+      "type": "prompt",
+      "path": ".github/prompts/review-skill.prompt.md",
+      "bytes": 1186,
+      "sha256": "6941fd32607c83a11adcef7815f74fb5ce2c6ed13df7ab9fb1d8e98b786020d7",
+      "loadingTier": "on-demand",
+      "description": "Audit a candidate skill (.github/skills/<name>/SKILL.md) using skill-review's five-gate process. For instructions/prompts/agents use /review-instruction, /review-prompt, /review-agent."
+    },
+    {
+      "id": "save-session-note",
+      "type": "prompt",
+      "path": ".github/prompts/save-session-note.prompt.md",
+      "bytes": 2776,
+      "sha256": "80994aaedaae2c7c5515eeb88d77cb35bf6835e54f6f8fb13045737032625f48",
+      "loadingTier": "on-demand",
+      "description": "Save session state for handoff in repo-root HANDOFF.md (and mirror to the shared memory bus)"
+    },
+    {
+      "id": "status",
+      "type": "prompt",
+      "path": ".github/prompts/status.prompt.md",
+      "bytes": 2200,
+      "sha256": "3964df6feb24e99c502c2f50788dc9f1d82cd0f3aa28239c89a99a19277c249f",
+      "loadingTier": "on-demand",
+      "description": "Session-start orientation — heir identity, git state, uncommitted age, unread announcements"
+    },
+    {
+      "id": "upgrade",
+      "type": "prompt",
+      "path": ".github/prompts/upgrade.prompt.md",
+      "bytes": 3028,
+      "sha256": "d3bc825626b8c03549586df7315af47321ad50fae0dbff07cd436fd5037d3dd0",
+      "loadingTier": "on-demand",
+      "description": "Pull the latest Edition into this heir — apply directly, summarize, surface notable changes"
+    },
+    {
+      "id": "welcome",
+      "type": "prompt",
+      "path": ".github/prompts/welcome.prompt.md",
+      "bytes": 5597,
+      "sha256": "cd7a7ff242e1d85a889ac958d1c9a75004614c71353c73add7d228b60e292d51",
+      "loadingTier": "on-demand",
+      "description": "First-session orientation tour — what's loaded, what to try next, how to extend"
+    },
+    {
+      "id": "PULL_REQUEST_TEMPLATE",
+      "type": "research",
+      "path": ".github/PULL_REQUEST_TEMPLATE.md",
+      "bytes": 1142,
+      "sha256": "31d820fd0a23c527a1213270ce46e716d9b6aa1b1845a79cf6b5ee48e39e7f21",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "CONVERTER-CHANGELOG",
+      "type": "research",
+      "path": ".github/scripts/CONVERTER-CHANGELOG.md",
+      "bytes": 670,
+      "sha256": "4448b255625333ade9a3ec00218784663f816eb8a9c05acbbab50f4c234bec07",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "agent-creator",
+      "type": "skill",
+      "path": ".github/skills/agent-creator/SKILL.md",
+      "bytes": 8600,
+      "sha256": "dc7a3b9841cb5f15401e2f8d2a2b7045d4a82ed9cad092b00497fc23e802a50a",
+      "loadingTier": "on-demand",
+      "description": "Create agents that pass agent-review's six gates by construction — role capture, distinct-from-skill check, tool allowlist minimization, draft against gates, dogfood self-review. Use when authoring a new agent, refactoring an existing one, or promoting a Mall agent into the heir's brain."
+    },
+    {
+      "id": "agent-review",
+      "type": "skill",
+      "path": ".github/skills/agent-review/SKILL.md",
+      "bytes": 8808,
+      "sha256": "310030c1dadac5bd7254efe1cf85ac94b7dfa7fefb88df43192f23f1b547ad52",
+      "loadingTier": "on-demand",
+      "description": "Audits a candidate agent (.agent.md) against five gates (spec compliance, content quality, scope fit, safety, currency & coherence) plus Gate 6 (tool allowlist minimality). Use when reviewing a new agent draft before commit, evaluating a Mall agent or store agent for adoption, or re-auditing existing agents on a periodic cadence."
+    },
+    {
+      "id": "ai-memory-setup",
+      "type": "skill",
+      "path": ".github/skills/ai-memory-setup/SKILL.md",
+      "bytes": 6913,
+      "sha256": "8300c4510a359b4e166fac6ad2f5b8d2d1117bfd50aa72cde9468cff655ecab0",
+      "loadingTier": "on-demand",
+      "description": "Detect, resolve, and manage the Alex_ACT_Memory shared memory bus. Fires on bootstrap, session start (announcements), and feedback writes."
+    },
+    {
+      "id": "alex-banner-generation",
+      "type": "skill",
+      "path": ".github/skills/alex-banner-generation/SKILL.md",
+      "bytes": 5385,
+      "sha256": "deca8e5e549e10507573ad84f0715d021e6ce2ba4da6101c2e2671b592ebeee8",
+      "loadingTier": "on-demand",
+      "description": "Generate on-brand Alex — ACT Edition SVG banners for documents (READMEs, plans, notes, release artifacts)"
+    },
+    {
+      "id": "anti-hallucination",
+      "type": "skill",
+      "path": ".github/skills/anti-hallucination/SKILL.md",
+      "bytes": 6851,
+      "sha256": "53fc4f6c04d1f18072486fe56de7acfcf1ee69284a4620faedb8edd23ad05e68",
+      "loadingTier": "on-demand",
+      "description": "Prevent fabricated facts, invented APIs, and citation confabulation at the point of generation. Use when generating factual claims, code examples, API references, library names, configuration values, error messages, or citations — anything where 'sounds plausible' is not the same as 'is real'."
+    },
+    {
+      "id": "brain-audit",
+      "type": "skill",
+      "path": ".github/skills/brain-audit/SKILL.md",
+      "bytes": 3616,
+      "sha256": "96edf835665ed104abf72f0f58ff77f73b153d453cd0d646d8878c12130a3c5f",
+      "loadingTier": "on-demand",
+      "description": "Perform a local brain audit for ACT Edition (and Supervisor) using deterministic QA plus targeted file review, then produce severity-ranked fixes. Pairs with extension-audit on the sibling surface side; the Marketplace surface routes there, not here."
+    },
+    {
+      "id": "browser-tools",
+      "type": "skill",
+      "path": ".github/skills/browser-tools/SKILL.md",
+      "bytes": 9062,
+      "sha256": "8eb5936c9e2b0ff5b504dc1424325a53b559a373f1f4b7c7c31ac74bbcd0fe51",
+      "loadingTier": "on-demand",
+      "description": "Use VS Code 1.127+ browser tools (open_browser_page, screenshot_page, click_element, navigate_page, run_playwright_code) to reach content plain fetch_webpage can't hit (bot-protected sites, JavaScript-rendered pages, interactive gates) and to validate visual/design output via screenshot-driven review."
+    },
+    {
+      "id": "code-review",
+      "type": "skill",
+      "path": ".github/skills/code-review/SKILL.md",
+      "bytes": 8763,
+      "sha256": "0baa2b07fefc010740d76251bbf8ab9e10df04b9ac13d31bc0e02871fb857181",
+      "loadingTier": "on-demand",
+      "description": "Systematic code review for correctness, security, and growth — not just style enforcement"
+    },
+    {
+      "id": "creative-writing",
+      "type": "skill",
+      "path": ".github/skills/creative-writing/SKILL.md",
+      "bytes": 13846,
+      "sha256": "a2766d1334d958a1135255d5f3426ccec4d92c08919e4ffb97ca059cadfe0546",
+      "loadingTier": "on-demand",
+      "description": "Scaffold book-writing projects with folder structure, BOOK-PLAN template, character development matrices, and chapter organization patterns. Use when starting a new book project, planning multi-chapter structure, or building character bibles."
+    },
+    {
+      "id": "critical-thinking",
+      "type": "skill",
+      "path": ".github/skills/critical-thinking/SKILL.md",
+      "bytes": 26273,
+      "sha256": "a1bcad3af86b090935a5098d352c8e88fb20f12bb61050076ff99381777e513f",
+      "loadingTier": "on-demand",
+      "description": "Challenge what you think is right — alternative hypotheses, missing data, evidence quality, bias detection, falsifiability, and adversarial review"
+    },
+    {
+      "id": "deep-review",
+      "type": "skill",
+      "path": ".github/skills/deep-review/SKILL.md",
+      "bytes": 6299,
+      "sha256": "b4b9c2819e4d0f5ebd32f61e5c571a9b4d6b49be2ca2ba0fbd616b7537cd210e",
+      "loadingTier": "on-demand",
+      "description": "Adversarial code review with three parallel perspectives — Advocate, Skeptic, Architect — that create productive tension. Use for high-stakes PRs, architectural changes, or when single-pass review would miss issues. Surfaces findings through disagreement, not consensus."
+    },
+    {
+      "id": "doc-hygiene",
+      "type": "skill",
+      "path": ".github/skills/doc-hygiene/SKILL.md",
+      "bytes": 5731,
+      "sha256": "0706811b557ba919596e0b8115a0fac64ee3d0a1c99f9f6be6e800a1d0716d9f",
+      "loadingTier": "on-demand",
+      "description": "Documentation hygiene — anti-drift rules, count elimination, and living document maintenance"
+    },
+    {
+      "id": "docx-to-md",
+      "type": "skill",
+      "path": ".github/skills/docx-to-md/SKILL.md",
+      "bytes": 8869,
+      "sha256": "10ff8b275dbd8ace27e45164ceb3a13db70ebadce33309f15745410ec39a89b2",
+      "loadingTier": "on-demand",
+      "description": "Convert Word documents (.docx) to clean Markdown with image extraction and pandoc cleanup"
+    },
+    {
+      "id": "git-workflow",
+      "type": "skill",
+      "path": ".github/skills/git-workflow/SKILL.md",
+      "bytes": 4843,
+      "sha256": "0280eb8b6c0c44581dfa9d9306c6a03dcf2d038bb6584eed8cecd5e344742e64",
+      "loadingTier": "on-demand",
+      "description": "Apply consistent git practices for branch hygiene, safe commits, and recovery from common mishaps (lost commits, bad merges, accidental pushes). Use when authoring or reviewing a git workflow, recovering broken local state, or sequencing a commit/push that needs explicit user approval before destructive steps."
+    },
+    {
+      "id": "greeting-checkin",
+      "type": "skill",
+      "path": ".github/skills/greeting-checkin/SKILL.md",
+      "bytes": 6482,
+      "sha256": "715ff77eb2b96f1eac845f772381065eb5f8e6160ca896513cb08e8ce857890b",
+      "loadingTier": "on-demand",
+      "description": "Greeting-triggered self-check — recognise greetings, check Edition version against the upstream tag, scan AI-Memory announcements, and report inside the greeting reply"
+    },
+    {
+      "id": "html-to-md",
+      "type": "skill",
+      "path": ".github/skills/html-to-md/SKILL.md",
+      "bytes": 1720,
+      "sha256": "ad3f8361389edae49f4c96109c6766531fd6da5bed69862b305095db78e58fbc",
+      "loadingTier": "on-demand",
+      "description": "Convert HTML documents to clean Markdown via pandoc"
+    },
+    {
+      "id": "full-example",
+      "type": "resource",
+      "path": ".github/skills/humanizer/examples/full-example.md",
+      "bytes": 6436,
+      "sha256": "dabf702fc7e117742c7b62b9fdd64bc5805a97ab8f8df1e9485c4e1c97f99e10",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "humanizer",
+      "type": "skill",
+      "path": ".github/skills/humanizer/SKILL.md",
+      "bytes": 27237,
+      "sha256": "897125cd6e7c1e6ff058c86d341f265a9ae66187ed0d3c4e88270bb249789704",
+      "loadingTier": "on-demand",
+      "description": "Use when the user wants to humanize, de-AI, de-slop, or un-ChatGPT a piece of text — strip AI-isms and add real voice. Scans for 29 documented AI-writing patterns (Wikipedia's \"Signs of AI writing\") and produces a draft → self-audit → final rewrite. Optional voice-calibration from a user-provided writing sample. Adapted from Hermes Agent / blader/humanizer."
+    },
+    {
+      "id": "instruction-creator",
+      "type": "skill",
+      "path": ".github/skills/instruction-creator/SKILL.md",
+      "bytes": 7696,
+      "sha256": "f8f3c3cf3d489f1eca65df962ab47a3ee2f08ab229a6510f37c6fff4ac4aec8f",
+      "loadingTier": "on-demand",
+      "description": "Create instructions that pass instruction-review's five gates (plus Gate 6 for always-on) by construction — intent capture, prior-art scan, applyTo calibration, draft against gates, dogfood self-review. Use when authoring a new instruction, refactoring an existing one, or promoting a Mall instruction into the heir's brain."
+    },
+    {
+      "id": "instruction-review",
+      "type": "skill",
+      "path": ".github/skills/instruction-review/SKILL.md",
+      "bytes": 9035,
+      "sha256": "0a3ab343865071abaa1560b20760e25d739ec0a98f3b7544e62b7d4b672ad544",
+      "loadingTier": "on-demand",
+      "description": "Audits a candidate instruction (.instructions.md) against five gates (spec compliance, content quality, scope fit, safety, currency & coherence) plus optional Gate 6 (token budget for always-on instructions). Use when reviewing a new instruction draft before commit, evaluating a Mall instruction or store instruction for adoption, or re-auditing existing instructions on a periodic cadence."
+    },
+    {
+      "id": "lint-clean-markdown",
+      "type": "skill",
+      "path": ".github/skills/lint-clean-markdown/SKILL.md",
+      "bytes": 6006,
+      "sha256": "107d1580c3437d6bfc8e6872f1241aa4db8bd6fd70003cf888df848e26857090",
+      "loadingTier": "on-demand",
+      "description": "Write markdown that passes markdownlint on first attempt — encode the most common rules as muscle memory"
+    },
+    {
+      "id": "polish-mermaid-setup",
+      "type": "prompt",
+      "path": ".github/skills/markdown-mermaid/polish-mermaid-setup.prompt.md",
+      "bytes": 3494,
+      "sha256": "3d0b67ca741b23193602a3a3621725d82c258151b8cb874bc7c2c427e013a0b2",
+      "loadingTier": "on-demand"
+    },
+    {
+      "id": "diagram-reference",
+      "type": "resource",
+      "path": ".github/skills/markdown-mermaid/references/diagram-reference.md",
+      "bytes": 9542,
+      "sha256": "82ca054a2af70b63522447ad818639b17b6ca100acd1f1af946d279837f37d59",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "markdown-best-practices",
+      "type": "resource",
+      "path": ".github/skills/markdown-mermaid/references/markdown-best-practices.md",
+      "bytes": 2005,
+      "sha256": "e03c19f3d4b69c20f533ad9e4fee0047b43c01d172ecd4013c96ec12e0bdd669",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "pitfalls",
+      "type": "resource",
+      "path": ".github/skills/markdown-mermaid/references/pitfalls.md",
+      "bytes": 25612,
+      "sha256": "05613790437a6d490293686293cf34956a3139a35fc08152fc6551f930d3b5b0",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "tool-ecosystem",
+      "type": "resource",
+      "path": ".github/skills/markdown-mermaid/references/tool-ecosystem.md",
+      "bytes": 2067,
+      "sha256": "6e7f864d3387d5ecb0e5fa3e53701a53222304256d18cedd526240d2e6c794f4",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "markdown-mermaid",
+      "type": "skill",
+      "path": ".github/skills/markdown-mermaid/SKILL.md",
+      "bytes": 14060,
+      "sha256": "e7235848019608ff20a2f185c604879c6f02bdd8cf5002cc039c9391fc7763ac",
+      "loadingTier": "on-demand",
+      "description": "Author markdown and Mermaid diagrams that render correctly in VS Code, GitHub, and other Mermaid 10+ consumers — covers diagram-tool selection, mandatory init template, parser pitfalls, and visual design rules. Use when writing technical docs with embedded diagrams, debugging Mermaid render failures, or choosing between Mermaid, Excalidraw, and other diagramming tools."
+    },
+    {
+      "id": "markdown-sanitization-chain",
+      "type": "skill",
+      "path": ".github/skills/markdown-sanitization-chain/SKILL.md",
+      "bytes": 3487,
+      "sha256": "9238816de1e5b972dcbf38889705d59677a43265a59c261196fdbacc0a316d71",
+      "loadingTier": "on-demand",
+      "description": "Render user-supplied markdown safely — marked.js → DOMPurify → Mermaid (order matters; skipping the sanitizer is XSS)"
+    },
+    {
+      "id": "md-to-eml",
+      "type": "skill",
+      "path": ".github/skills/md-to-eml/SKILL.md",
+      "bytes": 7731,
+      "sha256": "f5c9505fc1eeb4d7611b107f6469674ad6830178318172afa98ba3dd7e99f12c",
+      "loadingTier": "on-demand",
+      "description": "Convert Markdown to RFC 5322 email (.eml) with inline CSS and CID images"
+    },
+    {
+      "id": "md-to-html",
+      "type": "skill",
+      "path": ".github/skills/md-to-html/SKILL.md",
+      "bytes": 8320,
+      "sha256": "a82365a68545d1af61e3036d149ee268b5482ce212124aa19e59e3a2683a8ca7",
+      "loadingTier": "on-demand",
+      "description": "Convert Markdown to standalone HTML pages with embedded CSS, images, and Mermaid diagrams"
+    },
+    {
+      "id": "md-to-txt",
+      "type": "skill",
+      "path": ".github/skills/md-to-txt/SKILL.md",
+      "bytes": 1938,
+      "sha256": "d896c2994610aed07d4bab765545b0041b3236e0945c7966bed3d779957d0ce7",
+      "loadingTier": "on-demand",
+      "description": "Strip Markdown formatting and produce clean plain text via pandoc"
+    },
+    {
+      "id": "md-to-word",
+      "type": "skill",
+      "path": ".github/skills/md-to-word/SKILL.md",
+      "bytes": 18804,
+      "sha256": "4c7331481d2727bb5765e138a0fc2aedecb8df26904b3251a3b5b04c93f0104d",
+      "loadingTier": "on-demand",
+      "description": "Convert Markdown with Mermaid diagrams and SVG illustrations to professional Word documents"
+    },
+    {
+      "id": "meditation",
+      "type": "skill",
+      "path": ".github/skills/meditation/SKILL.md",
+      "bytes": 4989,
+      "sha256": "9b782f16b91eb3e79bad7b26c9bd2161aadadb68c37d79e572dd07bffa20075f",
+      "loadingTier": "on-demand",
+      "description": "Consolidate session learning into permanent architecture — extract patterns into skills, instructions, prompts, or memory"
+    },
+    {
+      "id": "plan",
+      "type": "skill",
+      "path": ".github/skills/plan/SKILL.md",
+      "bytes": 9926,
+      "sha256": "031d72a6bf718641f965c40f9944b8d63ee208ddff986ef3f99895e041b9a074",
+      "loadingTier": "on-demand",
+      "description": "Use when the user wants a plan instead of execution, or before any non-trivial implementation (multi-file, architectural choice, > 15 min). Writes a concrete actionable markdown plan with bite-sized tasks (2-5 min each), exact file paths, complete code, and verification steps. Adapted from Hermes Agent / obra/superpowers."
+    },
+    {
+      "id": "problem-framing-audit",
+      "type": "skill",
+      "path": ".github/skills/problem-framing-audit/SKILL.md",
+      "bytes": 8375,
+      "sha256": "34c92a7f67bf76b2c8827fbff1c093775ba77364335a040f4ae8877826e72517",
+      "loadingTier": "on-demand",
+      "description": "Step-back protocol — restate, generalise, specialise, invert, ask why, pre-mortem, check stakeholders, and audit framings before solving"
+    },
+    {
+      "id": "prompt-creator",
+      "type": "skill",
+      "path": ".github/skills/prompt-creator/SKILL.md",
+      "bytes": 6886,
+      "sha256": "025337d2007984169ba00364ed7a1f5813a3f5c8899c98ec190a636284a93f19",
+      "loadingTier": "on-demand",
+      "description": "Create prompts that pass prompt-review's five gates by construction — intent capture, slash-command naming, single-workflow scope, draft as numbered steps, dogfood self-review. Use when authoring a new prompt, refactoring an existing one, or promoting a Mall prompt into the heir's brain."
+    },
+    {
+      "id": "prompt-review",
+      "type": "skill",
+      "path": ".github/skills/prompt-review/SKILL.md",
+      "bytes": 7048,
+      "sha256": "aa39a96e964d2ae2a4a85c5c5ac92a352a4b9b3f7de54cbfa4444f7d7bc95432",
+      "loadingTier": "on-demand",
+      "description": "Audits a candidate prompt (.prompt.md) against five gates (spec compliance, content quality, scope fit, safety, currency & coherence). Use when reviewing a new prompt draft before commit, evaluating a Mall prompt or store prompt for adoption, or re-auditing existing prompts on a periodic cadence."
+    },
+    {
+      "id": "security-and-hardening",
+      "type": "skill",
+      "path": ".github/skills/security-and-hardening/SKILL.md",
+      "bytes": 12407,
+      "sha256": "986ad3c2f1301710f26d88ac62e7fd50e8d3c7ce9fe117dbb8e4d91a7f55bc8b",
+      "loadingTier": "on-demand",
+      "description": "Hardens code against vulnerabilities. Use when handling user input, authentication, data storage, or external integrations. OWASP-aware, language-agnostic principles with TypeScript examples — applies to any feature that accepts untrusted data, manages user sessions, or interacts with third-party services."
+    },
+    {
+      "id": "SKILL",
+      "type": "resource",
+      "path": ".github/skills/skill-creator/assets/skill-skeleton/SKILL.md",
+      "bytes": 1417,
+      "sha256": "8fe87311608dd3eaca9016a15dda39b3b96004808adfc87be96ca38240f924c4",
+      "loadingTier": "deferred",
+      "description": "<≤300 chars, third-person, behavioral, names what + when (trigger phrases)>"
+    },
+    {
+      "id": "SKILL",
+      "type": "resource",
+      "path": ".github/skills/skill-creator/examples/minimal-skill/SKILL.md",
+      "bytes": 1976,
+      "sha256": "c9329222b448bd373b513205b669a52836591d53fd29f3129b4f4767f6e70b10",
+      "loadingTier": "deferred",
+      "description": "Append a one-line entry to docs/ledgers/curation-log.md whenever a brain artifact is added, modified, or removed. Use when committing changes to .github/skills, .github/instructions, .github/prompts, or .github/agents."
+    },
+    {
+      "id": "bundled-resources",
+      "type": "resource",
+      "path": ".github/skills/skill-creator/references/bundled-resources.md",
+      "bytes": 4883,
+      "sha256": "6155298b3926eb6917a5e910027567ed192475989c270591e4fa852a1a43e713",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "five-gates",
+      "type": "resource",
+      "path": ".github/skills/skill-creator/references/five-gates.md",
+      "bytes": 3526,
+      "sha256": "404e6c936d0977a7ea611d5225a9c6af534e99a8eb2fa7a71e624abcf4dee00a",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "frontmatter-spec",
+      "type": "resource",
+      "path": ".github/skills/skill-creator/references/frontmatter-spec.md",
+      "bytes": 2210,
+      "sha256": "684b15cc9c887ac0f6899c6c81e36b698694f6a60e1e5ec9dd72bbdc9ba9d24e",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "skill-creator",
+      "type": "skill",
+      "path": ".github/skills/skill-creator/SKILL.md",
+      "bytes": 13289,
+      "sha256": "6e0177c36848083cf29f5be88096d02d4341a2ec2e476408edcdf6ca545ca208",
+      "loadingTier": "on-demand",
+      "description": "Create skills that pass skill-review's five gates by construction — intent capture, prior-art scan, draft against gates, dogfood self-review. Use when authoring a new skill, refactoring an existing one, or adopting a Mall unit into this brain."
+    },
+    {
+      "id": "skill-review",
+      "type": "skill",
+      "path": ".github/skills/skill-review/SKILL.md",
+      "bytes": 9144,
+      "sha256": "2d52dfc1c6b3261e5ed3e97e927c0d90f92c4579f8a85bdad6d37921e0d41bd2",
+      "loadingTier": "on-demand",
+      "description": "Audits a candidate skill (.github/skills/<name>/SKILL.md) against five gates (spec compliance, content quality, scope fit, safety, currency & coherence). Use when reviewing a new skill draft before commit, evaluating a Mall unit or store skill for adoption, or re-auditing existing skills on a periodic cadence. For instructions, prompts, agents — use the matching per-type review skill."
+    },
+    {
+      "id": "spike",
+      "type": "skill",
+      "path": ".github/skills/spike/SKILL.md",
+      "bytes": 8838,
+      "sha256": "b42284042eec1b265f2bddcfeb0b2803a1f35e44341c3b34bcc76a2796d98d95",
+      "loadingTier": "on-demand",
+      "description": "Use when the user wants to feel out an idea before committing to a real build — \"spike this out\", \"try it\", \"is this even possible?\", \"compare A vs B\". Throwaway experiments that decompose into 2-5 feasibility questions, build minimal observable prototypes, and return VALIDATED / PARTIAL / INVALIDATED verdicts. Disposable by design. Adapted from Hermes Agent / GSD."
+    },
+    {
+      "id": "status-reporting",
+      "type": "skill",
+      "path": ".github/skills/status-reporting/SKILL.md",
+      "bytes": 6928,
+      "sha256": "7ba85e55c831f8571d2071aea6b131e8046c4e1266f0c848cbd6628302d76e03",
+      "loadingTier": "on-demand",
+      "description": "Create stakeholder-friendly project status updates and progress reports"
+    },
+    {
+      "id": "condition-based-waiting",
+      "type": "resource",
+      "path": ".github/skills/systematic-debugging/references/condition-based-waiting.md",
+      "bytes": 2755,
+      "sha256": "a4e5198a4d3291cb2cbd5f82744f6581fbd1fbf43abe82b3cb204e8efceba746",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "defense-in-depth",
+      "type": "resource",
+      "path": ".github/skills/systematic-debugging/references/defense-in-depth.md",
+      "bytes": 3649,
+      "sha256": "79431616c801504bf8feb725e99cad62e82931372ef0718a3b6e20837b135d53",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "root-cause-tracing",
+      "type": "resource",
+      "path": ".github/skills/systematic-debugging/references/root-cause-tracing.md",
+      "bytes": 3923,
+      "sha256": "0454766fc4f67a9f3f1fa70d6c937670384091dbbdde510ca7d1374ba41a95cc",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "systematic-debugging",
+      "type": "skill",
+      "path": ".github/skills/systematic-debugging/SKILL.md",
+      "bytes": 10597,
+      "sha256": "4b9c0a518d55e829a7a8a0af867d049178c871d263f028af3149eda06cc60bc4",
+      "loadingTier": "on-demand",
+      "description": "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes. Four-phase root-cause-first method (investigate → pattern-analyze → hypothesize → implement) that beats guess-and-check thrashing."
+    },
+    {
+      "id": "test-driven-development",
+      "type": "skill",
+      "path": ".github/skills/test-driven-development/SKILL.md",
+      "bytes": 10912,
+      "sha256": "c3e3de5584abee9d3247358ce631604c7e8c993dc6c4237321932a1e551f6994",
+      "loadingTier": "on-demand",
+      "description": "Use for any feature, bug fix, refactor, or behavior change — enforces RED-GREEN-REFACTOR. Write the failing test first, watch it fail, write minimal code to pass, refactor. Carve out only throwaway prototypes, generated code, configuration files. Adapted from Hermes Agent / obra/superpowers."
+    },
+    {
+      "id": "CHANGELOG",
+      "type": "research",
+      "path": "CHANGELOG.md",
+      "bytes": 2098,
+      "sha256": "1ef9ad7cd7b6450a83391961813c612f7b6ec991caed8a5aec66a3de4eafbbeb",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "CREDITS",
+      "type": "research",
+      "path": "CREDITS.md",
+      "bytes": 2236,
+      "sha256": "5c6cf0dc1ae0d228c0fa175f4eb9f4e7a8752f04930fc6454e9ca4dc4e00cc7b",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "HANDOFF",
+      "type": "research",
+      "path": "HANDOFF.md",
+      "bytes": 3977,
+      "sha256": "00fa667ffcb1f5c6294bb6993ff4a5c5b34086bfedb9dd2e1f5ddbc2e4fa0cc4",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "INSTRUMENTATION",
+      "type": "research",
+      "path": "INSTRUMENTATION.md",
+      "bytes": 7918,
+      "sha256": "75e3c48c3cd1124f4fbd732dca64967abdb7e2e8249a9028d98db566fc8c711c",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "PLAN",
+      "type": "research",
+      "path": "PLAN.md",
+      "bytes": 11310,
+      "sha256": "2d4bbae82280a32c5720ec2822f1dc370847d622c46eeb661667a42944e75917",
+      "loadingTier": "deferred"
+    },
+    {
+      "id": "README",
+      "type": "research",
+      "path": "README.md",
+      "bytes": 18468,
+      "sha256": "3197e9b983fcbf5649f8278afc560fac355b51529977f0c2b0eee58cfeae3026",
+      "loadingTier": "deferred"
+    }
+  ],
+  "relationships": [
+    {
+      "from": ".github/agents/brain-auditor.agent.md",
+      "to": ".github/skills/instruction-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/agents/brain-auditor.agent.md",
+      "to": ".github/skills/instruction-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/copilot-instructions.md",
+      "to": ".github/skills/ai-memory-setup/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/instructions/cross-project-isolation.instructions.md",
+      "to": ".github/instructions/pii-memory-filter.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/instructions/cross-project-isolation.instructions.md",
+      "to": ".github/prompts/feedback.prompt.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/instructions/cross-project-isolation.instructions.md",
+      "to": ".github/prompts/note.prompt.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/instructions/cross-project-isolation.instructions.md",
+      "to": ".github/prompts/save-session-note.prompt.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/instructions/cross-project-isolation.instructions.md",
+      "to": ".github/instructions/mall-installation.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/instructions/doc-hygiene.instructions.md",
+      "to": ".github/skills/doc-hygiene/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/instructions/epistemic-calibration.instructions.md",
+      "to": ".github/instructions/critical-thinking.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/instructions/greeting-checkin.instructions.md",
+      "to": ".github/skills/greeting-checkin/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/instructions/greeting-checkin.instructions.md",
+      "to": ".github/skills/greeting-checkin/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/instructions/markdown-mermaid.instructions.md",
+      "to": ".github/skills/markdown-mermaid/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/instructions/markdown-mermaid.instructions.md",
+      "to": ".github/skills/markdown-mermaid/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/instructions/markdown-mermaid.instructions.md",
+      "to": ".github/instructions/lint-discipline.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/instructions/no-deferred-debt.instructions.md",
+      "to": ".github/instructions/lint-discipline.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/instructions/pii-memory-filter.instructions.md",
+      "to": ".github/instructions/memory-triggers.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/instructions/severity-tagged-commits.instructions.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/instructions/severity-tagged-commits.instructions.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/instructions/status-reporting.instructions.md",
+      "to": ".github/skills/status-reporting/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/instructions/tool-awareness.instructions.md",
+      "to": ".github/instructions/tool-awareness-categories.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/prompts/banner.prompt.md",
+      "to": ".github/skills/alex-banner-generation/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/checkin.prompt.md",
+      "to": ".github/skills/greeting-checkin/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/checkin.prompt.md",
+      "to": ".github/skills/greeting-checkin/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/critical-thinking.prompt.md",
+      "to": ".github/skills/critical-thinking/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/critical-thinking.prompt.md",
+      "to": ".github/instructions/critical-thinking.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/prompts/lint-markdown.prompt.md",
+      "to": ".github/skills/lint-clean-markdown/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/lint-markdown.prompt.md",
+      "to": ".github/instructions/lint-discipline.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/prompts/mall-install.prompt.md",
+      "to": ".github/instructions/mall-installation.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/prompts/mall-refresh.prompt.md",
+      "to": ".github/instructions/mall-installation.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/prompts/meditate.prompt.md",
+      "to": ".github/skills/meditation/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/meditate.prompt.md",
+      "to": ".github/skills/meditation/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/note.prompt.md",
+      "to": ".github/prompts/save-session-note.prompt.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/prompts/problem-framing-audit.prompt.md",
+      "to": ".github/skills/problem-framing-audit/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/problem-framing-audit.prompt.md",
+      "to": ".github/instructions/problem-framing-audit.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/prompts/review-agent.prompt.md",
+      "to": ".github/skills/agent-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/review-agent.prompt.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/prompts/review-agent.prompt.md",
+      "to": ".github/skills/agent-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/review-instruction.prompt.md",
+      "to": ".github/skills/instruction-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/review-instruction.prompt.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/prompts/review-instruction.prompt.md",
+      "to": ".github/skills/instruction-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/review-prompt.prompt.md",
+      "to": ".github/skills/prompt-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/review-prompt.prompt.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/prompts/review-prompt.prompt.md",
+      "to": ".github/skills/prompt-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/review-skill.prompt.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/prompts/review-skill.prompt.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/prompts/review-skill.prompt.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-creator/SKILL.md",
+      "to": ".github/skills/agent-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-creator/SKILL.md",
+      "to": ".github/skills/skill-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-creator/SKILL.md",
+      "to": ".github/skills/prompt-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-creator/SKILL.md",
+      "to": ".github/skills/instruction-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-creator/SKILL.md",
+      "to": ".github/instructions/system-prompt-skepticism.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/agent-creator/SKILL.md",
+      "to": ".github/skills/agent-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-creator/SKILL.md",
+      "to": ".github/skills/agent-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-creator/SKILL.md",
+      "to": ".github/skills/skill-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-creator/SKILL.md",
+      "to": ".github/skills/instruction-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-creator/SKILL.md",
+      "to": ".github/skills/prompt-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-creator/SKILL.md",
+      "to": ".github/instructions/system-prompt-skepticism.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/agent-creator/SKILL.md",
+      "to": ".github/instructions/agent-delegation.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/agent-creator/SKILL.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/agent-review/SKILL.md",
+      "to": ".github/skills/agent-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-review/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-review/SKILL.md",
+      "to": ".github/instructions/system-prompt-skepticism.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/agent-review/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-review/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-review/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-review/SKILL.md",
+      "to": ".github/skills/agent-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-review/SKILL.md",
+      "to": ".github/skills/instruction-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-review/SKILL.md",
+      "to": ".github/skills/prompt-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/agent-review/SKILL.md",
+      "to": ".github/instructions/system-prompt-skepticism.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/agent-review/SKILL.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/anti-hallucination/SKILL.md",
+      "to": ".github/skills/critical-thinking/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/anti-hallucination/SKILL.md",
+      "to": ".github/instructions/epistemic-calibration.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/anti-hallucination/SKILL.md",
+      "to": ".github/skills/critical-thinking/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/anti-hallucination/SKILL.md",
+      "to": ".github/instructions/system-prompt-skepticism.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/anti-hallucination/SKILL.md",
+      "to": ".github/instructions/epistemic-calibration.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/anti-hallucination/SKILL.md",
+      "to": ".github/skills/critical-thinking/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/browser-tools/SKILL.md",
+      "to": ".github/instructions/tool-awareness.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/browser-tools/SKILL.md",
+      "to": ".github/instructions/system-prompt-skepticism.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/browser-tools/SKILL.md",
+      "to": ".github/instructions/terminal-command-safety.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/critical-thinking/SKILL.md",
+      "to": ".github/instructions/epistemic-calibration.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/critical-thinking/SKILL.md",
+      "to": ".github/instructions/reliance-nudges.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/critical-thinking/SKILL.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/critical-thinking/SKILL.md",
+      "to": ".github/skills/problem-framing-audit/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/critical-thinking/SKILL.md",
+      "to": ".github/instructions/problem-framing-audit.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/critical-thinking/SKILL.md",
+      "to": ".github/prompts/problem-framing-audit.prompt.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/greeting-checkin/SKILL.md",
+      "to": ".github/instructions/greeting-checkin.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/greeting-checkin/SKILL.md",
+      "to": ".github/instructions/greeting-checkin.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/greeting-checkin/SKILL.md",
+      "to": ".github/prompts/checkin.prompt.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/greeting-checkin/SKILL.md",
+      "to": ".github/prompts/upgrade.prompt.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/greeting-checkin/SKILL.md",
+      "to": ".github/prompts/welcome.prompt.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/html-to-md/SKILL.md",
+      "to": ".github/skills/lint-clean-markdown/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/html-to-md/SKILL.md",
+      "to": ".github/skills/docx-to-md/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/html-to-md/SKILL.md",
+      "to": ".github/skills/lint-clean-markdown/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/humanizer/SKILL.md",
+      "to": ".github/skills/humanizer/examples/full-example.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/humanizer/SKILL.md",
+      "to": ".github/skills/code-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/humanizer/SKILL.md",
+      "to": ".github/skills/doc-hygiene/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/humanizer/SKILL.md",
+      "to": ".github/skills/meditation/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-creator/SKILL.md",
+      "to": ".github/skills/instruction-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-creator/SKILL.md",
+      "to": ".github/skills/skill-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-creator/SKILL.md",
+      "to": ".github/skills/skill-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-creator/SKILL.md",
+      "to": ".github/skills/prompt-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-creator/SKILL.md",
+      "to": ".github/skills/agent-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-creator/SKILL.md",
+      "to": ".github/skills/skill-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-creator/SKILL.md",
+      "to": ".github/skills/instruction-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-creator/SKILL.md",
+      "to": ".github/skills/instruction-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-creator/SKILL.md",
+      "to": ".github/skills/skill-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-creator/SKILL.md",
+      "to": ".github/skills/prompt-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-creator/SKILL.md",
+      "to": ".github/skills/agent-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-creator/SKILL.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/instruction-review/SKILL.md",
+      "to": ".github/skills/instruction-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-review/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-review/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-review/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-review/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-review/SKILL.md",
+      "to": ".github/skills/instruction-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-review/SKILL.md",
+      "to": ".github/skills/prompt-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-review/SKILL.md",
+      "to": ".github/skills/agent-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/instruction-review/SKILL.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/lint-clean-markdown/SKILL.md",
+      "to": ".github/skills/markdown-mermaid/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/lint-clean-markdown/SKILL.md",
+      "to": ".github/skills/markdown-mermaid/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/markdown-sanitization-chain/SKILL.md",
+      "to": ".github/skills/markdown-mermaid/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/markdown-sanitization-chain/SKILL.md",
+      "to": ".github/skills/markdown-mermaid/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/markdown-sanitization-chain/SKILL.md",
+      "to": ".github/skills/lint-clean-markdown/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/md-to-txt/SKILL.md",
+      "to": ".github/skills/lint-clean-markdown/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/md-to-txt/SKILL.md",
+      "to": ".github/skills/md-to-word/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/meditation/SKILL.md",
+      "to": ".github/instructions/meditation.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/meditation/SKILL.md",
+      "to": ".github/prompts/meditate.prompt.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/meditation/SKILL.md",
+      "to": ".github/instructions/memory-triggers.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/plan/SKILL.md",
+      "to": ".github/instructions/agent-delegation.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/plan/SKILL.md",
+      "to": ".github/skills/test-driven-development/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/plan/SKILL.md",
+      "to": ".github/skills/test-driven-development/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/plan/SKILL.md",
+      "to": ".github/skills/spike/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/plan/SKILL.md",
+      "to": ".github/skills/problem-framing-audit/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/plan/SKILL.md",
+      "to": ".github/instructions/agent-delegation.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/prompt-creator/SKILL.md",
+      "to": ".github/skills/prompt-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-creator/SKILL.md",
+      "to": ".github/skills/skill-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-creator/SKILL.md",
+      "to": ".github/skills/skill-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-creator/SKILL.md",
+      "to": ".github/skills/instruction-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-creator/SKILL.md",
+      "to": ".github/skills/agent-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-creator/SKILL.md",
+      "to": ".github/skills/skill-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-creator/SKILL.md",
+      "to": ".github/skills/prompt-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-creator/SKILL.md",
+      "to": ".github/skills/prompt-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-creator/SKILL.md",
+      "to": ".github/skills/skill-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-creator/SKILL.md",
+      "to": ".github/skills/instruction-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-creator/SKILL.md",
+      "to": ".github/skills/agent-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-creator/SKILL.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/prompt-review/SKILL.md",
+      "to": ".github/skills/prompt-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-review/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-review/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-review/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-review/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-review/SKILL.md",
+      "to": ".github/skills/prompt-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-review/SKILL.md",
+      "to": ".github/skills/instruction-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-review/SKILL.md",
+      "to": ".github/skills/agent-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/prompt-review/SKILL.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/security-and-hardening/SKILL.md",
+      "to": ".github/skills/code-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/security-and-hardening/SKILL.md",
+      "to": ".github/skills/deep-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-creator/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-creator/SKILL.md",
+      "to": ".github/skills/skill-creator/references/frontmatter-spec.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/skill-creator/SKILL.md",
+      "to": ".github/skills/skill-creator/references/bundled-resources.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/skill-creator/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-creator/SKILL.md",
+      "to": ".github/skills/skill-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-creator/SKILL.md",
+      "to": ".github/skills/instruction-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-creator/SKILL.md",
+      "to": ".github/skills/prompt-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-creator/SKILL.md",
+      "to": ".github/skills/agent-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-creator/SKILL.md",
+      "to": ".github/skills/meditation/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-creator/SKILL.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/skill-review/SKILL.md",
+      "to": ".github/skills/instruction-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-review/SKILL.md",
+      "to": ".github/skills/prompt-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-review/SKILL.md",
+      "to": ".github/skills/agent-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-review/SKILL.md",
+      "to": ".github/skills/skill-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-review/SKILL.md",
+      "to": ".github/skills/skill-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-review/SKILL.md",
+      "to": ".github/skills/skill-creator/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-review/SKILL.md",
+      "to": ".github/skills/instruction-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-review/SKILL.md",
+      "to": ".github/skills/prompt-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-review/SKILL.md",
+      "to": ".github/skills/agent-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/skill-review/SKILL.md",
+      "to": ".github/instructions/act-pass.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/spike/SKILL.md",
+      "to": ".github/skills/plan/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/spike/SKILL.md",
+      "to": ".github/skills/problem-framing-audit/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/spike/SKILL.md",
+      "to": ".github/instructions/agent-delegation.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/spike/SKILL.md",
+      "to": ".github/skills/plan/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/spike/SKILL.md",
+      "to": ".github/skills/problem-framing-audit/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/spike/SKILL.md",
+      "to": ".github/skills/critical-thinking/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/spike/SKILL.md",
+      "to": ".github/instructions/agent-delegation.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/systematic-debugging/SKILL.md",
+      "to": ".github/skills/systematic-debugging/references/root-cause-tracing.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/systematic-debugging/SKILL.md",
+      "to": ".github/skills/systematic-debugging/references/root-cause-tracing.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/systematic-debugging/SKILL.md",
+      "to": ".github/skills/systematic-debugging/references/defense-in-depth.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/systematic-debugging/SKILL.md",
+      "to": ".github/skills/systematic-debugging/references/condition-based-waiting.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/systematic-debugging/SKILL.md",
+      "to": ".github/skills/critical-thinking/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/systematic-debugging/SKILL.md",
+      "to": ".github/skills/problem-framing-audit/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/test-driven-development/SKILL.md",
+      "to": ".github/skills/spike/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/test-driven-development/SKILL.md",
+      "to": ".github/instructions/agent-delegation.instructions.md",
+      "state": "explicit-local-link"
+    },
+    {
+      "from": ".github/skills/test-driven-development/SKILL.md",
+      "to": ".github/skills/systematic-debugging/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/test-driven-development/SKILL.md",
+      "to": ".github/skills/plan/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/test-driven-development/SKILL.md",
+      "to": ".github/skills/systematic-debugging/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/test-driven-development/SKILL.md",
+      "to": ".github/skills/plan/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/test-driven-development/SKILL.md",
+      "to": ".github/skills/spike/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/test-driven-development/SKILL.md",
+      "to": ".github/skills/code-review/SKILL.md",
+      "state": "explicitly-routed-skill"
+    },
+    {
+      "from": ".github/skills/test-driven-development/SKILL.md",
+      "to": ".github/instructions/agent-delegation.instructions.md",
+      "state": "explicit-local-link"
+    }
+  ],
+  "findings": [
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/audit-brain.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/configure-vscode-verify.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/configure-vscode.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/configure-workspace-verify.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/configure-workspace.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/convert.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/feedback.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/format-markdown.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/initialize.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/mall-contribute.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/mall-install.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/mall-refresh.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/mall-search.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/mall-show.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/note.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/save-session-note.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/status.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/upgrade.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/prompts/welcome.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    },
+    {
+      "severity": "advisory",
+      "code": "unrouted-prompt",
+      "path": ".github/skills/markdown-mermaid/polish-mermaid-setup.prompt.md",
+      "message": "Prompt has no explicit Markdown route to a discovered skill"
+    }
+  ],
+  "counts": {
+    "research": 9,
+    "agent": 4,
+    "resource": 14,
+    "instruction": 37,
+    "prompt": 30,
+    "skill": 38
+  },
+  "bytes": {
+    "research": 49913,
+    "agent": 41320,
+    "resource": 73171,
+    "instruction": 151607,
+    "prompt": 101039,
+    "skill": 345714
+  },
+  "skillImportance": [
+    {
+      "id": "skill-creator",
+      "path": ".github/skills/skill-creator/SKILL.md",
+      "staticImportanceScore": 60,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 13,
+        "outboundRoutes": 10,
+        "bundledResources": 5,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "systematic-debugging",
+      "path": ".github/skills/systematic-debugging/SKILL.md",
+      "staticImportanceScore": 60,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 2,
+        "outboundRoutes": 6,
+        "bundledResources": 3,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "agent-creator",
+      "path": ".github/skills/agent-creator/SKILL.md",
+      "staticImportanceScore": 55,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 7,
+        "outboundRoutes": 13,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "agent-review",
+      "path": ".github/skills/agent-review/SKILL.md",
+      "staticImportanceScore": 55,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 9,
+        "outboundRoutes": 11,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "critical-thinking",
+      "path": ".github/skills/critical-thinking/SKILL.md",
+      "staticImportanceScore": 55,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 6,
+        "outboundRoutes": 6,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "greeting-checkin",
+      "path": ".github/skills/greeting-checkin/SKILL.md",
+      "staticImportanceScore": 55,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 4,
+        "outboundRoutes": 5,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "instruction-creator",
+      "path": ".github/skills/instruction-creator/SKILL.md",
+      "staticImportanceScore": 55,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 8,
+        "outboundRoutes": 12,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "instruction-review",
+      "path": ".github/skills/instruction-review/SKILL.md",
+      "staticImportanceScore": 55,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 10,
+        "outboundRoutes": 9,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "lint-clean-markdown",
+      "path": ".github/skills/lint-clean-markdown/SKILL.md",
+      "staticImportanceScore": 55,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 5,
+        "outboundRoutes": 2,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "meditation",
+      "path": ".github/skills/meditation/SKILL.md",
+      "staticImportanceScore": 55,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 4,
+        "outboundRoutes": 3,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "plan",
+      "path": ".github/skills/plan/SKILL.md",
+      "staticImportanceScore": 55,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 4,
+        "outboundRoutes": 6,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "prompt-creator",
+      "path": ".github/skills/prompt-creator/SKILL.md",
+      "staticImportanceScore": 55,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 7,
+        "outboundRoutes": 12,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "prompt-review",
+      "path": ".github/skills/prompt-review/SKILL.md",
+      "staticImportanceScore": 55,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 9,
+        "outboundRoutes": 9,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "skill-review",
+      "path": ".github/skills/skill-review/SKILL.md",
+      "staticImportanceScore": 55,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 17,
+        "outboundRoutes": 10,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "spike",
+      "path": ".github/skills/spike/SKILL.md",
+      "staticImportanceScore": 55,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 3,
+        "outboundRoutes": 7,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "test-driven-development",
+      "path": ".github/skills/test-driven-development/SKILL.md",
+      "staticImportanceScore": 55,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 2,
+        "outboundRoutes": 9,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "markdown-mermaid",
+      "path": ".github/skills/markdown-mermaid/SKILL.md",
+      "staticImportanceScore": 50,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 6,
+        "outboundRoutes": 0,
+        "bundledResources": 4,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "code-review",
+      "path": ".github/skills/code-review/SKILL.md",
+      "staticImportanceScore": 45,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 3,
+        "outboundRoutes": 0,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "doc-hygiene",
+      "path": ".github/skills/doc-hygiene/SKILL.md",
+      "staticImportanceScore": 45,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 2,
+        "outboundRoutes": 0,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "problem-framing-audit",
+      "path": ".github/skills/problem-framing-audit/SKILL.md",
+      "staticImportanceScore": 45,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 6,
+        "outboundRoutes": 0,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "ai-memory-setup",
+      "path": ".github/skills/ai-memory-setup/SKILL.md",
+      "staticImportanceScore": 25,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 1,
+        "outboundRoutes": 0,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "alex-banner-generation",
+      "path": ".github/skills/alex-banner-generation/SKILL.md",
+      "staticImportanceScore": 25,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 1,
+        "outboundRoutes": 0,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "deep-review",
+      "path": ".github/skills/deep-review/SKILL.md",
+      "staticImportanceScore": 25,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 1,
+        "outboundRoutes": 0,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "docx-to-md",
+      "path": ".github/skills/docx-to-md/SKILL.md",
+      "staticImportanceScore": 25,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 1,
+        "outboundRoutes": 0,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "md-to-word",
+      "path": ".github/skills/md-to-word/SKILL.md",
+      "staticImportanceScore": 25,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 1,
+        "outboundRoutes": 0,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "status-reporting",
+      "path": ".github/skills/status-reporting/SKILL.md",
+      "staticImportanceScore": 25,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 1,
+        "outboundRoutes": 0,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "humanizer",
+      "path": ".github/skills/humanizer/SKILL.md",
+      "staticImportanceScore": 20,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 0,
+        "outboundRoutes": 4,
+        "bundledResources": 1,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "anti-hallucination",
+      "path": ".github/skills/anti-hallucination/SKILL.md",
+      "staticImportanceScore": 15,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 0,
+        "outboundRoutes": 6,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "browser-tools",
+      "path": ".github/skills/browser-tools/SKILL.md",
+      "staticImportanceScore": 15,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 0,
+        "outboundRoutes": 3,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "html-to-md",
+      "path": ".github/skills/html-to-md/SKILL.md",
+      "staticImportanceScore": 15,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 0,
+        "outboundRoutes": 3,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "markdown-sanitization-chain",
+      "path": ".github/skills/markdown-sanitization-chain/SKILL.md",
+      "staticImportanceScore": 15,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 0,
+        "outboundRoutes": 3,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "md-to-txt",
+      "path": ".github/skills/md-to-txt/SKILL.md",
+      "staticImportanceScore": 15,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 0,
+        "outboundRoutes": 2,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "security-and-hardening",
+      "path": ".github/skills/security-and-hardening/SKILL.md",
+      "staticImportanceScore": 15,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 0,
+        "outboundRoutes": 2,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "brain-audit",
+      "path": ".github/skills/brain-audit/SKILL.md",
+      "staticImportanceScore": 5,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 0,
+        "outboundRoutes": 0,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "creative-writing",
+      "path": ".github/skills/creative-writing/SKILL.md",
+      "staticImportanceScore": 5,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 0,
+        "outboundRoutes": 0,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "git-workflow",
+      "path": ".github/skills/git-workflow/SKILL.md",
+      "staticImportanceScore": 5,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 0,
+        "outboundRoutes": 0,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "md-to-eml",
+      "path": ".github/skills/md-to-eml/SKILL.md",
+      "staticImportanceScore": 5,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 0,
+        "outboundRoutes": 0,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    },
+    {
+      "id": "md-to-html",
+      "path": ".github/skills/md-to-html/SKILL.md",
+      "staticImportanceScore": 5,
+      "maximumScore": 60,
+      "signals": {
+        "inboundRoutes": 0,
+        "outboundRoutes": 0,
+        "bundledResources": 0,
+        "uniqueBody": true
+      }
+    }
+  ],
+  "immutability": {
+    "preserved": true,
+    "beforeSha256": "a8fe75ef52cfe2229b04d64aec66ef27e8bc398a8fc207821da33835f7c966b1",
+    "afterSha256": "a8fe75ef52cfe2229b04d64aec66ef27e8bc398a8fc207821da33835f7c966b1"
+  }
+}

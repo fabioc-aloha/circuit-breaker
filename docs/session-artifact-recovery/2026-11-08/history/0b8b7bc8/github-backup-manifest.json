@@ -1,0 +1,674 @@
+[
+  {
+    "Path": ".act-heir.json",
+    "Hash": "32A0F4FC009145A1660E27B0C0CCBBE191D44E8012B8DCD280C91B0C96A58680"
+  },
+  {
+    "Path": "copilot-instructions.local.md",
+    "Hash": "41300C9ED1BCECAE159E61D188B3EEB21D76B22E8BE26D01643C493617931F66"
+  },
+  {
+    "Path": "copilot-instructions.md",
+    "Hash": "83670F6935DFA73543DE63F82268E4BA4C1ACF425B08889A1E7876431E5EA63A"
+  },
+  {
+    "Path": "dependabot.yml",
+    "Hash": "6291D6E4D9511A15B525B44571237221B3C5E5162B8BBF10D6759086B065834D"
+  },
+  {
+    "Path": "PULL_REQUEST_TEMPLATE.md",
+    "Hash": "31D820FD0A23C527A1213270CE46E716D9B6AA1B1845A79CF6B5EE48E39E7F21"
+  },
+  {
+    "Path": "VERSION",
+    "Hash": "0874A8FE36EFFB87780F431845B5A7D85BE657F2BD998CE8EEACE717860D3B78"
+  },
+  {
+    "Path": "agents\\brain-auditor.agent.md",
+    "Hash": "96E6A21A8D268AE249E3115B696A698BE7A986A94ACDFD348D89745E95DE8841"
+  },
+  {
+    "Path": "agents\\document-assembler.agent.md",
+    "Hash": "12893382AD6AE0B49564E1D337AECD42133F3D18E27C8F529C1BDE046A380241"
+  },
+  {
+    "Path": "agents\\illustrator.agent.md",
+    "Hash": "5AD01351833B4B9833EA4C5D29EA8C1B7DB5D66C044EF2ECC230379E4B84FA16"
+  },
+  {
+    "Path": "agents\\markdown-author.agent.md",
+    "Hash": "F0B484C06EF0A9B4A2D5FCD533A47952D95ED7258641852D0CBE8E67305EEB69"
+  },
+  {
+    "Path": "config\\cognitive-config.json",
+    "Hash": "1F8657BE20517DB4D75FF364FC9BACD38BA97F06E9B7B0961202139BD15030F5"
+  },
+  {
+    "Path": "config\\edition-manifest.json",
+    "Hash": "9DDD547E000583F0C78355711E331C279DAD4D2C792405AE4779492EF91C5AED"
+  },
+  {
+    "Path": "config\\extension-contract.json",
+    "Hash": "ADE61D12D184AF31DAF59C415DB6D2B060A8D2BF1894413E9E1BCC3F7761C60D"
+  },
+  {
+    "Path": "config\\goals.json",
+    "Hash": "5B32B2718B498DA5B74EE1917BD102ED1EAFC5E11F74D220C6D26924EA18B1A1"
+  },
+  {
+    "Path": "config\\heir-workspace-settings-baseline.json",
+    "Hash": "F405254EE3B05362B8285CAA5D334E219D24F935BC866E115562FFD74A6C2805"
+  },
+  {
+    "Path": "config\\README.md",
+    "Hash": "C28B71C025B6860D1C07F75D586C9B3EBFEE1C9E8D75FED8D7901133320BA5B5"
+  },
+  {
+    "Path": "config\\welcome-baseline.json",
+    "Hash": "E0992371ADF9668F7A08FA70F0D54E26E13C1CF24AAD2E5756FA78B9D4164AE6"
+  },
+  {
+    "Path": "instructions\\act-foundations.instructions.md",
+    "Hash": "CD383F5C479EF400AFAEF958D3FB514F4D0148791507269D7AFA25C2434F7F91"
+  },
+  {
+    "Path": "instructions\\act-pass.instructions.md",
+    "Hash": "A96957ED662C6509C997A201BDA680CC40FA5686F7FD3DE3884FA9072E0869DA"
+  },
+  {
+    "Path": "instructions\\adversarial-review.instructions.md",
+    "Hash": "E76E916970FD8B7D23804FFDB87A736BFE3B7A4FE45976A854135404645CB9C6"
+  },
+  {
+    "Path": "instructions\\agent-delegation.instructions.md",
+    "Hash": "0EDA2F461BD163878B093012D184C25769C646A980CF9F6FC88FB80FB138449E"
+  },
+  {
+    "Path": "instructions\\brain-audit.instructions.md",
+    "Hash": "185215A085AB3E7531E32F30713AD7D41EBF040B24D2003760287D3647CB5DFD"
+  },
+  {
+    "Path": "instructions\\code-review.instructions.md",
+    "Hash": "A15F5CDC32D96E584202893CDDF3E68FA25928993E08387E7FFCE55A0798E45D"
+  },
+  {
+    "Path": "instructions\\communication-craft.instructions.md",
+    "Hash": "EFA838CAA2968EE93ED956B49132B8F69F5E12CD99CA1C140B7E5048CC4F46E0"
+  },
+  {
+    "Path": "instructions\\converter.instructions.md",
+    "Hash": "21B036D4D25C46B8709028701FAF412793E76642E933A197CB18FB7B95750A16"
+  },
+  {
+    "Path": "instructions\\critical-thinking.instructions.md",
+    "Hash": "2370B2AE7C9F678266711F8BE042E6F37D18F9963B5AAB39D4C90EF2A9FE254E"
+  },
+  {
+    "Path": "instructions\\cross-project-isolation.instructions.md",
+    "Hash": "968E942C1E969A6BFD78FF9902975E1F24AFC4D9979198E4DC051B09D4596D80"
+  },
+  {
+    "Path": "instructions\\doc-hygiene.instructions.md",
+    "Hash": "91D2E1E414F50203ACF6B9514F10CED4586B911D4FB3CE816C457E62CD0395E4"
+  },
+  {
+    "Path": "instructions\\emotional-intelligence.instructions.md",
+    "Hash": "CA688961813C3653CF23D65BB80EB44927C1760710E1664FC7225A6C5DAA3A4A"
+  },
+  {
+    "Path": "instructions\\epistemic-calibration.instructions.md",
+    "Hash": "B9BFBC45017F0B4629D4E69D4F8DA9712826E50A6AA0FEB7FA8A79AC98B66CED"
+  },
+  {
+    "Path": "instructions\\falsifiability-deadlines.instructions.md",
+    "Hash": "381116DB64692F94F5BAEA6B51E86A74540DB0338C8903F0ABC8D373E34E4FA9"
+  },
+  {
+    "Path": "instructions\\git-workflow.instructions.md",
+    "Hash": "F6AEE346107612107BCC19879AD6C85D0AAD79596A0146F73CDABC2A23A546CD"
+  },
+  {
+    "Path": "instructions\\greeting-checkin.instructions.md",
+    "Hash": "4DE03BA670506854D5669FB21C9502FEC10100F8FBE9CC22FFB2FDC23077AFED"
+  },
+  {
+    "Path": "instructions\\knowledge-coverage.instructions.md",
+    "Hash": "CFEB771BF35F304B94F90E3DBC18FF69AAEC8D189031527C3F83DCE061CBE934"
+  },
+  {
+    "Path": "instructions\\lint-discipline.instructions.md",
+    "Hash": "64CC813E687192F9A49D6E8D6328CA1363025D3C7C70584037689EE4FCBCB5FD"
+  },
+  {
+    "Path": "instructions\\mall-installation.instructions.md",
+    "Hash": "3B60DF770A898962D24168BBCCE439A2C854AFA5DE084A07313CEFB5505A9DE0"
+  },
+  {
+    "Path": "instructions\\markdown-mermaid.instructions.md",
+    "Hash": "084EA3FE29A3E02C4084BA6F6FDBDB797351C1C9966077E4C469E64BC2E8C91C"
+  },
+  {
+    "Path": "instructions\\meditation.instructions.md",
+    "Hash": "7EA61F73BAAFC3EEAB73624108224BDDE2E74483FD45339E9FC3B3068E292798"
+  },
+  {
+    "Path": "instructions\\memory-triggers.instructions.md",
+    "Hash": "2279CEA2D6863A7323DAE3F436657F042AE589D5CB4C59AF70A79FDF87D53166"
+  },
+  {
+    "Path": "instructions\\no-deferred-debt.instructions.md",
+    "Hash": "C269E8C56D1BD03FF02D75D6D83B04B9416084EF05A6A141ACEC04BA8E0A4A1E"
+  },
+  {
+    "Path": "instructions\\pii-memory-filter.instructions.md",
+    "Hash": "D73DBFF0F8003F54340938657D9402EA48A5BEF16C4CBB36B77BABBBC2E85FE9"
+  },
+  {
+    "Path": "instructions\\privacy-responsible-ai.instructions.md",
+    "Hash": "7252E8E53E54AEF91662C6156982C602BA2DD432EFA87715E02F1303FF06EDF4"
+  },
+  {
+    "Path": "instructions\\proactive-awareness.instructions.md",
+    "Hash": "D4B5E6CA87AA9224480F2A1121BBA060A374F603498F010D191D0FC6770A4CF5"
+  },
+  {
+    "Path": "instructions\\problem-framing-audit.instructions.md",
+    "Hash": "AECC4272F1A646D11AC60945006FE0E1F7498695B7C403A8118B48B3D01B486E"
+  },
+  {
+    "Path": "instructions\\reliance-nudges.instructions.md",
+    "Hash": "9EDCA574A50BF873555D33C6DEDC69C5D148AAD4197163B213D7BAAB087C7A32"
+  },
+  {
+    "Path": "instructions\\session-health-monitoring.instructions.md",
+    "Hash": "0C1971C5A100D0C2E15ED6B569B81E96D4D651F17A0BBAC65BF8AEA1AFF9F3D5"
+  },
+  {
+    "Path": "instructions\\severity-tagged-commits.instructions.md",
+    "Hash": "92891570A1C58A79340C2DBD0469B0174F06F297F5AC618AFC3A4E4561F05931"
+  },
+  {
+    "Path": "instructions\\status-reporting.instructions.md",
+    "Hash": "153A570EDD10F909D90B25594453FF50652971CD4BCF770B9CB247E62493A3E2"
+  },
+  {
+    "Path": "instructions\\system-prompt-skepticism.instructions.md",
+    "Hash": "DBEDB85E83A933F60690609748F7DA4849C69B9B6E0B606ED3226D1519975036"
+  },
+  {
+    "Path": "instructions\\terminal-command-safety.instructions.md",
+    "Hash": "543FC7A2E795A837E63F6AB0589AF2B015DEDBDD53CA71966E3980EAAB933639"
+  },
+  {
+    "Path": "instructions\\tool-awareness-categories.instructions.md",
+    "Hash": "F9037F420AC251BDC693D3FF53172756B55970154956B51ECDEB35138A949DB6"
+  },
+  {
+    "Path": "instructions\\tool-awareness.instructions.md",
+    "Hash": "017EBC64440BA462E3767DBE3708B11E627608299CAA24F1F8A8F47D6044A1A4"
+  },
+  {
+    "Path": "instructions\\worldview.instructions.md",
+    "Hash": "B02709ACB774464D56404252CCBCE1C8C22502E48DFA378CEA2AE13AC646D1EE"
+  },
+  {
+    "Path": "ISSUE_TEMPLATE\\bug_report.yml",
+    "Hash": "58A8E99A99395F95AF2CF79BDBB3A25829AE2D677F6983E275F1CD8A7203BD65"
+  },
+  {
+    "Path": "ISSUE_TEMPLATE\\config.yml",
+    "Hash": "68B6883734D503324FE2F34932418FCEB1A1E52DA4257D6A90EDE23E96F38AA0"
+  },
+  {
+    "Path": "ISSUE_TEMPLATE\\feature_request.yml",
+    "Hash": "1E0F2F910478AF20D49AE5652FC1374B8FC05B06304D40E95E5740B919CE950F"
+  },
+  {
+    "Path": "prompts\\audit-brain.prompt.md",
+    "Hash": "1869DF70C495CEAC1DBF86573662C136BEF16EF8CEC0D044F57328E977FFDBB7"
+  },
+  {
+    "Path": "prompts\\banner.prompt.md",
+    "Hash": "6CFA5823362454E8C037F5A95527D1BCFAE2968DB0B18D02AA2BCDFA78E29F6B"
+  },
+  {
+    "Path": "prompts\\checkin.prompt.md",
+    "Hash": "A790364162314590DB9C8A9EFAABD83C98188972EA4916A5BA6697DEDA9EE695"
+  },
+  {
+    "Path": "prompts\\configure-vscode-verify.prompt.md",
+    "Hash": "C0FF30072D8CDE586D9CC0B5E2A774AE91266EAF1A39C33CE2CDFA1B03AD5CB4"
+  },
+  {
+    "Path": "prompts\\configure-vscode.prompt.md",
+    "Hash": "3ED47C24CA4CC1544C8EA5B64760D26CEF7D5891F52C9240B1A8AA89BEEA2264"
+  },
+  {
+    "Path": "prompts\\configure-workspace-verify.prompt.md",
+    "Hash": "AB40FE6E52999163AAEB141F703AA890BA7EA014991CC7C27621BFF8B9AFD84F"
+  },
+  {
+    "Path": "prompts\\configure-workspace.prompt.md",
+    "Hash": "0A4C53BC5B1E67A55F5093B3988B7B9C33C2D6CDF939B573ADAA261F77405146"
+  },
+  {
+    "Path": "prompts\\convert.prompt.md",
+    "Hash": "53A176D4666C2955D601C7DD63316BD9227D593D424CF915596E1F8CC6F5547F"
+  },
+  {
+    "Path": "prompts\\critical-thinking.prompt.md",
+    "Hash": "CDE77A18732CA6FD421FE0E3A9A03B3DF83DB8EDA95149657C4DA8DF729E3A15"
+  },
+  {
+    "Path": "prompts\\feedback.prompt.md",
+    "Hash": "7D000AD643F41B89A63D43CA5D64F58EBC05D2712179D8C37316BDD38CC6B505"
+  },
+  {
+    "Path": "prompts\\format-markdown.prompt.md",
+    "Hash": "B407A14A5D034E469C6AC6FC48B3FC6C1037CBD41D172154883BF411472694D5"
+  },
+  {
+    "Path": "prompts\\initialize.prompt.md",
+    "Hash": "2515BEC23F54FC5C6B18925586594C31065B1FD4C6E679DD1BE0FB238FAA83A4"
+  },
+  {
+    "Path": "prompts\\lint-markdown.prompt.md",
+    "Hash": "4DB184153A3FBDCDB6D32DC358DD73D7A4DF6F954CF0E34A9A9F0E4666BFAA6F"
+  },
+  {
+    "Path": "prompts\\mall-contribute.prompt.md",
+    "Hash": "77D16C7CA9320C9D6D04D1C1460D57AEA657E13FF2F180F73664831B3FD3936F"
+  },
+  {
+    "Path": "prompts\\mall-install.prompt.md",
+    "Hash": "B461F41359F36104A3EAEA579CAA7A4F87ACF6ADA489CA2006B12BA042C03956"
+  },
+  {
+    "Path": "prompts\\mall-refresh.prompt.md",
+    "Hash": "78A84F4546F5917B9BF27F4C7B06D0E86DE56A7D9395AE475E4E5D7221EC6592"
+  },
+  {
+    "Path": "prompts\\mall-search.prompt.md",
+    "Hash": "EF0B9C77DD52DD300104DE6B85B719C3BB72DE8F95299FCE28CF529145DA2948"
+  },
+  {
+    "Path": "prompts\\mall-show.prompt.md",
+    "Hash": "23D6EFD5CA108440ABFC5917288E606C41BDC16E452B65D9E17BEED8B479D8DC"
+  },
+  {
+    "Path": "prompts\\meditate.prompt.md",
+    "Hash": "71D3FBD4148EAA0FAB56622F4033D96386378EC15C7DE97A59D7602890C4EE26"
+  },
+  {
+    "Path": "prompts\\note.prompt.md",
+    "Hash": "9C8C50ADF079C7CA76DB317EF9C399DBE01A76906D32C36DFE7042B2EA85F135"
+  },
+  {
+    "Path": "prompts\\problem-framing-audit.prompt.md",
+    "Hash": "9F21AA5397AFBF53B73ED25269C212DF07498B4F20D8BDCC38E57926511748C9"
+  },
+  {
+    "Path": "prompts\\review-agent.prompt.md",
+    "Hash": "B774365408C2070E6E7853F1397161E79B787C00576AA57D016E767C20125859"
+  },
+  {
+    "Path": "prompts\\review-instruction.prompt.md",
+    "Hash": "395EF8A442987CCF6E40A6EE9DC51EF6C618E5B1B8A0AFDE4C1600CC4486434E"
+  },
+  {
+    "Path": "prompts\\review-prompt.prompt.md",
+    "Hash": "6B38493C1A6AFEFBB53B6DE92E464C42F68D6E605FC67D433065CCA2AFF2D34F"
+  },
+  {
+    "Path": "prompts\\review-skill.prompt.md",
+    "Hash": "6941FD32607C83A11ADCEF7815F74FB5CE2C6ED13DF7AB9FB1D8E98B786020D7"
+  },
+  {
+    "Path": "prompts\\save-session-note.prompt.md",
+    "Hash": "80994AAEDAAE2C7C5515EEB88D77CB35BF6835E54F6F8FB13045737032625F48"
+  },
+  {
+    "Path": "prompts\\status.prompt.md",
+    "Hash": "3964DF6FEB24E99C502C2F50788DC9F1D82CD0F3AA28239C89A99A19277C249F"
+  },
+  {
+    "Path": "prompts\\upgrade.prompt.md",
+    "Hash": "D3BC825626B8C03549586DF7315AF47321AD50FAE0DBFF07CD436FD5037D3DD0"
+  },
+  {
+    "Path": "prompts\\welcome.prompt.md",
+    "Hash": "CD7A7FF242E1D85A889AC958D1C9A75004614C71353C73ADD7D228B60E292D51"
+  },
+  {
+    "Path": "scripts\\_registry.cjs",
+    "Hash": "6B4A600C5B21E07513F7EE3B3BCF1EAF9F4277D22D69CE05C289CE0D32D9E4F2"
+  },
+  {
+    "Path": "scripts\\audit-mall-drift.cjs",
+    "Hash": "6804612D6876D34DCE04E9A6DD2E2F570EFE693A5D958491BFFBCEF1F4F3718D"
+  },
+  {
+    "Path": "scripts\\bootstrap-heir.cjs",
+    "Hash": "B8821D8E715528F9EE7F529E533C0F803CAF1648F94AD9C6B2E0565A67FD41A4"
+  },
+  {
+    "Path": "scripts\\build-edition-manifest.cjs",
+    "Hash": "B102F2E9514D2117F113BB0AEFB27E80486FB0B4B78BDEF54349031BAC9CC72C"
+  },
+  {
+    "Path": "scripts\\CONVERTER-CHANGELOG.md",
+    "Hash": "4448B255625333ADE9A3EC00218784663F816EB8A9C05ACBBAB50F4C234BEC07"
+  },
+  {
+    "Path": "scripts\\converter-qa.cjs",
+    "Hash": "DF7A9CF7E90FBF505B7E520439A4D57223A967B6A2F0A457EABD1FF02ABFF860"
+  },
+  {
+    "Path": "scripts\\upgrade-self.cjs",
+    "Hash": "7F2A5D2FE526C3BEDC34C1E4F8E77D52EE33416C82FBD0A536B337B4BF937798"
+  },
+  {
+    "Path": "scripts\\shared\\conversion-report.cjs",
+    "Hash": "C512964D9BE22C2B2C06A42096A3D948EB43338D366AF24ABD3671730CF1BCD5"
+  },
+  {
+    "Path": "scripts\\shared\\converter-config.cjs",
+    "Hash": "7E46F93D03E7ADA91852E69FFEFE7470178531068D2CF0135B46F7681F2CFF12"
+  },
+  {
+    "Path": "scripts\\shared\\converter-config.example.json",
+    "Hash": "74EC3B56600BF1AFF41BB0AE5C9BF1FE48811DBB192A59EBE9048EFA94EB0ADA"
+  },
+  {
+    "Path": "scripts\\shared\\data-uri.cjs",
+    "Hash": "F3C8BDA72B5B81ABC7B4F86DB120FE98708F1414405B602E1C14CE9CC83E80F7"
+  },
+  {
+    "Path": "scripts\\shared\\markdown-preprocessor.cjs",
+    "Hash": "45856D1ECFFC903715A401E59BA0D7D480BCA4F729D3558BD64122DD3C3F2E3B"
+  },
+  {
+    "Path": "scripts\\shared\\mermaid-pipeline.cjs",
+    "Hash": "8F6FCE501804D0981DBBCA63CA792EC08738957ED4560059A9757887A3CF5660"
+  },
+  {
+    "Path": "scripts\\shared\\profile-crypto.cjs",
+    "Hash": "F20ED24740654C3A8CE4B5FAFA54F81B6C9DC159180C712817B75B7791299E47"
+  },
+  {
+    "Path": "scripts\\shared\\prompt-preprocessor.cjs",
+    "Hash": "7029FF4B57220459AD80C9365579B8A47E2E0913A04923E0677B1028B82F5014"
+  },
+  {
+    "Path": "scripts\\shared\\tool-runner.cjs",
+    "Hash": "732992F2580E0CD506DC155B77B63B31DA1360D976415F35B81F676145F853EE"
+  },
+  {
+    "Path": "scripts\\shared\\workspace-settings-merger.cjs",
+    "Hash": "50147186F7B175D728DA680EAAED75ECB486DDCF4DD86B4F39F742C6BD9A7BEC"
+  },
+  {
+    "Path": "skills\\agent-creator\\SKILL.md",
+    "Hash": "DC7A3B9841CB5F15401E2F8D2A2B7045D4A82ED9CAD092B00497FC23E802A50A"
+  },
+  {
+    "Path": "skills\\agent-review\\SKILL.md",
+    "Hash": "310030C1DADAC5BD7254EFE1CF85AC94B7DFA7FEFB88DF43192F23F1B547AD52"
+  },
+  {
+    "Path": "skills\\ai-memory-setup\\SKILL.md",
+    "Hash": "8300C4510A359B4E166FAC6AD2F5B8D2D1117BFD50AA72CDE9468CFF655ECAB0"
+  },
+  {
+    "Path": "skills\\alex-banner-generation\\SKILL.md",
+    "Hash": "DECA8E5E549E10507573AD84F0715D021E6CE2BA4DA6101C2E2671B592EBEEE8"
+  },
+  {
+    "Path": "skills\\alex-banner-generation\\scripts\\generate-banner.cjs",
+    "Hash": "4511674263B046A9A02203E7BFE057E8C1A4778E74BDEE6912C8CEC760517706"
+  },
+  {
+    "Path": "skills\\anti-hallucination\\SKILL.md",
+    "Hash": "53FC4F6C04D1F18072486FE56DE7ACFCF1EE69284A4620FAEDB8EDD23AD05E68"
+  },
+  {
+    "Path": "skills\\brain-audit\\SKILL.md",
+    "Hash": "96EDF835665ED104ABF72F0F58FF77F73B153D453CD0D646D8878C12130A3C5F"
+  },
+  {
+    "Path": "skills\\browser-tools\\SKILL.md",
+    "Hash": "8EB5936C9E2B0FF5B504DC1424325A53B559A373F1F4B7C7C31AC74BBCD0FE51"
+  },
+  {
+    "Path": "skills\\code-review\\SKILL.md",
+    "Hash": "0BAA2B07FEFC010740D76251BBF8AB9E10DF04B9AC13D31BC0E02871FB857181"
+  },
+  {
+    "Path": "skills\\creative-writing\\SKILL.md",
+    "Hash": "A2766D1334D958A1135255D5F3426CCEC4D92C08919E4FFB97CA059CADFE0546"
+  },
+  {
+    "Path": "skills\\critical-thinking\\SKILL.md",
+    "Hash": "A1BCAD3AF86B090935A5098D352C8E88FB20F12BB61050076FF99381777E513F"
+  },
+  {
+    "Path": "skills\\deep-review\\SKILL.md",
+    "Hash": "B4B9C2819E4D0F5EBD32F61E5C571A9B4D6B49BE2CA2BA0FBD616B7537CD210E"
+  },
+  {
+    "Path": "skills\\doc-hygiene\\SKILL.md",
+    "Hash": "0706811B557BA919596E0B8115A0FAC64EE3D0A1C99F9F6BE6E800A1D0716D9F"
+  },
+  {
+    "Path": "skills\\docx-to-md\\SKILL.md",
+    "Hash": "10FF8B275DBD8ACE27E45164CEB3A13DB70EBADCE33309F15745410EC39A89B2"
+  },
+  {
+    "Path": "skills\\docx-to-md\\scripts\\docx-to-md.cjs",
+    "Hash": "50C9B067139107120115416498D1A227176C070A76A5FE06C907325A63A4D221"
+  },
+  {
+    "Path": "skills\\git-workflow\\SKILL.md",
+    "Hash": "0280EB8B6C0C44581DFA9D9306C6A03DCF2D038BB6584EED8CECD5E344742E64"
+  },
+  {
+    "Path": "skills\\greeting-checkin\\SKILL.md",
+    "Hash": "715FF77EB2B96F1EAC845F772381065EB5F8E6160CA896513CB08E8CE857890B"
+  },
+  {
+    "Path": "skills\\greeting-checkin\\scripts\\heir-doctor.cjs",
+    "Hash": "71EF98FDBB9894B9B65D344CB0973E018332979973FE59C70E438C914F8EC506"
+  },
+  {
+    "Path": "skills\\html-to-md\\SKILL.md",
+    "Hash": "AD3F8361389EDAE49F4C96109C6766531FD6DA5BED69862B305095DB78E58FBC"
+  },
+  {
+    "Path": "skills\\html-to-md\\scripts\\html-to-md.cjs",
+    "Hash": "C5679FD8C4A21214F21FE513B860F7048550AF18BF096B18A947537459886780"
+  },
+  {
+    "Path": "skills\\humanizer\\SKILL.md",
+    "Hash": "897125CD6E7C1E6FF058C86D341F265A9AE66187ED0D3C4E88270BB249789704"
+  },
+  {
+    "Path": "skills\\humanizer\\examples\\full-example.md",
+    "Hash": "DABF702FC7E117742C7B62B9FDD64BC5805A97AB8F8DF1E9485C4E1C97F99E10"
+  },
+  {
+    "Path": "skills\\instruction-creator\\SKILL.md",
+    "Hash": "F8F3C3CF3D489F1ECA65DF962AB47A3EE2F08AB229A6510F37C6FFF4AC4AEC8F"
+  },
+  {
+    "Path": "skills\\instruction-review\\SKILL.md",
+    "Hash": "0A3AB343865071ABAA1560B20760E25D739EC0A98F3B7544E62B7D4B672AD544"
+  },
+  {
+    "Path": "skills\\lint-clean-markdown\\SKILL.md",
+    "Hash": "107D1580C3437D6BFC8E6872F1241AA4DB8BD6FD70003CF888DF848E26857090"
+  },
+  {
+    "Path": "skills\\markdown-mermaid\\polish-mermaid-setup.prompt.md",
+    "Hash": "3D0B67CA741B23193602A3A3621725D82C258151B8CB874BC7C2C427E013A0B2"
+  },
+  {
+    "Path": "skills\\markdown-mermaid\\SKILL.md",
+    "Hash": "E7235848019608FF20A2F185C604879C6F02BDD8CF5002CC039C9391FC7763AC"
+  },
+  {
+    "Path": "skills\\markdown-mermaid\\references\\diagram-reference.md",
+    "Hash": "82CA054A2AF70B63522447AD818639B17B6CA100ACD1F1AF946D279837F37D59"
+  },
+  {
+    "Path": "skills\\markdown-mermaid\\references\\markdown-best-practices.md",
+    "Hash": "E03C19F3D4B69C20F533AD9E4FEE0047B43C01D172ECD4013C96EC12E0BDD669"
+  },
+  {
+    "Path": "skills\\markdown-mermaid\\references\\pitfalls.md",
+    "Hash": "05613790437A6D490293686293CF34956A3139A35FC08152FC6551F930D3B5B0"
+  },
+  {
+    "Path": "skills\\markdown-mermaid\\references\\tool-ecosystem.md",
+    "Hash": "6E7F864D3387D5ECB0E5FA3E53701A53222304256D18CEDD526240D2E6C794F4"
+  },
+  {
+    "Path": "skills\\markdown-mermaid\\scripts\\markdown-lint.cjs",
+    "Hash": "8B9376AE006EE459E452C91942CF1C98CEACDEEFAEDC9FC0B2DC15DFA0E28F0F"
+  },
+  {
+    "Path": "skills\\markdown-mermaid\\scripts\\md-format.cjs",
+    "Hash": "E2B9B8F9E42355B6EB527FBF409DDC1597607801D1B0B1C8C4C437ED73837137"
+  },
+  {
+    "Path": "skills\\markdown-sanitization-chain\\SKILL.md",
+    "Hash": "9238816DE1E5B972DCBF38889705D59677A43265A59C261196FDBACC0A316D71"
+  },
+  {
+    "Path": "skills\\md-to-eml\\SKILL.md",
+    "Hash": "F5C9505FC1EEB4D7611B107F6469674AD6830178318172AFA98BA3DD7E99F12C"
+  },
+  {
+    "Path": "skills\\md-to-eml\\scripts\\md-to-eml.cjs",
+    "Hash": "A6BA950C592620CB51F21A353F4FABAD46FD5F94EADB2BF0137180786177ADCB"
+  },
+  {
+    "Path": "skills\\md-to-html\\SKILL.md",
+    "Hash": "A82365A68545D1AF61E3036D149EE268B5482CE212124AA19E59E3A2683A8CA7"
+  },
+  {
+    "Path": "skills\\md-to-html\\scripts\\md-to-html.cjs",
+    "Hash": "016B16A3BB00EAFE16E01A22ED16AF29B0DADD415E61C1705F1058E4EBE2D083"
+  },
+  {
+    "Path": "skills\\md-to-txt\\SKILL.md",
+    "Hash": "D896C2994610AED07D4BAB765545B0041B3236E0945C7966BED3D779957D0CE7"
+  },
+  {
+    "Path": "skills\\md-to-txt\\scripts\\md-to-txt.cjs",
+    "Hash": "0A031938D26973244588C6F728574325E08A6A8A4333AD57DEFCC8BDBB5013AF"
+  },
+  {
+    "Path": "skills\\md-to-word\\SKILL.md",
+    "Hash": "4C7331481D2727BB5765E138A0FC2AEDECB8DF26904B3251A3B5B04C93F0104D"
+  },
+  {
+    "Path": "skills\\md-to-word\\scripts\\md-to-word.cjs",
+    "Hash": "D77B5789199C096E2354BB25CD5A7F8DB31029AE7128EE39B143D488FA32F151"
+  },
+  {
+    "Path": "skills\\md-to-word\\scripts\\lua-filters\\caption-labels.lua",
+    "Hash": "9C8E8B5EC7CA8046094872682EDE29018805B6F1E1FE85E4652CB37118CF58B1"
+  },
+  {
+    "Path": "skills\\md-to-word\\scripts\\lua-filters\\keep-headings.lua",
+    "Hash": "90776CA19235E8C6466F4E2862FFB2145F6A4F33057F8939695CF8A50E3F15FF"
+  },
+  {
+    "Path": "skills\\md-to-word\\scripts\\lua-filters\\word-table-style.lua",
+    "Hash": "437A49DA2B46CA9869C12418EC364D2DEDC8BDD18A9FF9EB2657FD52DA8F4A4A"
+  },
+  {
+    "Path": "skills\\meditation\\SKILL.md",
+    "Hash": "9B782F16B91EB3E79BAD7B26C9BD2161AADADB68C37D79E572DD07BFFA20075F"
+  },
+  {
+    "Path": "skills\\plan\\SKILL.md",
+    "Hash": "031D72A6BF718641F965C40F9944B8D63EE208DDFF986EF3F99895E041B9A074"
+  },
+  {
+    "Path": "skills\\problem-framing-audit\\SKILL.md",
+    "Hash": "34C92A7F67BF76B2C8827FBFF1C093775BA77364335A040F4AE8877826E72517"
+  },
+  {
+    "Path": "skills\\prompt-creator\\SKILL.md",
+    "Hash": "025337D2007984169BA00364ED7A1F5813A3F5C8899C98EC190A636284A93F19"
+  },
+  {
+    "Path": "skills\\prompt-review\\SKILL.md",
+    "Hash": "AA39A96E964D2AE2A4A85C5C5AC92A352A4B9B3F7DE54CBFA4444F7D7BC95432"
+  },
+  {
+    "Path": "skills\\security-and-hardening\\SKILL.md",
+    "Hash": "986AD3C2F1301710F26D88AC62E7FD50E8D3C7CE9FE117DBB8E4D91A7F55BC8B"
+  },
+  {
+    "Path": "skills\\skill-creator\\SKILL.md",
+    "Hash": "6E0177C36848083CF29F5BE88096D02D4341A2EC2E476408EDCDF6CA545CA208"
+  },
+  {
+    "Path": "skills\\skill-creator\\assets\\skill-skeleton\\SKILL.md",
+    "Hash": "8FE87311608DD3EACA9016A15DDA39B3B96004808ADFC87BE96CA38240F924C4"
+  },
+  {
+    "Path": "skills\\skill-creator\\examples\\minimal-skill\\SKILL.md",
+    "Hash": "C9329222B448BD373B513205B669A52836591D53FD29F3129B4F4767F6E70B10"
+  },
+  {
+    "Path": "skills\\skill-creator\\references\\bundled-resources.md",
+    "Hash": "6155298B3926EB6917A5E910027567ED192475989C270591E4FA852A1A43E713"
+  },
+  {
+    "Path": "skills\\skill-creator\\references\\five-gates.md",
+    "Hash": "404E6C936D0977A7EA611D5225A9C6AF534E99A8EB2FA7A71E624ABCF4DEE00A"
+  },
+  {
+    "Path": "skills\\skill-creator\\references\\frontmatter-spec.md",
+    "Hash": "684B15CC9C887AC0F6899C6C81E36B698694F6A60E1E5EC9DD72BBDC9BA9D24E"
+  },
+  {
+    "Path": "skills\\skill-review\\SKILL.md",
+    "Hash": "2D52DFC1C6B3261E5ED3E97E927C0D90F92C4579F8A85BDAD6D37921E0D41BD2"
+  },
+  {
+    "Path": "skills\\spike\\SKILL.md",
+    "Hash": "B42284042EEC1B265F2BDDCFEB0B2803A1F35E44341C3B34BCC76A2796D98D95"
+  },
+  {
+    "Path": "skills\\status-reporting\\SKILL.md",
+    "Hash": "7BA85E55C831F8571D2071AEA6B131E8046C4E1266F0C848CBD6628302D76E03"
+  },
+  {
+    "Path": "skills\\systematic-debugging\\SKILL.md",
+    "Hash": "4B9C0A518D55E829A7A8A0AF867D049178C871D263F028AF3149EDA06CC60BC4"
+  },
+  {
+    "Path": "skills\\systematic-debugging\\references\\condition-based-waiting.md",
+    "Hash": "A4E5198A4D3291CB2CBD5F82744F6581FBD1FBF43ABE82B3CB204E8EFCEBA746"
+  },
+  {
+    "Path": "skills\\systematic-debugging\\references\\defense-in-depth.md",
+    "Hash": "79431616C801504BF8FEB725E99CAD62E82931372EF0718A3B6E20837B135D53"
+  },
+  {
+    "Path": "skills\\systematic-debugging\\references\\root-cause-tracing.md",
+    "Hash": "0454766FC4F67A9F3F1FA70D6C937670384091DBBDDE510CA7D1374BA41A95CC"
+  },
+  {
+    "Path": "skills\\test-driven-development\\SKILL.md",
+    "Hash": "C3E3DE5584ABEE9D3247358CE631604C7E8C993DC6C4237321932A1E551F6994"
+  },
+  {
+    "Path": "workflows\\azure-static-web-apps.yml",
+    "Hash": "16065C7967710BBEA143B0263C56EE49FE7F38055D454630E8FE126C0CEB568E"
+  }
+]
